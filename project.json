@@ -1,0 +1,115 @@
+
+{
+  "ninja_version": "1.7",
+  "buildvar": "buildname",
+  "vars": {
+    "bindir": {
+      "description": "Binary output directory.",
+      "default": "${builddir}/${buildname}"
+    },
+    "objdir": {
+      "description": "Object file output directory.",
+      "default": "${builddir}/${buildname}"
+    },
+    "exe": {"description": "Executable file extention."},
+    "obj": {"description": "Object file extention."},
+    "cxxflags": {"description": "C++ Compiler flags."},
+    "lflags": {"description": "Linker flags."},
+    "cxxexe": {"description": "C++ Compiler executable file."},
+    "linkexe": {
+      "description": "Linker executable file.",
+      "default": "${cxxexe}"
+    },
+    "program": {
+      "description": "The name for the output program.",
+      "default": "synafis"
+    }
+  },
+  "pools": [
+    "link_pool",
+    "compile_pool"
+  ],
+  "tools": {
+    "cxx": {
+      "description": "C++ Compiler",
+      "file": "project",
+      "optional": false,
+      "default": "clang",
+      "options": {
+        "gcc": {
+          "description": "GNU C++ Compiler",
+          "command": "${cxxexe} -MMD -MF ${out}.d ${cxxflags} -o ${out} -c ${in}",
+          "deps": "gcc",
+          "depfile": "${out}.d",
+          "pool": "compile_pool"
+        },
+        "clang": {
+          "description": "Clang C++ Compiler",
+          "command": "${cxxexe} -MMD -MF ${out}.d ${cxxflags} -o ${out} -c ${in}",
+          "deps": "gcc",
+          "depfile": "${out}.d",
+          "pool": "compile_pool"
+        }
+      }
+    },
+    "link": {
+      "description": "Linker",
+      "file": "project",
+      "optional": false,
+      "default": "ld",
+      "options": {
+        "ld": {
+          "description": "GNU LD Linker",
+          "command": "${linkexe} -pipe -o ${out} ${in} ${lflags}",
+          "pool": "link_pool"
+        }
+      }
+    }
+  },
+  "regex": {
+    "cpp": "(?<=src/)((?!\\.cpp\\Z).)+",
+  },
+  "patterns": {
+    "obj": {
+      "pattern": "${objdir}/#${obj}",
+      "replace": "#"
+    }
+  },
+  "files": {},
+  "build": [
+    {
+      "rule": "cxx",
+      "input": {
+        "glob": ["src/**.cpp"]
+      },
+      "index": "obj",
+      "file": "project",
+      "regex": "cpp",
+      "pattern": "obj"
+    },
+    {
+      "rule": "link",
+      "input": {
+        "include": ["obj"]
+      },
+      "output": {
+        "list": ["${bindir}/${program}${exe}"]
+      },
+      "index": "exe",
+      "file": "project"
+    },
+    {
+      "rule": "phony",
+      "input": {
+        "include": ["exe"]
+      },
+      "output": {
+        "list": ["${buildname}_program"]
+      },
+      "file": "project"
+    }
+  ],
+  "defaults": [
+    "release_program"
+  ]
+}
