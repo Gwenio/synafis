@@ -46,7 +46,8 @@ PERFORMANCE OF THIS SOFTWARE.
 #include "gc/traits.hpp"
 #include "gc/identity.hpp"
 #include "gc/lock.hpp"
-#include "gc/pointer.hpp"
+#include "gc/soft_ptr.hpp"
+#include "gc/hard_ptr.hpp"
 #include "gc/root.hpp"
 #include "gc/collector.hpp"
 
