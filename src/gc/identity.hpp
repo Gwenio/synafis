@@ -102,6 +102,15 @@ private:
 	static std::tuple<void *, allocate_cb>
 	select_alloc(identity const&id, std::size_t size, std::size_t align, traits::flag_type flags);
 
+	/**	\fn fetch_impl(void *obj) noexcept
+	 *	\brief Gets the identity of an object.
+	 *	\param obj The object to get the identity for.
+	 *	\returns Returns a pointer to the identity of the object or nullptr if
+	 *	\returns the object was not allocated by the collector.
+	 *	\pre obj != nullptr
+	 */
+	static identity const* fetch_impl(void *obj) noexcept;
+
 	/**	\fn identity(finalize_cb f, traverse_cb t, relocate_cb r, equality_cb e) noexcept
 	 *	\brief Sets up the parts that can be done as a constexpr.
 	 *	\param f The finalizer callback.
@@ -229,6 +238,40 @@ public:
 			// Objects are not equal if their equality cannot be checked.
 			return false;
 		}
+	}
+
+	/**	\fn fetch(T *obj)
+	 *	\brief Gets the identity of an object.
+	 *	\tparam T The apperent type of obj.
+	 *	\param obj The object to get the identity for.
+	 *	\returns Returns a reference to the identity of the object.
+	 *	\throws Throws std::runtime_error if the object was not allocated by the collector.
+	 *	\pre obj != nullptr
+	 *	\pre obj points to an area of memory allocated the the collector.
+	 */
+	template<typename T>
+	static identity const& fetch(T *obj) {
+		SYNAFIS_ASSERT(obj != nullptr);
+		identity const* temp{fetch_impl(static_cast<void *>(const_cast<std::remove_cv_t<T> *>(obj)))};
+		if (temp) {
+			return *temp;
+		} else {
+			throw std::runtime_error("Object was not allocated by the garbage collector.");
+		}
+	}
+
+	/**	\fn fetch(T *obj, std::nothrow_t) noexcept
+	 *	\brief Gets the identity of an object.
+	 *	\tparam T The apperent type of obj.
+	 *	\param obj The object to get the identity for.
+	 *	\returns Returns a pointer to the identity of the object or nullptr if
+	 *	\returns the object was not allocated by the collector.
+	 *	\pre obj != nullptr
+	 */
+	template<typename T>
+	static identity const* fetch(T *obj, std::nothrow_t) noexcept {
+		SYNAFIS_ASSERT(obj != nullptr);
+		return fetch_impl(static_cast<void *>(const_cast<std::remove_cv_t<T> *>(obj)));
 	}
 };
 
