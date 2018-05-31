@@ -31,6 +31,7 @@ PERFORMANCE OF THIS SOFTWARE.
 
 #include <type_traits>
 #include <utility>
+#include <variant>
 
 #include "unit_test.hpp"
 #include "gc.hpp"
@@ -42,5 +43,8 @@ PERFORMANCE OF THIS SOFTWARE.
 #include "datatypes/config.hpp"
 #include "datatypes/literals.hpp"
 #include "datatypes/block.hpp"
+#include "datatypes/value_type.hpp"
+#include "datatypes/environment_type.hpp"
+#include "datatypes/state_type.hpp"
 
 #endif
