@@ -43,6 +43,8 @@ PERFORMANCE OF THIS SOFTWARE.
 #include "operations/types.hpp"
 #include "operations/peephole.hpp"
 #include "operations/block.hpp"
+#include "operations/generate.hpp"
+
 #include "operations/peephole/2.hpp"
 
 /**	\page operation_main Operations
