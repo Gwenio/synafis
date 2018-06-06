@@ -50,33 +50,45 @@ private:
 	 *	\returns Returns the next block to execute.
 	 *	\note Specialize the template to create optimizations for code patterns.
 	 *	\warning All specializations need to have been declared before use.
+	 *	\see operations/block.hpp for the definition.
 	 *	\see operation::config::optimize
 	 */
 	template<typename T>
 	static block impl(state_type &state);
 
-	/**	\fn finish(state_type &state)
-	 *	\brief The implementation for the final step of a block.
-	 *	\tparam T The type representing the operation to preform on state and for providing the next block.
-	 *	\param state The state of execution.
-	 *	\returns Returns the next block to execute.
-	 */
-	template<typename T>
-	static block finish(state_type &state);
-
 	/**	\fn step(state_type &state)
-	 *	\brief The implementation for intermediate steps.
+	 *	\brief The implementation for intermediate steps, defaulting to treating as an intrinsic.
 	 *	\tparam T The type representing the operation to preform on state.
 	 *	\param state The state of execution.
-	 *	\details The unspecialized implementation will take the accumulator of state and
-	 *	\details pass it to a function and place the returned value into the accumulator.
-	 *	\details The function used is one used to represent intrinsic functions, and it
-	 *	\details will be a template function whose specialization for T will be called.
-	 *	\note Due to there being a general case, types that should not appear as regular steps should
-	 *	\note have their specialization deleted.
+	 *	\details An intrinsic is expected to have a static member function called
+	 *	\details 'intrinsic' that accepts a value_typ as a parameter.
+	 *	\details
+	 *	\details The return value will be stored in the accumulator of state.
+	 *	\details
+	 *	\details The passed parameter will be the previous value of the accumulator.
+	 *	\note Types that should only be at the end of a tuple passed to impl should
+	 *	\note have their specialization of this function deleted to avoid accidents.
+	 *	\see operations/block.hpp for the definition.
 	 */
 	template<typename T>
 	static void step(state_type &state);
+
+	/**	\fn finish(state_type &state)
+	 *	\brief The implementation for the final step in a block, defaulting to treating as an intrinsic.
+	 *	\tparam T The type representing the operation to preform on state.
+	 *	\param state The state of execution.
+	 *	\returns Returns the next block to execute.
+	 *	\returns For intrinsics, this will be the return value of the intrinsic.
+	 *	\details An intrinsic is expected to have a static member function called
+	 *	\details 'intrinsic' that accepts a value_typ as a parameter.
+	 *	\details
+	 *	\details The passed parameter will be the previous value of the accumulator.
+	 *	\note Types that should only be at the end of a tuple passed to impl should
+	 *	\note have their specialization of this function deleted to avoid accidents.
+	 *	\see operations/block.hpp for the definition.
+	 */
+	template<typename T>
+	static block finish(state_type &state);
 public:
 	/**	\fn block() noexcept
 	 *	\brief Member ptr is set to &block::impl<T>.
@@ -190,35 +202,6 @@ public:
 		return (*ptr)(state);
 	}
 };
-
-/**	\fn block::impl<std::tuple<<Head, Tail...>>(state_type &state)
- *	\brief Specialized to omit unnecessary operations.
- *	\tparam Head The current step to execute.
- *	\tparam Tail A list of operations following the set being executed.
- *	\param state The state of execution.
- *	\returns Returns the next block to execute.
- *	\details Executes step<Head>(state) and then returns impl<Tail...>(state).
- */
-template<typename Head, typename... Tail>
-inline std::enable_if_t<(2 <= sizeof...(Tail)), block>
-block::impl<std::tuple<Head, Tail...>>(state_type &state) {
-	step<Head>(state);
-	return impl<std::tuple<Tail...>>(state);
-}
-
-/**	\fn block::impl<std::tuple<Head, Tail>>(state_type &state)
- *	\brief The last pair of steps in a block.
- *	\tparam Head The current step to execute.
- *	\tparam Tail The final operation in the block.
- *	\param state The state of execution.
- *	\returns Returns the next block to execute.
- *	\details The last step is preformed with block::finish rather than block::impl.
- */
-template<typename Head, typename Tail>
-inline block block::impl<std::tuple<Head, Tail>>(state_type &state) {
-	step<Head>(state);
-	return finish<Tail>(state);
-}
 
 }
 

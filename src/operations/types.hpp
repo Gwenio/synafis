@@ -21,6 +21,7 @@ PERFORMANCE OF THIS SOFTWARE.
 #include "../operations.hpp"
 #elif !defined(SYNAFIS_OPERATIONS_TYPES_HPP)
 #define SYNAFIS_OPERATIONS_TYPES_HPP
+#pragma once
 
 /**	\file operations/types.hpp
  *	\brief Defines the operation types.
@@ -101,8 +102,8 @@ class acc_closure;
 
 /**	\class exec_branch
  *	\brief Operation type for selecting between two following blocks.
- *	\tparam T The the first possible option.
- *	\tparam F The the second possible option.
+ *	\tparam T The first possible option.
+ *	\tparam F The second possible option.
  */
 template<typename T, typename F>
 class exec_branch;

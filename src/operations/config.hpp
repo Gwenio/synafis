@@ -37,6 +37,10 @@ PERFORMANCE OF THIS SOFTWARE.
 #endif
 #endif
 
+#ifndef SYNAFIS_CONFIG_PEEPHOLE
+#define SYNAFIS_CONFIG_PEEPHOLE true
+#endif
+
 namespace operation {
 
 /**	\namespace config
@@ -46,9 +50,18 @@ namespace config {
 
 /**	\var optimize
  *	\brief A general control for using optimized routines for datatype::block::impl().
- *	\note To be useful the code units that add optimizations must be respecting this configuration.
+ *	\details Set to the preprocessor definition SYNAFIS_CONFIG_OPTIMIZE.
+ *	\warning To be useful the code units that add optimizations must be respecting this configuration.
  */
-constexpr bool const optimize = SYNAFIS_CONFIG_OPTIMIZE;
+inline constexpr bool const optimize = SYNAFIS_CONFIG_OPTIMIZE;
+
+/**	\var peephole
+ *	\brief Controls the use of peephole optimizations.
+ *	\details Set to the preprocessor definition SYNAFIS_CONFIG_PEEPHOLE.
+ *	\details If optimize is false, then peephole will also be false.
+ *	\warning To be useful the code units that add peepholes must be respecting this configuration.
+ */
+inline constexpr bool const peephole = optimize && SYNAFIS_CONFIG_PEEPHOLE;
 
 }
 
