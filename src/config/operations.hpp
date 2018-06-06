@@ -19,39 +19,35 @@ PERFORMANCE OF THIS SOFTWARE.
 
 #if !defined(SYNAFIS_OPERATIONS_HPP)
 #include "../operations.hpp"
-#elif !defined(SYNAFIS_OPERATIONS_CONFIG_HPP)
-#define SYNAFIS_OPERATIONS_CONFIG_HPP
+#elif !defined(SYNAFIS_CONFIG_OPERATIONS_HPP)
+#define SYNAFIS_CONFIG_OPERATIONS_HPP
+#pragma once
 
-/**	\file operations/config.hpp
+#ifndef SYNAFIS_CONFIG_GENERAL_HPP
+#include "general.hpp"
+#endif
+
+/**	\file config/operations.hpp
  *	\brief Configures implementation details for operations.
  */
 
 // Set default configurations for those not specified.
 
 #ifndef SYNAFIS_CONFIG_OPTIMIZE
-// If NDEBUG is defined disabling assert() from the standard library, assume optimizing is desired.
-#ifndef NDEBUG
-#define SYNAFIS_CONFIG_OPTIMIZE true
-#else
-#define SYNAFIS_CONFIG_OPTIMIZE false
-#endif
+#define SYNAFIS_CONFIG_OPTIMIZE (!config::debug)
 #endif
 
 #ifndef SYNAFIS_CONFIG_PEEPHOLE
 #define SYNAFIS_CONFIG_PEEPHOLE true
 #endif
 
-namespace operation {
-
-/**	\namespace config
- *	\brief Stores configuration constants for operation implementation details.
- */
 namespace config {
 
 /**	\var optimize
  *	\brief A general control for using optimized routines for datatype::block::impl().
  *	\details Set to the preprocessor definition SYNAFIS_CONFIG_OPTIMIZE.
  *	\warning To be useful the code units that add optimizations must be respecting this configuration.
+ *	\note Defaults to the opposite of debug.
  */
 inline constexpr bool const optimize = SYNAFIS_CONFIG_OPTIMIZE;
 
@@ -62,8 +58,6 @@ inline constexpr bool const optimize = SYNAFIS_CONFIG_OPTIMIZE;
  *	\warning To be useful the code units that add peepholes must be respecting this configuration.
  */
 inline constexpr bool const peephole = optimize && SYNAFIS_CONFIG_PEEPHOLE;
-
-}
 
 }
 

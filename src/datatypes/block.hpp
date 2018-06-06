@@ -51,7 +51,7 @@ private:
 	 *	\note Specialize the template to create optimizations for code patterns.
 	 *	\warning All specializations need to have been declared before use.
 	 *	\see operations/block.hpp for the definition.
-	 *	\see operation::config::optimize
+	 *	\see config::optimize
 	 */
 	template<typename T>
 	static block impl(state_type &state);

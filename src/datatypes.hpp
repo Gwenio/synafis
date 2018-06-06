@@ -40,7 +40,7 @@ PERFORMANCE OF THIS SOFTWARE.
  *	\brief Contains the basic datatypes for Synafis.
  */
 
-#include "datatypes/config.hpp"
+#include "config/datatypes.hpp"
 #include "datatypes/literals.hpp"
 #include "datatypes/block.hpp"
 #include "datatypes/value_type.hpp"

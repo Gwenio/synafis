@@ -59,7 +59,7 @@ void block::step<operation::env_lookup<Key>>(state_type &state) {
  *	\details An ignore literal will cause the matching value to be skipped.
  *	\note The state of the accumulator after this operation should be treated as undefined.
  *	\note While making unoptimized code less efficient, it allows greater opprotunity for optimizations.
- *	\see datatype::config::mutable_env
+ *	\see config::mutable_env
  */
 template<typename Keys>
 void block::step<operation::env_assign<Keys>>(state_type &state) {
@@ -184,7 +184,7 @@ inline block block::finish(state_type &state) {
  *	\details Otherwise, block::finish is used.
  */
 template<typename... Args> inline
-std::enable_if_t<(operation::config::peephole &&
+std::enable_if_t<(config::peephole &&
 	std::is_same_v<operation::peephole<Args...>::head, std::tuple<Args...>>),
 	block>
 block::impl<std::tuple<Args...>>(state_type &state) {
@@ -192,7 +192,7 @@ block::impl<std::tuple<Args...>>(state_type &state) {
 }
 
 template<typename... Args> inline
-std::enable_if_t<(operation::config::peephole &&
+std::enable_if_t<(config::peephole &&
 	!std::is_same_v<operation::peephole<Args...>::head, std::tuple<Args...>> &&
 	operation::peephole<Args...>::value), block>
 block::impl<std::tuple<Args...>>(state_type &state) {
@@ -201,7 +201,7 @@ block::impl<std::tuple<Args...>>(state_type &state) {
 }
 
 template<typename... Args> inline
-std::enable_if_t<(operation::config::peephole &&
+std::enable_if_t<(config::peephole &&
 	!std::is_same_v<operation::peephole<Args...>::head, std::tuple<Args...>> &&
 	!operation::peephole<Args...>::value), block>
 block::impl<std::tuple<Args...>>(state_type &state) {
@@ -267,7 +267,7 @@ block::finish<operation::exec_branch<T, F>>(state_type &state) {
  *	\pre The top of the stack must contain a closure or a continuation.
  *	\see acc_closure<T> for the definition of a closure.
  *	\see stack_frame for information about 'stack frames'.
- *	\see datatype::config::keep_call
+ *	\see config::keep_call
  */
 template<>
 block block::finish<operation::exec_call>(state_type &state);
@@ -286,7 +286,7 @@ block block::finish<operation::exec_call>(state_type &state);
  *	\pre The second value of the stack must contain a closure or a continuation.
  *	\note When config::keep_call == true the called item is placed on the stack.
  *	\see exec_call
- *	\see datatype::config::keep_call
+ *	\see config::keep_call
  */
 template<>
 block block::impl<std::tuple<operation::exec_prep,

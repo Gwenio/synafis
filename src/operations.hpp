@@ -39,7 +39,7 @@ PERFORMANCE OF THIS SOFTWARE.
  *	\brief Contains the definitions of the basic operation for the "virtual machine".
  */
 
-#include "operations/config.hpp"
+#include "config/operations.hpp"
 #include "operations/types.hpp"
 #include "operations/peephole.hpp"
 #include "operations/block.hpp"

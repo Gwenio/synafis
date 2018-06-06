@@ -19,10 +19,15 @@ PERFORMANCE OF THIS SOFTWARE.
 
 #if !defined(SYNAFIS_GC_HPP)
 #include "../gc.hpp"
-#elif !defined(SYNAFIS_GC_CONFIG_HPP)
-#define SYNAFIS_GC_CONFIG_HPP
+#elif !defined(SYNAFIS_CONFIG_GC_HPP)
+#define SYNAFIS_CONFIG_GC_HPP
+#pragma once
 
-/**	\file gc/config.hpp
+#ifndef SYNAFIS_CONFIG_GENERAL_HPP
+#include "general.hpp"
+#endif
+
+/**	\file config/gc.hpp
  *	\brief Configures the garbage collector.
  */
 
@@ -30,7 +35,7 @@ PERFORMANCE OF THIS SOFTWARE.
 
 ;
 
-namespace gc {
+namespace config {
 
 ;
 

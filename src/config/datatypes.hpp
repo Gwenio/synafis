@@ -19,10 +19,15 @@ PERFORMANCE OF THIS SOFTWARE.
 
 #if !defined(SYNAFIS_DATATYPES_HPP)
 #include "../datatypes.hpp"
-#elif !defined(SYNAFIS_DATATYPES_CONFIG_HPP)
-#define SYNAFIS_DATATYPES_CONFIG_HPP
+#elif !defined(SYNAFIS_CONFIG_DATATYPES_HPP)
+#define SYNAFIS_CONFIG_DATATYPES_HPP
+#pragma once
 
-/**	\file datatypes/config.hpp
+#ifndef SYNAFIS_CONFIG_GENERAL_HPP
+#include "general.hpp"
+#endif
+
+/**	\file config/datatypes.hpp
  *	\brief Configures implementation details of datatypes.
  */
 
@@ -36,11 +41,6 @@ PERFORMANCE OF THIS SOFTWARE.
 #define SYNAFIS_CONFIG_KEEP_CALL false
 #endif
 
-namespace datatype {
-
-/**	\namespace config
- *	\brief Stores configuration constants for datatype implementation details.
- */
 namespace config {
 
 /**	\var mutable_env
@@ -61,8 +61,6 @@ constexpr bool const keep_call = ALES_CONFIG_KEEP_CALL;
 
 static_assert(mutable_env || keep_call,
 	"Environments must be mutable or we must keep closures on the stack after calling them.");
-
-}
 
 }
 

@@ -41,7 +41,7 @@ PERFORMANCE OF THIS SOFTWARE.
  *	\brief Contains garbage collector utilities.
  */
 
-#include "gc/config.hpp"
+#include "config/gc.hpp"
 #include "gc/callbacks.hpp"
 #include "gc/traits.hpp"
 #include "gc/identity.hpp"
