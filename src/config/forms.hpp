@@ -17,40 +17,27 @@ OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
 PERFORMANCE OF THIS SOFTWARE.
 */
 
-#ifndef SYNAFIS_CONFIG_GENERAL_HPP
-#define SYNAFIS_CONFIG_GENERAL_HPP
+#if !defined(SYNAFIS_FORMS_HPP)
+#include "../forms.hpp"
+#elif !defined(SYNAFIS_CONFIG_FORMS_HPP)
+#define SYNAFIS_CONFIG_FORMS_HPP
 #pragma once
 
-/**	\dir config
- *	\brief Contains the configuration header files.
- */
+#ifndef SYNAFIS_CONFIG_GENERAL_HPP
+#include "general.hpp"
+#endif
 
-/**	\file config/general.hpp
- *	\brief General configurations useful to all parts of the program.
+/**	\file config/forms.hpp
+ *	\brief Configures spedial forms.
  */
 
 // Set default configurations for those not specified.
 
-#if defined(NDEBUG) && defined(DEBUG)
-#error Only one of NDEBUG or DEBUG should be defined in the preprocessor.
-#elif defined(NDEBUG) || !defined(DEBUG)
-// Default to not debugging.
-#define SYNAFIS_CONFIG_DEBUG false
-#else
-#define SYNAFIS_CONFIG_DEBUG true
-#endif
+;
 
-/**	\namespace config
- *	\brief Stores configuration constants for implementation details.
- */
 namespace config {
 
-/**	\var debug
- *	\brief Controls the use of debugging helpers.
- *	\details Set to the preprocessor definition SYNAFIS_CONFIG_DEBUG.
- *	\details Indirectly set by having NDEBUG or DEBUG defined.
- */
-inline constexpr bool const debug = SYNAFIS_CONFIG_DEBUG;
+;
 
 }
 
