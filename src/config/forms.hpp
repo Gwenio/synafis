@@ -33,11 +33,18 @@ PERFORMANCE OF THIS SOFTWARE.
 
 // Set default configurations for those not specified.
 
-;
+#ifndef SYNAFIS_CONFIG_ENV_NOOP
+#define SYNAFIS_CONFIG_ENV_NOOP true
+#endif
 
 namespace config {
 
-;
+/**	\var remove_env_noop
+ *	\brief Controls whether to remove operation on environments that have no affect.
+ *	\details Set to the preprocessor definition SYNAFIS_CONFIG_ENV_NOOP.
+ *	\details If optimize is false, then remove_env_noop will also be false.
+ */
+inline constexpr bool const remove_env_noop = optimize && SYNAFIS_CONFIG_ENV_NOOP;
 
 }
 

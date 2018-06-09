@@ -80,7 +80,7 @@ public:
 	 *	\note Only op::exec_call is treated as a tail indicator.
 	 */
 	template<typename Next>
-	using impl = typename call_select<Next, common<op::exec_call>, body<Next>>;
+	using impl = typename tail_select<Next, common<op::exec_call>, body<Next>>;
 };
 
 /**	\class sequence

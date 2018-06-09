@@ -55,14 +55,12 @@ public:
 	/**	\typedef impl
 	 *	\brief The type to pass to block::block<T>().
 	 *	\tparam Next The code following this expression.
-	 *	\details If is_tail<I>::value && Next == op::exec_call then I is the last operation
-	 *	\details for the block, omitting op::exec_call.
+	 *	\details If Next is void, then I is the last operation in the block.
 	 */
 	template<typename Next>
 	using impl = typename Params::impl<
-		std::conditional_t<(is_tail<I>::value && std::is_same_v<Next, op::exec_call>),
-		I,
-		concat<I, Next>>>;
+		std::conditional_t<(std::is_same_v<Next, void>),
+		I, concat<I, Next>>>;
 };
 
 /**	\class cons

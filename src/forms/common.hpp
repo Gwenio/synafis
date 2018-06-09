@@ -34,7 +34,7 @@ PERFORMANCE OF THIS SOFTWARE.
 namespace form {
 
 /**	\namespace op
- *	\brief Shorthand for operation for the operation types.
+ *	\brief Shorthand aliases for operation types.
  */
 namespace op {
 
@@ -56,25 +56,23 @@ using operation::exec_call;
 
 }
 
+/**	\namespace lit
+ *	\brief Shorthand aliases for literals from datatype.
+ */
+namespace lit {
+
+using datatype::empty;
+using datatype::ignore;
+using datatype::inert;
+using datatype::true_;
+using datatype::false_;
+
+}
+
 using operation::concat;
 using operation::flatten;
 using operation::append_if;
 using operation::prefix_if;
-
-/**	\class is_tail
- *	\brief Template for determining if the tail of a block.
- *	\tparam T The type to check for indicating a tail context.
- *	\details For types indicating a tail context, specialize inheriting from std::true_type.
- *	\note It is expected that other than exec_call, the other tail indicators will be intrinsics.
- */
-template<typename T>
-class is_tail : public std::false_type {};
-
-/**	\class is_tail<op::exec_call>
- *	\brief exec_call is the standard tail indicator.
- */
-template<>
-class is_tail<op::exec_call> : public std::true_type {};
 
 /**	\typedef tail_select
  *	\brief Simplifies selecting whether to use the tail context version of a form or not.
@@ -84,16 +82,7 @@ class is_tail<op::exec_call> : public std::true_type {};
  *	\see is_tail
  */
 template<typename Next, typename Tail, typename Body>
-using tail_select = typename std::conditional_t<is_tail<Next>::value, Tail, Body>;
-
-/**	\typedef call_select
- *	\brief A more restricted version of tail select that looks only for op::exec_call.
- *	\tparam Next The following code.
- *	\tparam Tail The tail context implementation.
- *	\tparam Body The non-tail context implementation.
- */
-template<typename Next, typename Tail, typename Body>
-using call_select = typename std::conditional_t<std::is_same_v<op::exec_call, Next>, Tail, Body>;
+using tail_select = typename std::conditional_t<std::is_same_v<op::exec_call, Next>, Tail, Body>;
 
 /**	\typedef stack_discard
  *	\brief Discard the top value of the stack without changing other aspects of state.

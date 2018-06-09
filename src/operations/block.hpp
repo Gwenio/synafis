@@ -54,7 +54,7 @@ void block::step<operation::env_lookup<Key>>(state_type &state) {
  *	\details is controlled by config::mutable_env.
  *	\details If a list is provided as a key, assignment occurs recursively.
  *	\details Pairs must be matched with pairs and the head and tail will be assigned.
- *	\details Null must match against another null.
+ *	\details Null (called in the implementation 'empty') must match against another null.
  *	\details Symbols will be bound to the matching value in the environment.
  *	\details An ignore literal will cause the matching value to be skipped.
  *	\note The state of the accumulator after this operation should be treated as undefined.
@@ -63,8 +63,15 @@ void block::step<operation::env_lookup<Key>>(state_type &state) {
  */
 template<typename Keys>
 void block::step<operation::env_assign<Keys>>(state_type &state) {
-	state = state[Key::value];
+	state.bind(Keys::value, *state);
 }
+
+/**	\fn block::step<operation::env_assign<ignore>>(state_type &)
+ *	\brief No binding occurs when the Keys used is ignore.
+ *	\see config::mutable_env
+ */
+template<>
+void block::step<operation::env_assign<ignore>>(state_type &) {}
 
 /**	\fn block::step<operation::env_swap>(state_type &state)
  *	\brief Step for swapping the current environment with the value in the accumulator.
