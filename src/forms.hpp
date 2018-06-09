@@ -41,6 +41,7 @@ PERFORMANCE OF THIS SOFTWARE.
 
 #include "config/forms.hpp"
 #include "forms/common.hpp"
+#include "forms/basic.hpp"
 
 /**	\page form_main Special Forms
  *	\tableofcontents
