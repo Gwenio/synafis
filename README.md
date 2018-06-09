@@ -1,6 +1,6 @@
-= Synafis
+# Synafis
 
-== Description
+## Description
 
 Synafis is an interpreted language designed to facilitate processing code.
 "Processing" can be evaluating, compiling, error checking, or other things
@@ -19,7 +19,7 @@ and optimized based on knowledge of the inner workings of each other.
 Synafis is primarily based on the Lisp dialect 'Kernel' by John Shutt.
 It also draws inspiration from Pharo Smalltalk and Elixir.
 
-== Building
+## Building
 
 The 'ninjagen.rb' Ruby script for generating the build files for the project.
 
@@ -29,7 +29,7 @@ After editing 'config.json', run the script with '--project' to generate the fil
 
 Finally run Ninja in the directory containing the generated files.
 
-== Requirements
+## Requirements
 
 - Ruby 2.2 or higher with the 'yajl' gem installed.
 - Ninja version 1.7 or higher.
@@ -37,7 +37,7 @@ Finally run Ninja in the directory containing the generated files.
 
 The documentation is written to be generated from the source files by Doxygen.
 
-== Project Layout
+## Project Layout
 
 - src			: Contains the source files for the project.
 - test			: Contains tests cases.
@@ -48,11 +48,11 @@ The documentation is written to be generated from the source files by Doxygen.
 - config.json	: Configuration for ninjagen.rb.
 - *.ninja		: Ninja build files.
 
-== Developers
+## Developers
 
 Adam Armstrong
 
-== License
+## License
 
 The project's code is under the ISC license, see the LICENSE file for details.
 
