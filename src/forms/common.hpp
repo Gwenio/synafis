@@ -81,9 +81,19 @@ class is_tail<op::exec_call> : public std::true_type {};
  *	\tparam Next The following code.
  *	\tparam Tail The tail context implementation.
  *	\tparam Body The non-tail context implementation.
+ *	\see is_tail
  */
 template<typename Next, typename Tail, typename Body>
 using tail_select = typename std::conditional_t<is_tail<Next>::value, Tail, Body>;
+
+/**	\typedef call_select
+ *	\brief A more restricted version of tail select that looks only for op::exec_call.
+ *	\tparam Next The following code.
+ *	\tparam Tail The tail context implementation.
+ *	\tparam Body The non-tail context implementation.
+ */
+template<typename Next, typename Tail, typename Body>
+using call_select = typename std::conditional_t<std::is_same_v<op::exec_call, Next>, Tail, Body>;
 
 /**	\typedef stack_discard
  *	\brief Discard the top value of the stack without changing other aspects of state.
