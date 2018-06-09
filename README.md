@@ -31,9 +31,11 @@ Finally run Ninja in the directory containing the generated files.
 
 == Requirements
 
-- Ruby 2.2 with the 'yajl' gem installed.
+- Ruby 2.2 or higher with the 'yajl' gem installed.
 - Ninja version 1.7 or higher.
 - C++ Compiler (MSVC 2017 is the current baseline for expected standard support).
+
+The documentation is written to be generated from the source files by Doxygen.
 
 == Project Layout
 
