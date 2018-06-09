@@ -70,7 +70,7 @@ void block::step<operation::env_assign<Keys>>(state_type &state) {
  *	\brief No binding occurs when the Keys used is ignore.
  *	\see config::mutable_env
  */
-template<>
+template<> inline
 void block::step<operation::env_assign<ignore>>(state_type &) {}
 
 /**	\fn block::step<operation::env_swap>(state_type &state)

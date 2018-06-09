@@ -44,6 +44,7 @@ PERFORMANCE OF THIS SOFTWARE.
 #include "forms/basic.hpp"
 #include "forms/control.hpp"
 #include "forms/environment.hpp"
+#include "forms/callable.hpp"
 
 /**	\page form_main Special Forms
  *	\tableofcontents
