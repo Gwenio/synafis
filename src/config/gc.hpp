@@ -17,9 +17,7 @@ OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
 PERFORMANCE OF THIS SOFTWARE.
 */
 
-#if !defined(SYNAFIS_GC_HPP)
-#include "../gc.hpp"
-#elif !defined(SYNAFIS_CONFIG_GC_HPP)
+#ifndef SYNAFIS_CONFIG_GC_HPP
 #define SYNAFIS_CONFIG_GC_HPP
 #pragma once
 
@@ -33,11 +31,28 @@ PERFORMANCE OF THIS SOFTWARE.
 
 // Set default configurations for those not specified.
 
-;
+#ifndef SYNAFIS_CONFIG_GUARD_PAGES
+#define SYNAFIS_CONFIG_GUARD_PAGES (config::debug ? 1 : 0)
+#endif
 
 namespace config {
 
-;
+/**	\var guard_pages
+ *	\brief Controls the presence and number of guard pages for blocks of virtual memory.
+ *	\details Set to the preprocessor definition SYNAFIS_CONFIG_GUARD_PAGE.
+ *	\details A value of zero disables the use of guard pages.
+ *	\details
+ *	\details Guard pages are page(s) of inaccessible memory before and
+ *	\details after a block of allocated virtual memory.
+ *	\details This detects some memory issues as an error will occur
+ *	\details if the program touches a guard page.
+ *	\details Due to how virtual memory is used in the collector, the detection
+ *	\details provided by this alone is limited.
+ *	\note As virtual memory is system specific, guard pages are only possible
+ *	\note if system support is present.
+ *	\note However, it would be suprising if a modern fully featured system lacked support.
+ */
+inline constexpr std::size_t const guard_pages = SYNAFIS_CONFIG_GUARD_PAGES;
 
 }
 

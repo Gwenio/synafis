@@ -1,0 +1,87 @@
+
+/*
+ISC License (ISC)
+
+Copyright 2018 Adam Armstrong
+
+Permission to use, copy, modify, and/or distribute this software for any
+purpose with or without fee is hereby granted, provided that the above copyright
+notice and this permission notice appear in all copies.
+
+THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES WITH
+REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND
+FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY SPECIAL, DIRECT,
+INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM
+LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR
+OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
+PERFORMANCE OF THIS SOFTWARE.
+*/
+
+#include "vmem.hpp"
+
+/**	\file gc/vmem.cpp
+ *	\todo For now only a Windows implementation will be provided.
+ *	\todo Eventually it should be possible to select other systems.
+ *	\note "WIN32_LEAN_AND_MEAN" might need to be defined if there are errors
+ *	\note in the Windows system headers.
+ *	\note Or for errors in an editor rather than a compiler, the architecture
+ *	\note preprocessor definitions the compiler is expected to provide might
+ *	\note not be present.
+ */
+
+#include <type_traits>
+#include <cstdint>
+#include <windows.h>
+
+namespace {
+
+/**	\fn get_page_size() noexcept
+ *	\brief Gets the value for vmem::page_size.
+ *	\returns Returns the system page size.
+ */
+inline std::size_t get_page_size() noexcept {
+	SYSTEM_INFO info;
+	GetSystemInfo(&info);
+	return info.dwPageSize;
+}
+
+}
+
+namespace gc {
+
+std::size_t const vmem::page_size{get_page_size()};
+
+void *vmem::allocate(std::size_t size) noexcept {
+	SYNAFIS_ASSERT(size > 0);
+	if (config::guard_pages == 0) {
+		return VirtualAlloc(nullptr, size, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE);
+	} else {
+		void *base{VirtualAlloc(nullptr, size + (config::guard_pages * 2), MEM_RESERVE, PAGE_NOACCESS)};
+		if (base) {
+			void *temp{static_cast<std::uint8_t *>(temp) +
+				static_cast<std::uintptr_t>(config::guard_pages * page_size)};
+			temp = VirtualAlloc(temp, size, MEM_COMMIT, PAGE_READWRITE);
+			if (temp) {
+				return temp;
+			} else {
+				VirtualFree(base, 0, MEM_RELEASE);
+				return nullptr;
+			}
+		} else {
+			return nullptr;
+		}
+	}
+}
+
+void vmem::deallocate(void *ptr) noexcept {
+	SYNAFIS_ASSERT(ptr != nullptr);
+	if (config::guard_pages == 0) {
+		VirtualFree(ptr, 0, MEM_RELEASE);
+	} else {
+		void *base{static_cast<std::uint8_t *>(ptr) -
+			static_cast<std::uintptr_t>(config::guard_pages * page_size)};
+		VirtualFree(base, 0, MEM_RELEASE);
+	}
+}
+
+}
