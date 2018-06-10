@@ -22,6 +22,7 @@ PERFORMANCE OF THIS SOFTWARE.
 #pragma once
 
 #include <cstdlib>
+#include <utility>
 
 #ifndef SYNAFIS_CONFIG_GC_HPP
 #include "../config/gc.hpp"
@@ -40,39 +41,176 @@ namespace gc {
 /**	\class vmem
  *	\brief Abstracts the host system's virtual memory.
  *	\todo Investigate supporting huge pages to reduce page map size in the kernel.
+ *	\note Execute privalage is considered unneeded at this time.
  */
 class vmem {
-	/**	\fn vmem()
-	 *	\brief Deleted.
+	friend unit_test::tester<vmem>;
+private:
+	/**	\var ptr
+	 *	\brief The address of the virtual memory.
 	 */
-	vmem() = delete;
+	void *ptr;
 
-	/**	\fn ~vmem()
-	 *	\brief Deleted.
+	/**	\var len
+	 *	\brief The size of the virtual memory.
 	 */
-	~vmem() = delete;
+	std::size_t len;
+
+	/**	\fn allocate(std::size_t size, bool access) noexcept
+	 *	\brief Allocates virtual memory.
+	 *	\param size The size of the block of memory to allocate.
+	 *	\param access If true start with read and write access; otherwise, start with no access.
+	 *	\returns Returns the allocate memory or nullptr on failure.
+	 *	\pre 'size' must be greater than zero.
+	 *	\note If size is not a multiple of page_size, it will be rounded up to the nearest multiple.
+	 */
+	static void *allocate(std::size_t size, bool access) noexcept;
+
+	/**	\fn deallocate(void *ptr) noexcept
+	 *	\brief Dellocates virtual memory.
+	 *	\param ptr The virtual memory to deallocate.
+	 *	\pre 'ptr' must be a block of virtual memory returned by allocate.
+	 */
+	static void deallocate(void *ptr) noexcept;
 public:
 	/**	\var page_size
-	 *	\brief The basic unit size of virtual memory.
+	 *	\brief The basic unit size of virtual memory blocks.
 	 */
 	static std::size_t const page_size;
 
-	/**	\fn allocate(std::size_t size) noexcept
-	 *	\brief Allocates virtual memory.
-	 *	\param size The size of the block of memory to allocate.
-	 *	\returns Returns the allocate memory or nullptr on failure.
-	 *	\pre 'size' must be greater than zero.
-	 *	\details The allocated memory will have read and write permission but not execute.
-	 *	\note If size is not a multiple of page_size, it will be rounded up to the nearest multiple.
+	/**	\fn vmem() noexcept
+	 *	\brief Initializes with no virtual memory.
 	 */
-	static void *allocate(std::size_t size) noexcept;
+	constexpr vmem() noexcept : ptr(nullptr), len(0) {}
 
-	/**	\fn deallocate(void *ptr) noexcept
-	 *	\brief Deallocates a block allocated by vmem::allocate.
-	 *	\param ptr The block to deallocate.
-	 *	\pre 'ptr' must not be nullptr and must have been allocated by allocate.
+	/**	\fn (std::size_t const s, bool const access) noexcept
+	 *	\brief Initializes with a new virtual memory block.
+	 *	\param s The size of the block.
+	 *	\param access If true start with read and write access; otherwise, start with no access.
 	 */
-	static void deallocate(void *ptr) noexcept;
+	vmem(std::size_t const s, bool const access) noexcept : vmem() {
+		ptr = allocate(s, access);
+		if (ptr) {
+			len = s;
+		}
+	}
+
+	/**	\fn vmem(vmem const&)
+	 *	\brief Deleted.
+	 */
+	vmem(vmem const&) = delete;
+
+	/**	\fn vmem(vmem && other) noexcept
+	 *	\brief Moves the virtual memory from other to this.
+	 */
+	constexpr vmem(vmem && other) noexcept : vmem() {
+		if (other.ptr) {
+			ptr = std::exchange(other.ptr, nullptr);
+			len = std::exchange(other.len, 0);
+		}
+	}
+
+	/**	\fn ~vmem() noexcept
+	 *	\brief Deallocates the virtual memory if ptr is not nullptr.
+	 */
+	~vmem() noexcept {
+		if (ptr) {
+			deallocate(ptr);
+		}
+	}
+
+	/**	\fn operator=(nullptr_t const&) noexcept
+	 *	\brief Removes the owned virtual memory if this has any.
+	 */
+	constexpr vmem &operator=(nullptr_t const&) noexcept {
+		if (ptr) {
+			deallocate(ptr);
+			ptr = nullptr;
+			len = 0;
+		}
+		return *this;
+	}
+
+	/**	\fn operator=(vmem const&)
+	 *	\brief Deleted.
+	 */
+	vmem &operator=(vmem const&) = delete;
+
+	/**	\fn vmem(vmem && other) noexcept
+	 *	\brief Moves the virtual memory from other to this.
+	 */
+	constexpr vmem &operator=(vmem && other) noexcept {
+		if (other.ptr) {
+			if (ptr) {
+				deallocate(ptr);
+			}
+			ptr = std::exchange(other.ptr, nullptr);
+			len = std::exchange(other.len, 0);
+			return *this;
+		} else {
+			return *this = nullptr;
+		}
+	}
+
+	/**	\fn operator bool() const noexcept
+	 *	\brief Converts to bool.
+	 *	\returns Returns true if ptr != nullptr.
+	 */
+	constexpr operator bool() const noexcept {
+		return ptr != nullptr;
+	}
+
+	/**	\fn operator!() const noexcept
+	 *	\brief Converts to bool.
+	 *	\returns Returns true if ptr == nullptr.
+	 */
+	constexpr bool operator!() const noexcept {
+		return ptr == nullptr;
+	}
+
+	/**	\fn size() const noexcept
+	 *	\brief Gets the size of the owned virtual memory.
+	 *	\returns The size of the virtual memory.
+	 */
+	constexpr std::size_t size() const noexcept {
+		return len;
+	}
+
+	/**	\fn forbid(std::size_t offset, std::size_t length) noexcept
+	 *	\brief Makes part of a previously allocated block unaccessible.
+	 *	\param offset The starting point in the virtual memory block.
+	 *	\param length The size of area to forbid.
+	 *	\returns Returns a boolean value indicated whether the change succeeded.
+	 *	\pre The whole indicated area must reside in the owned virtual memory.
+	 *	\pre ptr != nullptr
+	 *	\warning If any portion of a page falls in the area, the whole page
+	 *	\warning will have its protection settings changed.
+	 */
+	bool forbid(std::size_t offset, std::size_t length) noexcept;
+
+	/**	\fn readonly(std::size_t offset, std::size_t length) noexcept
+	 *	\brief Makes part of a previously allocated block have read access only.
+	 *	\param offset The starting point in the virtual memory block.
+	 *	\param length The size of area to have read access only.
+	 *	\returns Returns a boolean value indicated whether the change succeeded.
+	 *	\pre The whole indicated area must reside in the owned virtual memory.
+	 *	\pre ptr != nullptr
+	 *	\warning If any portion of a page falls in the area, the whole page
+	 *	\warning will have its protection settings changed.
+	 */
+	bool readonly(std::size_t offset, std::size_t length) noexcept;
+
+	/**	\fn writable(std::size_t offset, std::size_t length) noexcept
+	 *	\brief Makes part of a previously allocated block have read and write access.
+	 *	\param offset The starting point in the virtual memory block.
+	 *	\param length The size of area to make writable.
+	 *	\returns Returns a boolean value indicated whether the change succeeded.
+	 *	\pre The whole indicated area must reside in the owned virtual memory.
+	 *	\pre ptr != nullptr
+	 *	\warning If any portion of a page falls in the area, the whole page
+	 *	\warning will have its protection settings changed.
+	 */
+	bool writable(std::size_t offset, std::size_t length) noexcept;
 };
 
 }

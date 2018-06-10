@@ -24,12 +24,12 @@ PERFORMANCE OF THIS SOFTWARE.
  *	\todo Eventually it should be possible to select other systems.
  *	\note "WIN32_LEAN_AND_MEAN" might need to be defined if there are errors
  *	\note in the Windows system headers.
+ *	\note
  *	\note Or for errors in an editor rather than a compiler, the architecture
  *	\note preprocessor definitions the compiler is expected to provide might
  *	\note not be present.
  */
 
-#include <type_traits>
 #include <cstdint>
 #include <windows.h>
 
@@ -51,37 +51,45 @@ namespace gc {
 
 std::size_t const vmem::page_size{get_page_size()};
 
-void *vmem::allocate(std::size_t size) noexcept {
+void *vmem::allocate(std::size_t size, bool access) noexcept {
 	SYNAFIS_ASSERT(size > 0);
-	if (config::guard_pages == 0) {
-		return VirtualAlloc(nullptr, size, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE);
-	} else {
-		void *base{VirtualAlloc(nullptr, size + (config::guard_pages * 2), MEM_RESERVE, PAGE_NOACCESS)};
-		if (base) {
-			void *temp{static_cast<std::uint8_t *>(temp) +
-				static_cast<std::uintptr_t>(config::guard_pages * page_size)};
-			temp = VirtualAlloc(temp, size, MEM_COMMIT, PAGE_READWRITE);
-			if (temp) {
-				return temp;
-			} else {
-				VirtualFree(base, 0, MEM_RELEASE);
-				return nullptr;
-			}
-		} else {
-			return nullptr;
-		}
-	}
+	return VirtualAlloc(nullptr, size, MEM_COMMIT | MEM_RESERVE,
+		access ? PAGE_READWRITE : PAGE_NOACCESS);
 }
 
 void vmem::deallocate(void *ptr) noexcept {
 	SYNAFIS_ASSERT(ptr != nullptr);
-	if (config::guard_pages == 0) {
-		VirtualFree(ptr, 0, MEM_RELEASE);
-	} else {
-		void *base{static_cast<std::uint8_t *>(ptr) -
-			static_cast<std::uintptr_t>(config::guard_pages * page_size)};
-		VirtualFree(base, 0, MEM_RELEASE);
-	}
+	VirtualFree(ptr, 0, MEM_RELEASE);
+}
+
+bool vmem::forbid(std::size_t offset, std::size_t length) noexcept {
+	SYNAFIS_ASSERT(ptr != nullptr);
+	SYNAFIS_ASSERT(0 < length);
+	void *temp{static_cast<std::uint8_t *>(ptr) + offset};
+	SYNAFIS_ASSERT(ptr < temp);
+	SYNAFIS_ASSERT((offset + length) < len);
+	DWORD old{0};
+	return VirtualProtect(temp, length, PAGE_NOACCESS, &old);
+}
+
+bool vmem::readonly(std::size_t offset, std::size_t length) noexcept {
+	SYNAFIS_ASSERT(ptr != nullptr);
+	SYNAFIS_ASSERT(0 < length);
+	void *temp{static_cast<std::uint8_t *>(ptr) + offset};
+	SYNAFIS_ASSERT(ptr < temp);
+	SYNAFIS_ASSERT((offset + length) < len);
+	DWORD old{0};
+	return VirtualProtect(temp, length, PAGE_READONLY, &old);
+}
+
+bool vmem::writable(std::size_t offset, std::size_t length) noexcept {
+	SYNAFIS_ASSERT(ptr != nullptr);
+	SYNAFIS_ASSERT(0 < length);
+	void *temp{static_cast<std::uint8_t *>(ptr) + offset};
+	SYNAFIS_ASSERT(ptr < temp);
+	SYNAFIS_ASSERT((offset + length) < len);
+	DWORD old{0};
+	return VirtualProtect(temp, length, PAGE_READWRITE, &old);
 }
 
 }
