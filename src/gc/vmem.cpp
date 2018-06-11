@@ -30,7 +30,7 @@ PERFORMANCE OF THIS SOFTWARE.
  *	\note not be present.
  */
 
-#include <cstdint>
+#include <stdexcept>
 #include <windows.h>
 
 namespace {
@@ -62,12 +62,31 @@ void vmem::deallocate(void *ptr) noexcept {
 	VirtualFree(ptr, 0, MEM_RELEASE);
 }
 
+void *vmem::operator[](std::size_t offset) const noexcept {
+	SYNAFIS_ASSERT(offset < len);
+	return ptr ?
+		static_cast<std::uint8_t *>(ptr) + offset :
+		nullptr;
+}
+
+void *vmem::at(std::size_t offset) const {
+	if (ptr) {
+		if (offset < len) {
+			return static_cast<std::uint8_t *>(ptr) + offset;
+		} else {
+			throw std::logic_error{"Precondition (offset < len) violated."};
+		}
+	} else {
+		throw std::logic_error{"Precondition (ptr != nullptr) violated."};
+	}
+}
+
 bool vmem::forbid(std::size_t offset, std::size_t length) noexcept {
 	SYNAFIS_ASSERT(ptr != nullptr);
 	SYNAFIS_ASSERT(0 < length);
-	void *temp{static_cast<std::uint8_t *>(ptr) + offset};
-	SYNAFIS_ASSERT(ptr < temp);
-	SYNAFIS_ASSERT((offset + length) < len);
+	void *temp{(*this)[offset]};
+	SYNAFIS_ASSERT(ptr <= temp);
+	SYNAFIS_ASSERT((offset + length) <= len);
 	DWORD old{0};
 	return VirtualProtect(temp, length, PAGE_NOACCESS, &old);
 }
@@ -75,9 +94,9 @@ bool vmem::forbid(std::size_t offset, std::size_t length) noexcept {
 bool vmem::readonly(std::size_t offset, std::size_t length) noexcept {
 	SYNAFIS_ASSERT(ptr != nullptr);
 	SYNAFIS_ASSERT(0 < length);
-	void *temp{static_cast<std::uint8_t *>(ptr) + offset};
-	SYNAFIS_ASSERT(ptr < temp);
-	SYNAFIS_ASSERT((offset + length) < len);
+	void *temp{(*this)[offset]};
+	SYNAFIS_ASSERT(ptr <= temp);
+	SYNAFIS_ASSERT((offset + length) <= len);
 	DWORD old{0};
 	return VirtualProtect(temp, length, PAGE_READONLY, &old);
 }
@@ -85,9 +104,9 @@ bool vmem::readonly(std::size_t offset, std::size_t length) noexcept {
 bool vmem::writable(std::size_t offset, std::size_t length) noexcept {
 	SYNAFIS_ASSERT(ptr != nullptr);
 	SYNAFIS_ASSERT(0 < length);
-	void *temp{static_cast<std::uint8_t *>(ptr) + offset};
-	SYNAFIS_ASSERT(ptr < temp);
-	SYNAFIS_ASSERT((offset + length) < len);
+	void *temp{(*this)[offset]};
+	SYNAFIS_ASSERT(ptr <= temp);
+	SYNAFIS_ASSERT((offset + length) <= len);
 	DWORD old{0};
 	return VirtualProtect(temp, length, PAGE_READWRITE, &old);
 }

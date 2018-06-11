@@ -21,12 +21,8 @@ PERFORMANCE OF THIS SOFTWARE.
 #define SYNAFIS_GC_VMEM_HPP
 #pragma once
 
-#include <cstdlib>
+#include <cstdint>
 #include <utility>
-
-#ifndef SYNAFIS_CONFIG_GC_HPP
-#include "../config/gc.hpp"
-#endif
 
 #ifndef SYNAFIS_UNIT_TEST_HPP
 #include "../unit_test.hpp"
@@ -175,6 +171,46 @@ public:
 	constexpr std::size_t size() const noexcept {
 		return len;
 	}
+
+	/**	\fn begin() const noexcept
+	 *	\brief Gets the starting address of the block.
+	 *	\returns ptr
+	 */
+	constexpr void *begin() const noexcept {
+		return ptr;
+	}
+
+	/**	\fn end() const noexcept
+	 *	\brief Gets the end address of the block.
+	 *	\returns The address just past the end.
+	 *	\returns Returns nullptr if ptr is nullptr.
+	 */
+	constexpr void *end() const noexcept {
+		return ptr ?
+			static_cast<std::uint8_t *>(ptr) + len :
+			nullptr;
+	}
+
+	/**	\fn operator[](std::size_t offset) const noexcept
+	 *	\brief Gets the pointer for an offset into the virtual memory.
+	 *	\param offset The offset into the block to get a pointer for.
+	 *	\returns The pointer to the offset from the beginning of the block.
+	 *	\returns Returns nullptr if ptr is nullptr.
+	 *	\pre offset < len
+	 *	\warning The precondition is only checked with SYNAFIS_ASSERT,
+	 *	\warning which does nothing when not debugging or testing.
+	 */
+	void *operator[](std::size_t offset) const noexcept;
+
+	/**	\fn at(std::size_t offset) const
+	 *	\brief Gets the pointer for an offset into the virtual memory.
+	 *	\param offset The offset into the block to get a pointer for.
+	 *	\returns The pointer to the offset from the beginning of the block.
+	 *	\throws Throws std::logic_error if any of the preconditions are violated.
+	 *	\pre offset < len
+	 *	\pre ptr != nullptr
+	 */
+	void *at(std::size_t offset) const;
 
 	/**	\fn forbid(std::size_t offset, std::size_t length) noexcept
 	 *	\brief Makes part of a previously allocated block unaccessible.
