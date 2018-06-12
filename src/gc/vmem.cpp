@@ -64,15 +64,13 @@ void vmem::deallocate(void *ptr) noexcept {
 
 void *vmem::operator[](std::size_t offset) const noexcept {
 	SYNAFIS_ASSERT(offset < len);
-	return ptr ?
-		static_cast<std::uint8_t *>(ptr) + offset :
-		nullptr;
+	return ptr ? add_offset(ptr, offset) : nullptr;
 }
 
 void *vmem::at(std::size_t offset) const {
 	if (ptr) {
 		if (offset < len) {
-			return static_cast<std::uint8_t *>(ptr) + offset;
+			return add_offset(ptr, offset);
 		} else {
 			throw std::logic_error{"Precondition (offset < len) violated."};
 		}

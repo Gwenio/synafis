@@ -20,12 +20,14 @@ PERFORMANCE OF THIS SOFTWARE.
 #ifndef SYNAFIS_GC_VMEM_HPP
 #define SYNAFIS_GC_VMEM_HPP
 #pragma once
-
-#include <cstdint>
 #include <utility>
 
 #ifndef SYNAFIS_UNIT_TEST_HPP
 #include "../unit_test.hpp"
+#endif
+
+#ifndef SYNAFIS_GC_PTR_MATH_HPP
+#include "ptr_math.hpp"
 #endif
 
 /**	\file gc/vmem.hpp
@@ -186,9 +188,7 @@ public:
 	 *	\returns Returns nullptr if ptr is nullptr.
 	 */
 	constexpr void *end() const noexcept {
-		return ptr ?
-			static_cast<std::uint8_t *>(ptr) + len :
-			nullptr;
+		return ptr ? add_offset(ptr, len) : nullptr;
 	}
 
 	/**	\fn operator[](std::size_t offset) const noexcept
