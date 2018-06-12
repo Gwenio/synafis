@@ -23,49 +23,6 @@ PERFORMANCE OF THIS SOFTWARE.
 
 namespace gc {
 
-class identity::idaccess {
-	/**	\fn idaccess()
-	 *	\brief Deleted.
-	 */
-	idaccess() = delete;
-	/**	\fn ~idaccess()
-	 *	\brief Deleted.
-	 */
-	~idaccess() = delete;
-public:
-	/**	\fn finalize(identity const& id, void *ptr) noexcept
-	 *	\brief Wrapper for identity::finalize that provides access to it.
-	 *	\param id The identity of the object.
-	 *	\param ptr A pointer to the object to clean up.
-	 */
-	static void finalize(identity const& id, void *ptr) noexcept {
-		id.finalize(ptr);
-	}
-
-	/**	\fn traverse(identity const& id, void const* ptr, void *data, enumerate_cb cb) noexcept
-	 *	\brief Wrapper for identity::traverse that provides access to it.
-	 *	\param id The identity of the object.
-	 *	\param ptr A pointer to the object to traverse.
-	 *	\param data Parameter to pass to cb.
-	 *	\param cb Callback to enumerate reachable pointers.
-	 */
-	static void traverse(identity const& id, void const* ptr, void *data, enumerate_cb cb) noexcept {
-		id.traverse(ptr, data, cb);
-	}
-
-	/**	\fn relocate(identity const& id, void *orig, void *dest, void *data, remap_cb cb)
-	 *	\brief Wrapper for identity::relocate that provides access to it.
-	 *	\param id The identity of the object.
-	 *	\param orig The original address of the object.
-	 *	\param orig The destination address of the object.
-	 *	\param data Parameter to pass to cb.
-	 *	\param cb Callback to remap pointers.
-	 */
-	static void relocate(identity const& id, void *orig, void *dest, void *data, remap_cb cb) noexcept {
-		id.relocate(orig, dest, data, cb);
-	}
-};
-
 class soft_ptr::data {
 public:
 	/**	\var ptr
