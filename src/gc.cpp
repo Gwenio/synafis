@@ -102,8 +102,7 @@ identity::~identity() {
 }
 
 std::tuple<void *, identity::allocate_cb>
-identity::select_alloc(identity const&id, std::size_t size,
-		std::size_t align, traits::flag_type flags) {
+identity::select_alloc(identity const&id, std::size_t unit, traits::flag_type flags) {
 #warning Not implemented.
 	return std::tuple<void *, identity::allocate_cb>{nullptr, nullptr};
 }

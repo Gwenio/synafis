@@ -88,11 +88,22 @@ private:
 	 */
 	equality_cb ecb;
 
-	/**	\fn select_alloc(identity const&id, std::size_t size, std::size_t align, traits::flag_type flags)
+	/**	\fn unit_size() noexcept
+	 *	\brief Gets the amount of memory to allocate to objects of a type.
+	 *	\tparam T The type to get the allocation unit for.
+	 *	\returns Returns the size of the allocation unit for objects of type T.
+	 *	\details The return value is to be at least sizeof(T) and a multiple of alignof(T).
+	 */
+	template<typename T>
+	static constexpr std::size_t unit_size() noexcept {
+		return (sizeof(T) % alignof(T) == 0) ? sizeof(T) :
+			((sizeof(T) / alignof(T)) + 1) * alignof(T);
+	}
+
+	/**	\fn select_alloc(identity const&id, std::size_t unit, traits::flag_type flags)
 	 *	\brief Gets the allocation callback and the allocator data.
 	 *	\param id The identity of the type to get an allocator for.
-	 *	\param size The size of objects of the type.
-	 *	\param align The required alignment of objects of the type.
+	 *	\param unit The return value of unit_size for the type to select an allocator for.
 	 *	\param flags The flags from traits::get_flags.
 	 *	\returns Returns a tuple with the allocator data and callback.
 	 *	\returns The data maybe nullptr, but the callback must be valid.
@@ -100,7 +111,7 @@ private:
 	 *	\see traits::get_flags
 	 */
 	static std::tuple<void *, allocate_cb>
-	select_alloc(identity const&id, std::size_t size, std::size_t align, traits::flag_type flags);
+	select_alloc(identity const&id, std::size_t unit, traits::flag_type flags);
 
 	/**	\fn fetch_impl(void *obj) noexcept
 	 *	\brief Gets the identity of an object.
@@ -191,7 +202,7 @@ public:
 	identity() : identity(traits::finalizer<T>, traits::traverser<T>,
 		traits::relocator<T>, traits::equalizer<T>) {
 			std::tie(allocator, acb) =
-				select_alloc(*this, sizeof(T), alignof(T), traits::get_flags<T>());
+				select_alloc(*this, unit_size<T>(), traits::get_flags<T>());
 			SYNAFIS_ASSERT(acb != nullptr);
 			SYNAFIS_ASSERT(!traits::pointers<T> || (tcb && rcb));
 			SYNAFIS_ASSERT(std::is_trivially_destructible_v<T> || fcb != nullptr);
