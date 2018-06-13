@@ -48,14 +48,16 @@ namespace gc {
 class identity {
 	friend unit_test::tester<identity>;
 public:
-	/**	\class idaccess
+	/**	\class access
 	 *	\brief Type to access restricted parts of the identity class.
 	 *	\note Should be defined where only the garbage collector has access
 	 *	\note to the members of this class.
 	 */
-	class idaccess;
+	class access;
+
 	// So the garbage collector internals can get more access.
-	friend idaccess;
+	friend access;
+
 	/**	\typedef allocate_cb
 	 *	\brief The callback type for allocating a garbage collector owned object.
 	 */
@@ -66,23 +68,28 @@ private:
 	 *	\see select_alloc
 	 */
 	void *allocator;
+
 	/**	\var acb
 	 *	\brief The callback used to allocate objects from the collector.
 	 *	\see select_alloc
 	 */
 	allocate_cb acb;
+
 	/**	\var fcb
 	 *	\brief The callback used to clean up an object.
 	 */
 	finalize_cb fcb;
+
 	/**	\var tcb
 	 *	\brief The callback used to enumerate pointers reachable from an object.
 	 */
 	traverse_cb tcb;
+
 	/**	\var rcb
 	 *	\brief The callback used to relocate objects and remap their pointers.
 	 */
 	relocate_cb rcb;
+
 	/**	\var ecb
 	 *	\brief The callback used check if two objects will always be equal.
 	 */

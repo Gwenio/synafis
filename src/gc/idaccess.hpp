@@ -26,23 +26,23 @@ PERFORMANCE OF THIS SOFTWARE.
 #endif
 
 /**	\file gc/idaccess.hpp
- *	\brief Implements identity::idaccess.
+ *	\brief Implements identity::access.
  *	\warning Should only be included where the more access to identity
  *	\warning is appropriate.
  */
 
 namespace gc {
 
-class identity::idaccess {
-	/**	\fn idaccess()
+class identity::access {
+	/**	\fn access()
 	 *	\brief Deleted.
 	 */
-	idaccess() = delete;
+	access() = delete;
 
 	/**	\fn ~idaccess()
 	 *	\brief Deleted.
 	 */
-	~idaccess() = delete;
+	~access() = delete;
 public:
 	/**	\fn finalize(identity const& id, void *ptr) noexcept
 	 *	\brief Wrapper for identity::finalize that provides access to it.
@@ -51,6 +51,15 @@ public:
 	 */
 	static void finalize(identity const& id, void *ptr) noexcept {
 		id.finalize(ptr);
+	}
+
+	/**	\fn finalize(identity const& id) noexcept
+	 *	\brief Checks if id has a finalizer callback.
+	 *	\param id The identity of the object type.
+	 *	\returns Returns true if id has a finalizer callback.
+	 */
+	static bool has_finalizer(identity const& id) noexcept {
+		return id.fcb != nullptr;
 	}
 
 	/**	\fn traverse(identity const& id, void const* ptr, void *data, enumerate_cb cb) noexcept
@@ -76,6 +85,11 @@ public:
 		id.relocate(orig, dest, data, cb);
 	}
 };
+
+/**	\typedef idaccess
+ *	\brief Shorthand for identity::access.
+ */
+typedef identity::access idaccess;
 
 }
 

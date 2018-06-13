@@ -20,6 +20,7 @@ PERFORMANCE OF THIS SOFTWARE.
 #ifndef SYNAFIS_GC_VMEM_HPP
 #define SYNAFIS_GC_VMEM_HPP
 #pragma once
+
 #include <utility>
 
 #ifndef SYNAFIS_UNIT_TEST_HPP
