@@ -38,9 +38,43 @@ namespace gc {
  *	\details address of any pointer type.
  *	\details Therefore casting pointers to and from that type is safe when
  *	\details using a standard compliant compiler and standard library combo.
+ *	\warning Does not checked for overflow.
  */
 inline constexpr void *add_offset(void *addr, std::uintptr_t offset) noexcept {
 	return reinterpret_cast<void *>(reinterpret_cast<std::uintptr_t>(addr) + offset);
+}
+
+/**	\fn sub_offset(void *addr, std::uintptr_t offset) noexcept
+ *	\brief Helper for pointer arithematic on void pointers.
+ *	\param addr The address to subtract an offset from.
+ *	\param offset The offset to subtract.
+ *	\returns Returns the address - the offset.
+ *	\pre offset < reinterpret_cast<std::uintptr_t>(addr)
+ *	\details The type std::uintptr_t is required to be large enough to hold the
+ *	\details address of any pointer type.
+ *	\details Therefore casting pointers to and from that type is safe when
+ *	\details using a standard compliant compiler and standard library combo.
+ *	\warning Does not checked for overflow.
+ */
+inline constexpr void *sub_offset(void *addr, std::uintptr_t offset) noexcept {
+	return reinterpret_cast<void *>(reinterpret_cast<std::uintptr_t>(addr) - offset);
+}
+
+/**	\fn sub_addr(void *addr, void *sub) noexcept
+ *	\brief Helper for subtracting pointers.
+ *	\param addr The address to subtract from.
+ *	\param sub The address to subtract.
+ *	\returns Returns addr - sub.
+ *	\details The type ptrdiff_t is meant for holding the difference between pointers.
+ *	\warning Does not checked for overflow.
+ */
+inline constexpr std::ptrdiff_t sub_addr(void *addr, void *sub) noexcept {
+	if (sub <= addr) {
+		return reinterpret_cast<std::uintptr_t>(addr) - reinterpret_cast<std::uintptr_t>(sub);
+	} else {
+		std::ptrdiff_t temp{reinterpret_cast<std::uintptr_t>(sub) - reinterpret_cast<std::uintptr_t>(addr)};
+		return -temp;
+	}
 }
 
 }
