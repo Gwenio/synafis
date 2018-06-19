@@ -96,6 +96,11 @@ private:
 	 */
 	vmem region;
 
+	/**	\var capacity
+	 *	\brief The number of slots in the pool.
+	 */
+	std::size_t const capacity;
+
 	/**	\var unit
 	 *	\brief The allocation unit size.
 	 *	\note At least the sizeof the type being allocated and a multiple of its alignof.
@@ -116,7 +121,8 @@ private:
 
 	/**	\var space
 	 *	\brief The number of free slots.
-	 *	\invariant If free == nullptr then space == 0.
+	 *	\invariant If and only if free == nullptr then space == 0.
+	 *	\invariant space <= capacity
 	 */
 	std::size_t space;
 
@@ -124,12 +130,11 @@ private:
 	 *	\brief Tracks allocated slots. Is a pointer to an array.
 	 *	\details While nodes track free objects for allocation, the bitmap is
 	 *	\details needed to know if the finalizer should be called on a slot
-	 *	\details that is not marked. Traversing the free list takes longer
-	 *	\details than checking a know bit flag in terms of big O notation.
-	 *	\details
-	 *	\details The free stack is better than the bit map for finding an
-	 *	\details unknown free slot to allocate.
+	 *	\details that is not marked.
 	 *	\todo The bitmap is not needed for types without a finalizer.
+	 *	\note Could be done with a node list similar to free objects;
+	 *	\note however, if the pointer cannot be squeezed in after the
+	 *	\note object then it would take more memory than a bitmap.
 	 */
 	bit_group *bitmap;
 
@@ -180,20 +185,45 @@ private:
 	 */
 	pool(vmem && mem, identity const& id, std::size_t cap, std::size_t u, void *start) noexcept;
 public:
+	/**	\var min_unit
+	 *	\brief The minimum unit size for pool allocations.
+	 *	\invariant Must be a multiple of alignof(node *).
+	 */
+	static constexpr std::size_t const min_unit{sizeof(node *)};
+	static_assert(min_unit % alignof(node *) == 0,
+		"pool::min_unit must be a multiple of alignof(node *).");
+
 	/**	\fn ~pool() noexcept
 	 *	\brief Finalizes all objects and frees region.
 	 *	\note Pools are to have their destructor called directly.
 	 */
 	~pool() noexcept;
 
+	/**	\fn select_capacity(std::size_t unit) noexcept
+	 *	\brief Determines a good capacity for a pool with a given allocation unit.
+	 *	\param unit The size of the unit of allocation.
+	 *	\returns Returns the selected capacity.
+	 *	\pre Must be at least min unit.
+	 *	\todo Currently does not consider if the bitmap and colors array make
+	 *	\todo inefficent use of the last page they occupy.
+	 *	\todo However, that consideration only applies if the arrays can pass
+	 *	\todo the end of the page they start on.
+	 *	\see config::min_pool
+	 *	\see config::max_pool
+	 */
+	static std::size_t select_capacity(std::size_t unit) noexcept;
+
 	/**	\fn create(identity const& id, std::size_t unit) noexcept
 	 *	\brief Creates a new pool.
 	 *	\param id The type the pool allocates memory for.
+	 *	\param capacity The number of objects in the pool.
 	 *	\param unit The size of the unit of allocation.
 	 *	\returns Returns a new pool or nullptr if virtual memory could not be allocated.
+	 *	\pre Must be at least min unit.
 	 *	\note To deallocate the pool, directly call its destructor.
+	 *	\see select_capacity
 	 */
-	static pool *create(identity const& id, std::size_t unit) noexcept;
+	static pool *create(identity const& id, std::size_t capacity, std::size_t unit) noexcept;
 
 	/**	\fn allocate() noexcept
 	 *	\brief Allocates a free slot.
@@ -206,7 +236,7 @@ public:
 	 *	\brief Marks an object as reachable so it will not be deallocate be sweep.
 	 *	\param ptr The object to mark as reachable.
 	 *	\pre slots <= ptr < end
-	 *	\details Sets the appropriate bit in the color array.
+	 *	\details Sets the appropriate bit in the colors array.
 	 */
 	void mark(void *ptr) noexcept;
 
@@ -222,9 +252,17 @@ public:
 	/**	\fn sweep() noexcept
 	 *	\brief Deallocates all unmarked objects.
 	 *	\param ptr The object to mark as reachable.
-	 *	\details Sets the appropriate bit in the color array.
+	 *	\details Sets the appropriate bit in the colors array.
 	 */
 	void sweep() noexcept;
+
+	/**	\fn used() const noexcept
+	 *	\brief Gets the number of allocated slots.
+	 *	\returns capacity - space
+	 */
+	std::size_t used() const noexcept {
+		return capacity - space;
+	}
 
 	/**	\fn available() const noexcept
 	 *	\brief Gets the number of free slots.

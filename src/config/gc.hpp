@@ -35,19 +35,44 @@ PERFORMANCE OF THIS SOFTWARE.
 #define SYNAFIS_CONFIG_GUARD_PAGES (config::debug)
 #endif
 
+#ifndef SYNAFIS_CONFIG_MIN_POOL
+#define SYNAFIS_CONFIG_MIN_POOL (sizeof(std::size_t) * 8)
+#endif
+
+#ifndef SYNAFIS_CONFIG_MAX_POOL
+#define SYNAFIS_CONFIG_MAX_POOL (sizeof(std::size_t) * 8)
+#endif
+
 namespace config {
 
 /**	\var guard_pages
  *	\brief Controls the presence and number of guard pages for blocks of virtual memory.
  *	\details Set to the preprocessor definition SYNAFIS_CONFIG_GUARD_PAGE.
+ *	\details
  *	\details Guard pages are page(s) of inaccessible memory separating
  *	\details accessible regions.
+ *	\details
  *	\details This detects some memory issues as an error will occur
  *	\details if the program touches a guard page.
  *	\details Due to how virtual memory is used in the collector, the detection
  *	\details provided by this alone is limited.
  */
 inline constexpr bool const guard_pages = SYNAFIS_CONFIG_GUARD_PAGES;
+
+/**	\var min_pool
+ *	\brief The minimum number of objects a pool can hold.
+ *	\details Set to the preprocessor definition SYNAFIS_CONFIG_MIN_POOL.
+ */
+inline constexpr std::size_t const min_pool = SYNAFIS_CONFIG_MIN_POOL;
+
+/**	\var max_pool
+ *	\brief The maximum number of pages to use for objects in a pool.
+ *	\details Set to the preprocessor definition SYNAFIS_CONFIG_MAX_PAGE.
+ *	\details
+ *	\details The variable min_pool takes priority if min_pool objects
+ *	\details need more space than max_pool pages.
+ */
+inline constexpr std::size_t const max_pool = SYNAFIS_CONFIG_MAX_POOL;
 
 }
 
