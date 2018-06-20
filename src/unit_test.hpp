@@ -19,10 +19,17 @@ PERFORMANCE OF THIS SOFTWARE.
 
 #ifndef SYNAFIS_UNIT_TEST_HPP
 #define SYNAFIS_UNIT_TEST_HPP
+#pragma once
 
 /**	\file unit_test.hpp
  *	\brief Defines utilities for constructing unit tests.
  */
+
+/**	\dir unit_test
+ *	\brief Contains the headers defining testing infostructure.
+ */
+
+#include <string_view>
 
 /**	\namespace unit_test
  *	\brief Contains utilities for constructing unit tests.
@@ -36,11 +43,32 @@ namespace unit_test {
 template<typename T>
 class tester;
 
+/**	\fn fail_msg(std::string_view msg) noexcept
+ *	\brief Sets the current test status to fail.
+ *	\param msg A message about why the test failed.
+ *	\details Defined in the test runner source.
+ *	\note Thread safe.
+ */
+void fail_msg(std::string_view msg) noexcept;
+
 }
 
+/**	\macro SYNAFIS_ASSERT(x)
+ *	\brief Determine if if the expression 'x' is true.
+ *	\param x The expression to evaluate.
+ *	\pre 'x' should not have side affects.
+ *	\details In unit testing will case the current case to fail if evaluates false.
+ *	\details
+ *	\details For debugging will use assert(x) from <cassert>.
+ *	\details
+ *	\details Otherwise will be omitted so as to not impact release proformace.
+ */
 #if defined(SYNAFIS_UNIT_TEST)
-#warning Unit Test macros are not yet implemented.
-#define SYNAFIS_ASSERT(x)
+
+#define SYNAFIS_ASSERT(x) if (!(x)) { \
+	::unit_test::case_type::context::fail_msg(#x); \
+}
+
 #elif !defined(NDEBUG)
 // Use generic assert for debug without unit testing.
 #include <cassert>
