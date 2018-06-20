@@ -31,10 +31,7 @@ PERFORMANCE OF THIS SOFTWARE.
 
 // Set default configurations for those not specified.
 
-#if defined(NDEBUG) && defined(DEBUG)
-#error Only one of NDEBUG or DEBUG should be defined in the preprocessor.
-#elif defined(NDEBUG) || !defined(DEBUG)
-// Default to not debugging.
+#ifdef NDEBUG
 #define SYNAFIS_CONFIG_DEBUG false
 #else
 #define SYNAFIS_CONFIG_DEBUG true
