@@ -46,10 +46,12 @@ class tester;
 /**	\fn fail_msg(std::string_view msg) noexcept
  *	\brief Sets the current test status to fail.
  *	\param msg A message about why the test failed.
+ *	\param lineno The line number the failure occurred at.
+ *	\param file The file the failure occurred in.
  *	\details Defined in the test runner source.
  *	\note Thread safe.
  */
-void fail_msg(std::string_view msg) noexcept;
+void fail_msg(std::string_view msg, int lineno, std::string_view file) noexcept;
 
 }
 
@@ -65,9 +67,7 @@ void fail_msg(std::string_view msg) noexcept;
  */
 #if defined(SYNAFIS_UNIT_TEST)
 
-#define SYNAFIS_ASSERT(x) if (!(x)) { \
-	::unit_test::case_type::context::fail_msg(#x); \
-}
+#define SYNAFIS_ASSERT(x) if (!(x)) { ::unit_test::case_type::context::fail_msg(#x, __LINE__, __FILE__); }
 
 #elif !defined(NDEBUG)
 // Use generic assert for debug without unit testing.

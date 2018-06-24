@@ -178,7 +178,7 @@ public:
 			try {
 				(*test)(out);
 			} catch(...) {
-				fail_msg("The test case exited with an unexpected exception.");
+				fail_msg("The test case exited with an unexpected exception.", __LINE__, __FILE__);
 			}
 			status temp{context::get()};
 			out.end(temp);

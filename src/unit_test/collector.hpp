@@ -67,11 +67,13 @@ public:
 	 */
 	virtual void end(status result) noexcept = 0;
 
-	/**	\fn message(std::string_view msg) noexcept
+	/**	\fn message(std::string_view msg, int lineno, std::string_view file) noexcept
 	 *	\brief The method for test cases to output messages.
 	 *	\param msg A message from the current test case.
+	 *	\param lineno The line number of the message.
+	 *	\param file The file the message is from.
 	 */
-	virtual void message(std::string_view msg) noexcept = 0;
+	virtual void message(std::string_view msg, int lineno, std::string_view file) noexcept = 0;
 
 	/**	\fn up(std::string_view name)
 	 *	\brief Move to the first child of the current test suite.
