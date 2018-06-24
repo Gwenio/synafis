@@ -63,8 +63,9 @@ void vmem::deallocate(void *ptr) noexcept {
 }
 
 void *vmem::operator[](std::size_t offset) const noexcept {
+	SYNAFIS_ASSERT(ptr != nullptr);
 	SYNAFIS_ASSERT(offset < len);
-	return ptr ? add_offset(ptr, offset) : nullptr;
+	return add_offset(ptr, offset);
 }
 
 void *vmem::at(std::size_t offset) const {
@@ -72,7 +73,7 @@ void *vmem::at(std::size_t offset) const {
 		if (offset < len) {
 			return add_offset(ptr, offset);
 		} else {
-			throw std::logic_error{"Precondition (offset < len) violated."};
+			throw std::out_of_range{"Precondition (offset < len) violated."};
 		}
 	} else {
 		throw std::logic_error{"Precondition (ptr != nullptr) violated."};
@@ -85,6 +86,9 @@ bool vmem::forbid(std::size_t offset, std::size_t length) noexcept {
 	void *temp{(*this)[offset]};
 	SYNAFIS_ASSERT(ptr <= temp);
 	SYNAFIS_ASSERT((offset + length) <= len);
+	if ((offset + length) > len) {
+		throw std::out_of_range{"Precondition (offset + length > len) violated."};
+	}
 	DWORD old{0};
 	return VirtualProtect(temp, length, PAGE_NOACCESS, &old);
 }
@@ -95,6 +99,9 @@ bool vmem::readonly(std::size_t offset, std::size_t length) noexcept {
 	void *temp{(*this)[offset]};
 	SYNAFIS_ASSERT(ptr <= temp);
 	SYNAFIS_ASSERT((offset + length) <= len);
+	if ((offset + length) > len) {
+		throw std::out_of_range{"Precondition (offset + length > len) violated."};
+	}
 	DWORD old{0};
 	return VirtualProtect(temp, length, PAGE_READONLY, &old);
 }
@@ -105,6 +112,9 @@ bool vmem::writable(std::size_t offset, std::size_t length) noexcept {
 	void *temp{(*this)[offset]};
 	SYNAFIS_ASSERT(ptr <= temp);
 	SYNAFIS_ASSERT((offset + length) <= len);
+	if ((offset + length) > len) {
+		throw std::out_of_range{"Precondition (offset + length > len) violated."};
+	}
 	DWORD old{0};
 	return VirtualProtect(temp, length, PAGE_READWRITE, &old);
 }

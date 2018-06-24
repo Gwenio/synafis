@@ -196,7 +196,7 @@ public:
 	 *	\brief Gets the pointer for an offset into the virtual memory.
 	 *	\param offset The offset into the block to get a pointer for.
 	 *	\returns The pointer to the offset from the beginning of the block.
-	 *	\returns Returns nullptr if ptr is nullptr.
+	 *	\pre ptr != nullptr
 	 *	\pre offset < len
 	 *	\warning The precondition is only checked with SYNAFIS_ASSERT,
 	 *	\warning which does nothing when not debugging or testing.
