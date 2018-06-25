@@ -81,11 +81,7 @@ void *vmem::at(std::size_t offset) const {
 }
 
 bool vmem::forbid(std::size_t offset, std::size_t length) noexcept {
-	SYNAFIS_ASSERT(ptr != nullptr);
-	SYNAFIS_ASSERT(0 < length);
 	void *temp{(*this)[offset]};
-	SYNAFIS_ASSERT(ptr <= temp);
-	SYNAFIS_ASSERT((offset + length) <= len);
 	if ((offset + length) > len) {
 		throw std::out_of_range{"Precondition (offset + length > len) violated."};
 	}
@@ -94,11 +90,7 @@ bool vmem::forbid(std::size_t offset, std::size_t length) noexcept {
 }
 
 bool vmem::readonly(std::size_t offset, std::size_t length) noexcept {
-	SYNAFIS_ASSERT(ptr != nullptr);
-	SYNAFIS_ASSERT(0 < length);
 	void *temp{(*this)[offset]};
-	SYNAFIS_ASSERT(ptr <= temp);
-	SYNAFIS_ASSERT((offset + length) <= len);
 	if ((offset + length) > len) {
 		throw std::out_of_range{"Precondition (offset + length > len) violated."};
 	}
@@ -107,11 +99,7 @@ bool vmem::readonly(std::size_t offset, std::size_t length) noexcept {
 }
 
 bool vmem::writable(std::size_t offset, std::size_t length) noexcept {
-	SYNAFIS_ASSERT(ptr != nullptr);
-	SYNAFIS_ASSERT(0 < length);
 	void *temp{(*this)[offset]};
-	SYNAFIS_ASSERT(ptr <= temp);
-	SYNAFIS_ASSERT((offset + length) <= len);
 	if ((offset + length) > len) {
 		throw std::out_of_range{"Precondition (offset + length > len) violated."};
 	}
