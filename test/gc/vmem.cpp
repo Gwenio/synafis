@@ -330,6 +330,11 @@ public:
 			is_writable(temp, vmem::page_size, vmem::page_size) &&
 			is_writable(temp, vmem::page_size * 2, vmem::page_size) &&
 			no_access(temp, vmem::page_size * 3, vmem::page_size));
+		temp.forbid(vmem::page_size, vmem::page_size);
+		SYNAFIS_ASSERT(no_access(temp, 0, vmem::page_size) &&
+			no_access(temp, vmem::page_size, vmem::page_size) &&
+			is_writable(temp, vmem::page_size * 2, vmem::page_size) &&
+			no_access(temp, vmem::page_size * 3, vmem::page_size));
 	}
 };
 
