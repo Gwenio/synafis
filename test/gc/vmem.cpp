@@ -283,9 +283,9 @@ public:
 	static void access(collector &) {
 		vmem temp{vmem::page_size, true};
 		SYNAFIS_ASSERT(temp[0] == temp.ptr);
-		SYNAFIS_ASSERT(temp[vmem::page_size / 2] == gc::add_offset(temp2.ptr, temp2.size / 2));
-		SYNAFIS_ASSERT(temp[vmem::page_size - 1] == gc::add_offset(temp2.ptr, temp2.size - 1));
-		SYNAFIS_ASSERT(temp.at(0) == temp.[0]);
+		SYNAFIS_ASSERT(temp[vmem::page_size / 2] == gc::add_offset(temp.ptr, temp.size / 2));
+		SYNAFIS_ASSERT(temp[vmem::page_size - 1] == gc::add_offset(temp.ptr, temp.size - 1));
+		SYNAFIS_ASSERT(temp.at(0) == temp[0]);
 		SYNAFIS_ASSERT(temp.at(vmem::page_size / 2) == temp[vmem::page_size / 2]);
 		SYNAFIS_ASSERT(temp.at(vmem::page_size - 1) == temp[vmem::page_size - 1]);
 		bool threw{false};
@@ -295,7 +295,7 @@ public:
 			threw = true;
 		}
 		if (!threw) {
-			fail_msg("Out of bounds vmem::at should throw std::logic_error." __LINE__,
+			fail_msg("Out of bounds vmem::at should throw std::logic_error.", __LINE__,
 				__FILE__);
 		}
 		threw = false;
@@ -306,7 +306,7 @@ public:
 			threw = true;
 		}
 		if (!threw) {
-			fail_msg("vmem::at should throw std::logic_error when ptr == nullptr." __LINE__,
+			fail_msg("vmem::at should throw std::logic_error when ptr == nullptr.", __LINE__,
 				__FILE__);
 		}
 	}
