@@ -87,6 +87,7 @@ public:
 	 *	\brief Run the test cases of a suite, its children, and its siblings.
 	 *	\param out The collector of test results.
 	 *	\param root The initial suite.
+	 *	\note Child suites are to be run before the test cases of the suite.
 	 */
 	static void run(collector &out, suite &root);
 };

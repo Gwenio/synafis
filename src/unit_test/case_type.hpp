@@ -169,7 +169,8 @@ public:
 	 *	\details before starting their own testing to check for
 	 *	\details conditions where they should be skip.
 	 *	\details However, to give the collector correct singals,
-	 *	\details only tests from the same suite should be checked.
+	 *	\details only tests from the same suite or from children
+	 *	\details of that suite should have their results checked.
 	 */
 	status operator()(collector &out) noexcept {
 		if (!result) {
