@@ -874,7 +874,6 @@ const driver = pipeline(options.jobs, {
 							((_.size(steps) < 1) || _.some(steps, (x) => x == step)) &&
 								((_.size(rules) < 1) || _.some(rules, (y) => y == rule))
 						const temp = _.find(list, filter)
-						display({step, rule, id, temp, list}, 2)
 						return _.isNil(temp)? inner :
 							_.set(inner, id, temp.value)
 					}, {})),
@@ -1119,9 +1118,9 @@ const driver = pipeline(options.jobs, {
 		async ({NinjaCfg}) => {writer.defs(NinjaCfg.defaults)}]
 }).then((results) => {
 	console.log('Completed.')
-	display(_.pick(results,
-		['PartVars', 'BuildActions', 'BuildVars']),
-		options.verbose)
+	if (options.verbose >= 1) {
+		display(results, options.verbose)
+	}
 }, (err) => {throw err}).catch((err) => {
 	console.log('Error!')
 	console.log(err)
