@@ -21,17 +21,29 @@ It also draws inspiration from Pharo Smalltalk and Elixir.
 
 ## Building
 
-The 'ninjagen.rb' Ruby script for generating the build files for the project.
+The 'setup.js' Node script for generating the build files for the project.
 
-Pass '--config' to create a default build configuration file (config.json).
+Run node -- setup.js --help to get a list of command line options.
 
-After editing 'config.json', run the script with '--project' to generate the files for Ninja.
+Create and fill out 'config.json' to configure the generated build file.
 
 Finally run Ninja in the directory containing the generated files.
 
 ## Requirements
 
-- Ruby 2.2 or higher with the 'yajl' gem installed.
+#### Setup.js Requirements
+
+- Node 10.0 or higher.
+- command-line-args 5.0.2
+- command-line-usage 5.0.5
+- jsonfile 5.0.0
+- lodash 4.17.10
+- asyncmachine 3.4.1
+- superstruct 0.6.0
+- neo-async 2.6.0 (async can be substituted if the require line is changed.)
+
+#### Build Requirements
+
 - Ninja version 1.7 or higher.
 - C++ Compiler (MSVC 2017 is the current baseline for expected standard support).
 
@@ -43,10 +55,11 @@ The documentation is written to be generated from the source files by Doxygen.
 - test			: Contains tests cases.
 - LICENSE		: The license for the project's code.
 - README.md		: This file.
-- ninjagen.rb	: Script for generating build files.
-- project.json	: Describes the project for ninjagen.rb.
-- config.json	: Configuration for ninjagen.rb.
-- *.ninja		: Ninja build files.
+- setup.md      : Documents setup.js and the associated json files.
+- setup.js	    : Script for generating build files.
+- project.json	: Describes the project for setup.js.
+- config.json	: Configuration for setup.js (this file is for the user to create).
+- build.ninja	: The Ninja build file.
 
 ## Developers
 
