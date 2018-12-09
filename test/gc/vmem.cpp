@@ -26,6 +26,7 @@ PERFORMANCE OF THIS SOFTWARE.
 
 #include <stdexcept>
 #include <windows.h>
+#include <iostream>
 
 namespace unit_test {
 
@@ -68,8 +69,9 @@ private:
 	 */
 	static bool no_access(vmem const& obj, std::size_t offset, std::size_t length) noexcept {
 		MEMORY_BASIC_INFORMATION info;
-		VirtualQuery(obj[offset], std::addressof(info), length);
-		return info.State == MEM_COMMIT && info.Protect == PAGE_NOACCESS;
+		memset(std::addressof(info), 0, sizeof(info));
+		VirtualQuery(obj[offset], std::addressof(info), sizeof(info));
+		return (info.Protect & PAGE_NOACCESS) == PAGE_NOACCESS;
 	}
 
 	/**	\fn no_readonly(vmem const& obj, std::size_t offset, std::size_t length) noexcept
@@ -81,8 +83,9 @@ private:
 	 */
 	static bool is_readonly(vmem const& obj, std::size_t offset, std::size_t length) noexcept {
 		MEMORY_BASIC_INFORMATION info;
-		VirtualQuery(obj[offset], std::addressof(info), length);
-		return info.State == MEM_COMMIT && info.Protect == PAGE_READONLY;
+		memset(std::addressof(info), 0, sizeof(info));
+		VirtualQuery(obj[offset], std::addressof(info), sizeof(info));
+		return (info.Protect & PAGE_READONLY) == PAGE_READONLY;
 	}
 
 	/**	\fn no_writable(vmem const& obj, std::size_t offset, std::size_t length) noexcept
@@ -94,8 +97,9 @@ private:
 	 */
 	static bool is_writable(vmem const& obj, std::size_t offset, std::size_t length) noexcept {
 		MEMORY_BASIC_INFORMATION info;
-		VirtualQuery(obj[offset], std::addressof(info), length);
-		return info.State == MEM_COMMIT && info.Protect == PAGE_READWRITE;
+		memset(std::addressof(info), 0, sizeof(info));
+		VirtualQuery(obj[offset], std::addressof(info), sizeof(info));
+		return (info.Protect & PAGE_READWRITE) == PAGE_READWRITE;
 	}
 
 	/**	\fn is_allocated(vmem const& obj) noexcept
@@ -105,8 +109,9 @@ private:
 	 */
 	static bool is_allocated(vmem const& obj) noexcept {
 		MEMORY_BASIC_INFORMATION info;
-		VirtualQuery(obj.ptr, std::addressof(info), obj.len);
-		return info.State == MEM_COMMIT;
+		memset(std::addressof(info), 0, sizeof(info));
+		VirtualQuery(obj.ptr, std::addressof(info), sizeof(info));
+		return (info.State & MEM_COMMIT) == MEM_COMMIT;
 	}
 
 	/**	\fn is_free(void *addr, std::size_t length) noexcept
@@ -117,8 +122,9 @@ private:
 	 */
 	static bool is_free(void *addr, std::size_t length) noexcept {
 		MEMORY_BASIC_INFORMATION info;
-		VirtualQuery(addr, std::addressof(info), length);
-		return info.State == MEM_FREE;
+		memset(std::addressof(info), 0, sizeof(info));
+		VirtualQuery(addr, std::addressof(info), sizeof(info));
+		return (info.State & MEM_FREE) == MEM_FREE;
 	}
 public:
 	/**	\fn sane_page_size(collector &)
@@ -321,20 +327,20 @@ public:
 		SYNAFIS_ASSERT(no_access(temp, vmem::page_size * 2, vmem::page_size));
 		SYNAFIS_ASSERT(no_access(temp, vmem::page_size * 3, vmem::page_size));
 		temp.readonly(vmem::page_size + 1, vmem::page_size * 2 - 2);
-		SYNAFIS_ASSERT(no_access(temp, 0, vmem::page_size) &&
-			is_readonly(temp, vmem::page_size, vmem::page_size) &&
-			is_readonly(temp, vmem::page_size * 2, vmem::page_size) &&
-			no_access(temp, vmem::page_size * 3, vmem::page_size));
+		SYNAFIS_ASSERT(no_access(temp, 0, vmem::page_size));
+		SYNAFIS_ASSERT(is_readonly(temp, vmem::page_size, vmem::page_size));
+		SYNAFIS_ASSERT(is_readonly(temp, vmem::page_size * 2, vmem::page_size));
+		SYNAFIS_ASSERT(no_access(temp, vmem::page_size * 3, vmem::page_size));
 		temp.writable(vmem::page_size * 2 - 1, 2);
-		SYNAFIS_ASSERT(no_access(temp, 0, vmem::page_size) &&
-			is_writable(temp, vmem::page_size, vmem::page_size) &&
-			is_writable(temp, vmem::page_size * 2, vmem::page_size) &&
-			no_access(temp, vmem::page_size * 3, vmem::page_size));
+		SYNAFIS_ASSERT(no_access(temp, 0, vmem::page_size));
+		SYNAFIS_ASSERT(is_writable(temp, vmem::page_size, vmem::page_size));
+		SYNAFIS_ASSERT(is_writable(temp, vmem::page_size * 2, vmem::page_size));
+		SYNAFIS_ASSERT(no_access(temp, vmem::page_size * 3, vmem::page_size));
 		temp.forbid(vmem::page_size, vmem::page_size);
-		SYNAFIS_ASSERT(no_access(temp, 0, vmem::page_size) &&
-			no_access(temp, vmem::page_size, vmem::page_size) &&
-			is_writable(temp, vmem::page_size * 2, vmem::page_size) &&
-			no_access(temp, vmem::page_size * 3, vmem::page_size));
+		SYNAFIS_ASSERT(no_access(temp, 0, vmem::page_size));
+		SYNAFIS_ASSERT(no_access(temp, vmem::page_size, vmem::page_size));
+		SYNAFIS_ASSERT(is_writable(temp, vmem::page_size * 2, vmem::page_size));
+		SYNAFIS_ASSERT(no_access(temp, vmem::page_size * 3, vmem::page_size));
 	}
 };
 
