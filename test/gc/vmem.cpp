@@ -350,26 +350,26 @@ using unit_test::skip;
 
 static unit_test::suite s{"vmem", unit_test::gc_suite};
 
-static c sane_page_size{"sane page size", s, pass, &t::sane_page_size};
-
-static c def_init{"default initialization", s, pass, &t::def_init};
-
-static c reg_init{"regular initialization", s, pass, &t::reg_init};
-
-static c move_init{"move initialization", s, pass, &t::move_init};
-
-static c destruct{"destructor", s, pass, &t::destruct};
-
-static c null_assign{"null assign", s, pass, &t::null_assign};
-
-static c move_assign{"move assign", s, pass, &t::move_assign};
-
-static c bool_convert{"bool_convert", s, pass, &t::bool_convert};
-
-static c bounds{"bounds", s, pass, &t::bounds};
+static c protect{"protect", s, pass, &t::protect};
 
 static c access{"access", s, pass, &t::access};
 
-static c protect{"protect", s, pass, &t::protect};
+static c bounds{"bounds", s, pass, &t::bounds};
+
+static c bool_convert{"bool_convert", s, pass, &t::bool_convert};
+
+static c move_assign{"move assign", s, pass, &t::move_assign};
+
+static c null_assign{"null assign", s, pass, &t::null_assign};
+
+static c destruct{"destructor", s, pass, &t::destruct};
+
+static c move_init{"move initialization", s, pass, &t::move_init};
+
+static c reg_init{"regular initialization", s, pass, &t::reg_init};
+
+static c def_init{"default initialization", s, pass, &t::def_init};
+
+static c sane_page_size{"sane page size", s, pass, &t::sane_page_size};
 
 }
