@@ -42,7 +42,7 @@ namespace unit_test {
 /**	\var gc_suite
  *	\brief The main test suite for the garbage collector.
  */
-static suite gc_suite;
+extern suite gc_suite;
 
 }
 

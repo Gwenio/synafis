@@ -67,7 +67,7 @@ void fail_msg(std::string_view msg, int lineno, std::string_view file) noexcept;
  */
 #if defined(SYNAFIS_UNIT_TEST)
 
-#define SYNAFIS_ASSERT(x) if (!(x)) { ::unit_test::case_type::context::fail_msg(#x, __LINE__, __FILE__); }
+#define SYNAFIS_ASSERT(x) if (!(x)) { ::unit_test::fail_msg(#x, __LINE__, __FILE__); }
 
 #elif !defined(NDEBUG)
 // Use generic assert for debug without unit testing.

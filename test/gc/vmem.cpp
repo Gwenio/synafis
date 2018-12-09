@@ -55,8 +55,8 @@ private:
 	 *	\returns Returns true if obj satisfy invariants.
 	 */
 	static bool invariants(vmem const& obj) noexcept {
-		return !obj.ptr && obj.size == 0 ||
-			obj.ptr && 0 < obj.size && is_allocated(obj);
+		return !obj.ptr && (obj.len == 0) ||
+			obj.ptr && (0 < obj.len) && is_allocated(obj);
 	}
 
 	/**	\fn no_access(vmem const& obj, std::size_t offset, std::size_t length) noexcept
@@ -68,7 +68,7 @@ private:
 	 */
 	static bool no_access(vmem const& obj, std::size_t offset, std::size_t length) noexcept {
 		MEMORY_BASIC_INFORMATION info;
-		VirtualQuery(obj[offset], &info, length);
+		VirtualQuery(obj[offset], std::addressof(info), length);
 		return info.State == MEM_COMMIT && info.Protect == PAGE_NOACCESS;
 	}
 
@@ -81,7 +81,7 @@ private:
 	 */
 	static bool is_readonly(vmem const& obj, std::size_t offset, std::size_t length) noexcept {
 		MEMORY_BASIC_INFORMATION info;
-		VirtualQuery(obj[offset], &info, length);
+		VirtualQuery(obj[offset], std::addressof(info), length);
 		return info.State == MEM_COMMIT && info.Protect == PAGE_READONLY;
 	}
 
@@ -94,7 +94,7 @@ private:
 	 */
 	static bool is_writable(vmem const& obj, std::size_t offset, std::size_t length) noexcept {
 		MEMORY_BASIC_INFORMATION info;
-		VirtualQuery(obj[offset], &info, length);
+		VirtualQuery(obj[offset], std::addressof(info), length);
 		return info.State == MEM_COMMIT && info.Protect == PAGE_READWRITE;
 	}
 
@@ -105,7 +105,7 @@ private:
 	 */
 	static bool is_allocated(vmem const& obj) noexcept {
 		MEMORY_BASIC_INFORMATION info;
-		VirtualQuery(obj.ptr, &info, obj.size);
+		VirtualQuery(obj.ptr, std::addressof(info), obj.len);
 		return info.State == MEM_COMMIT;
 	}
 
@@ -117,7 +117,7 @@ private:
 	 */
 	static bool is_free(void *addr, std::size_t length) noexcept {
 		MEMORY_BASIC_INFORMATION info;
-		VirtualQuery(addr, &info, length);
+		VirtualQuery(addr, std::addressof(info), length);
 		return info.State == MEM_FREE;
 	}
 public:
@@ -136,7 +136,7 @@ public:
 	static void def_init(collector &) {
 		vmem temp{};
 		SYNAFIS_ASSERT(temp.ptr == nullptr);
-		SYNAFIS_ASSERT(temp.size == 0);
+		SYNAFIS_ASSERT(temp.len == 0);
 	}
 
 	/**	\fn reg_init(collector &)
@@ -146,14 +146,14 @@ public:
 		{
 			vmem temp{vmem::page_size, true};
 			SYNAFIS_ASSERT(temp.ptr != nullptr);
-			SYNAFIS_ASSERT(temp.size == vmem::page_size);
+			SYNAFIS_ASSERT(temp.len == vmem::page_size);
 			SYNAFIS_ASSERT(is_allocated(temp));
 			SYNAFIS_ASSERT(is_writable(temp, 0, vmem::page_size));
 		}
 		{
 			vmem temp{vmem::page_size, false};
 			SYNAFIS_ASSERT(temp.ptr != nullptr);
-			SYNAFIS_ASSERT(temp.size == vmem::page_size);
+			SYNAFIS_ASSERT(temp.len == vmem::page_size);
 			SYNAFIS_ASSERT(is_allocated(temp));
 			SYNAFIS_ASSERT(no_access(temp, 0, vmem::page_size));
 		}
@@ -273,7 +273,7 @@ public:
 		SYNAFIS_ASSERT(temp1.end() == nullptr);
 		SYNAFIS_ASSERT(temp1.size() == 0);
 		SYNAFIS_ASSERT(temp2.begin() == temp2.ptr);
-		SYNAFIS_ASSERT(temp2.end() == gc::add_offset(temp2.ptr, temp2.size));
+		SYNAFIS_ASSERT(temp2.end() == gc::add_offset(temp2.ptr, temp2.len));
 		SYNAFIS_ASSERT(temp2.size() == temp2.len);
 	}
 
@@ -283,8 +283,8 @@ public:
 	static void access(collector &) {
 		vmem temp{vmem::page_size, true};
 		SYNAFIS_ASSERT(temp[0] == temp.ptr);
-		SYNAFIS_ASSERT(temp[vmem::page_size / 2] == gc::add_offset(temp.ptr, temp.size / 2));
-		SYNAFIS_ASSERT(temp[vmem::page_size - 1] == gc::add_offset(temp.ptr, temp.size - 1));
+		SYNAFIS_ASSERT(temp[vmem::page_size / 2] == gc::add_offset(temp.ptr, temp.len / 2));
+		SYNAFIS_ASSERT(temp[vmem::page_size - 1] == gc::add_offset(temp.ptr, temp.len - 1));
 		SYNAFIS_ASSERT(temp.at(0) == temp[0]);
 		SYNAFIS_ASSERT(temp.at(vmem::page_size / 2) == temp[vmem::page_size / 2]);
 		SYNAFIS_ASSERT(temp.at(vmem::page_size - 1) == temp[vmem::page_size - 1]);
@@ -316,10 +316,10 @@ public:
 	 */
 	static void protect(collector &) {
 		vmem temp{vmem::page_size * 4, false};
-		SYNAFIS_ASSERT(no_access(temp, 0, vmem::page_size) &&
-			no_access(temp, vmem::page_size, vmem::page_size) &&
-			no_access(temp, vmem::page_size * 2, vmem::page_size) &&
-			no_access(temp, vmem::page_size * 3, vmem::page_size));
+		SYNAFIS_ASSERT(no_access(temp, 0, vmem::page_size));
+		SYNAFIS_ASSERT(no_access(temp, vmem::page_size, vmem::page_size));
+		SYNAFIS_ASSERT(no_access(temp, vmem::page_size * 2, vmem::page_size));
+		SYNAFIS_ASSERT(no_access(temp, vmem::page_size * 3, vmem::page_size));
 		temp.readonly(vmem::page_size + 1, vmem::page_size * 2 - 2);
 		SYNAFIS_ASSERT(no_access(temp, 0, vmem::page_size) &&
 			is_readonly(temp, vmem::page_size, vmem::page_size) &&
@@ -348,7 +348,7 @@ using unit_test::pass;
 using unit_test::fail;
 using unit_test::skip;
 
-static unit_test::suite s{"vmem", gc_suite};
+static unit_test::suite s{"vmem", unit_test::gc_suite};
 
 static c sane_page_size{"sane page size", s, pass, &t::sane_page_size};
 

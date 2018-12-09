@@ -268,7 +268,7 @@ public:
 /**	\var master
  *	\brief The primary test suite all other will be children of.
  */
-static unit_test::suite master{"master"};
+extern unit_test::suite master{"master"};
 
 /**	\var output
  *	\brief The collector of the test runner.

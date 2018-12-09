@@ -70,10 +70,13 @@ inline constexpr void *sub_offset(void *addr, std::uintptr_t offset) noexcept {
  */
 inline constexpr std::ptrdiff_t sub_addr(void *addr, void *sub) noexcept {
 	if (sub <= addr) {
-		return reinterpret_cast<std::uintptr_t>(addr) - reinterpret_cast<std::uintptr_t>(sub);
+		return static_cast<std::ptrdiff_t>(
+			reinterpret_cast<std::uintptr_t>(addr) -
+				reinterpret_cast<std::uintptr_t>(sub));
 	} else {
-		std::ptrdiff_t temp{reinterpret_cast<std::uintptr_t>(sub) - reinterpret_cast<std::uintptr_t>(addr)};
-		return -temp;
+		return -static_cast<std::ptrdiff_t>(
+			reinterpret_cast<std::uintptr_t>(sub) -
+				reinterpret_cast<std::uintptr_t>(addr));
 	}
 }
 
