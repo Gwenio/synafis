@@ -252,7 +252,6 @@ public:
 	virtual void down() override {
 		std::lock_guard<std::mutex> l{msg_lock};
 		indent--;
-		std::cout << std::endl;
 	}
 
 	/**	\fn init(std::string_view start)
