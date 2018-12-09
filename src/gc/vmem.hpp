@@ -139,13 +139,14 @@ public:
 	 *	\brief Moves the virtual memory from other to this.
 	 */
 	constexpr vmem &operator=(vmem && other) noexcept {
-		if (other.ptr) {
+		if (std::addressof(other) == this) {
+			return *this;
+		} else if (other.ptr) {
 			if (ptr) {
 				deallocate(ptr);
 			}
 			ptr = std::exchange(other.ptr, nullptr);
 			len = std::exchange(other.len, 0);
-			return *this;
 		} else {
 			return *this = nullptr;
 		}
