@@ -145,6 +145,7 @@ public:
 	 *	\warning It is assumed that static variable contructors are run on a single thread and
 	 *	\warning that the constexpr initialization is preformed for all suites before non-constexpr
 	 *	\warning constructors.
+	 *	\note Test cases will be run in the opposite order they are added to a suite. (LIFO)
 	 */
 	case_type(std::string_view n, suite &parent, status ex, test_cb cb) noexcept :
 			case_type(n, ex, cb) {
