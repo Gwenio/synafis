@@ -48,6 +48,11 @@ public:
 	 *	\brief Shorthand for the class being tested.
 	 */
 	typedef gc::pool pool;
+
+	/**	\typedef handle
+	 *	\brief Shorthand for a pool::handle.
+	 */
+	typedef pool::handle handle;
 private:
 public:
 };

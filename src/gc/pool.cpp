@@ -177,9 +177,9 @@ std::size_t pool::select_capacity(std::size_t unit) noexcept {
 	}
 }
 
-pool *pool::create(identity const& id, std::size_t capacity, std::size_t unit) noexcept {
+pool::handle::handle(identity const& id, std::size_t capacity, std::size_t unit) : handle() {
 	// The unit size of slots must be able to hold a node pointer.
-	SYNAFIS_ASSERT(min_unit <= unit);
+	SYNAFIS_ASSERT(pool::min_unit <= unit);
 	std::size_t const guard{(config::guard_pages ? vmem::page_size : 0)};
 	//	Calculate size rounded up to the nearest multiple of vmem::page_size.
 	std::size_t size = capacity * unit;
@@ -196,9 +196,9 @@ pool *pool::create(identity const& id, std::size_t capacity, std::size_t unit) n
 			mem.writable(vmem::page_size, offset - (vmem::page_size * 2));
 			mem.writable(offset, size);
 		}
-		return new (mem[guard]) pool(std::move(mem), id, capacity, unit, mem[offset]);
+		ptr = new (mem[guard]) pool(std::move(mem), id, capacity, unit, mem[offset]);
 	} else {
-		return nullptr;
+		throw std::bad_alloc{};
 	}
 }
 

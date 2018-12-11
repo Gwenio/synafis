@@ -70,6 +70,159 @@ public:
 	 *	\brief Type for an element in bitmap state tracking arrays.
 	 */
 	typedef std::bitset<(sizeof(std::uintptr_t) * 8)> bit_group;
+
+	class handle {
+		// Shares a tester with pool.
+		friend unit_test::tester<pool>;
+	private:
+		/** \var ptr
+		 *	\brief The pointer to the managed pool object.
+		 */
+		pool *ptr;
+
+		/**	\fn destroy() noexcept
+		 *	\brief Destroys the owned pool.
+		 *	\pre ptr != nullptr
+		 */
+		void destroy() noexcept {
+			ptr->~pool();
+		}
+	public:
+		/**	\fn handle() noexcept
+		 *	\brief Initialize with a null pointer.
+		 */
+		constexpr handle() noexcept : ptr(nullptr) {}
+
+		/**	\fn handle(std::nullptr_t) noexcept
+		 *	\brief Initialize with a null pointer.
+		 */
+		constexpr handle(std::nullptr_t) noexcept : handle() {}
+
+		/**	\fn handle(handle const&)
+		 *	\brief Deleted.
+		 */
+		handle(handle const&) = delete;
+
+		/**	\fn handle(handle &&other)
+		 *	\brief Moves the pointer of other to this.
+		 *	\param other The handle to take ownership from.
+		 */
+		handle(handle &&other) noexcept :
+			ptr(std::exchange(other.ptr, nullptr)) {}
+
+		/**	\fn create(identity const& id, std::size_t unit) noexcept
+		 *	\brief Creates a new pool.
+		 *	\param id The type the pool allocates memory for.
+		 *	\param capacity The number of objects in the pool.
+		 *	\param unit The size of the unit of allocation.
+		 *	\returns Returns a new pool or nullptr if virtual memory could not be allocated.
+		 *	\pre Must be at least min unit.
+		 *	\note To deallocate the pool, directly call its destructor.
+		 *	\see select_capacity
+		 */
+		handle(identity const& id, std::size_t capacity, std::size_t unit);
+
+		/**	\fn ~handle() noexcept
+		 *	\brief Destroys ptr if it is not null.
+		 */
+		~handle() noexcept {
+			if (ptr) {
+				destroy();
+			}
+		}
+
+		/**	\fn handle &operator=(std::nullptr_t) noexcept
+		 *	\brief Initialize with a null pointer.
+		 */
+		handle &operator=(std::nullptr_t) noexcept {
+			if (ptr) {
+				destroy();
+				ptr = nullptr;
+			}
+			return *this;
+		}
+
+		/**	\fn handle &operator=(handle const&)
+		 *	\brief Deleted.
+		 */
+		handle &operator=(handle const&) = delete;
+
+		/**	\fn handle &operator=(handle &&other) noexcept
+		 *	\brief Moves the pointer of other to this.
+		 *	\param other The handle to take ownership from.
+		 */
+		handle &operator=(handle &&other) noexcept {
+			if (std::addressof(other) != this) {
+				if (ptr) {
+					destroy();
+				}
+				ptr = std::exchange(other.ptr, nullptr);
+			}
+			return *this;
+		}
+
+		/**	\fn allocate() noexcept
+		 *	\brief Allocates a free slot.
+		 *	\returns Returns ptr->allocate().
+		 *	\pre ptr != nullptr
+		 *	\see pool::allocate
+		 */
+		void *allocate() noexcept;
+
+		/**	\fn mark(void *addr) noexcept
+		 *	\brief Marks an object as reachable so it will not be deallocate be sweep.
+		 *	\param addr The object to mark as reachable.
+		 *	\details Calls ptr->mark(addr).
+		 *	\pre ptr != nullptr
+		 *	\see pool::mark
+		 */
+		void mark(void *addr) noexcept {
+			ptr->mark(addr);
+		}
+
+		/**	\fn from(void *addr) const noexcept
+		 *	\brief Checks if a pointer is from the pool.
+		 *	\param addr The object to check.
+		 *	\returns ptr->from(addr)
+		 *	\pre ptr != nullptr
+		 *	\see pool::from
+		 */
+		bool from(void *addr) const noexcept {
+			return ptr->from(addr);
+		}
+
+		/**	\fn sweep() noexcept
+		 *	\brief Deallocates all unmarked objects.
+		 *	\details Calles ptr->sweep().
+		 *	\pre ptr != nullptr
+		 *	\see pool::sweep
+		 */
+		void sweep() noexcept {
+			ptr->sweep();
+		}
+
+		/**	\fn used() const noexcept
+		 *	\brief Gets the number of allocated slots.
+		 *	\returns ptr->used().
+		 *	\pre ptr != nullptr
+		 *	\see pool::used
+		 */
+		std::size_t used() const noexcept {
+			return ptr->used();
+		}
+
+		/**	\fn available() const noexcept
+		 *	\brief Gets the number of free slots.
+		 *	\returns ptr->available().
+		 *	\pre ptr != nullptr
+		 *	\see pool::available
+		 */
+		std::size_t available() const noexcept {
+			return ptr->available();
+		}
+	};
+
+	friend handle;
 private:
 	/**	\class node
 	 *	\brief Used to form a stack of free locations.
@@ -213,18 +366,6 @@ public:
 	 */
 	static std::size_t select_capacity(std::size_t unit) noexcept;
 
-	/**	\fn create(identity const& id, std::size_t unit) noexcept
-	 *	\brief Creates a new pool.
-	 *	\param id The type the pool allocates memory for.
-	 *	\param capacity The number of objects in the pool.
-	 *	\param unit The size of the unit of allocation.
-	 *	\returns Returns a new pool or nullptr if virtual memory could not be allocated.
-	 *	\pre Must be at least min unit.
-	 *	\note To deallocate the pool, directly call its destructor.
-	 *	\see select_capacity
-	 */
-	static pool *create(identity const& id, std::size_t capacity, std::size_t unit) noexcept;
-
 	/**	\fn allocate() noexcept
 	 *	\brief Allocates a free slot.
 	 *	\returns Returns a previously free slot or nullptr is there was not one.
@@ -251,7 +392,6 @@ public:
 
 	/**	\fn sweep() noexcept
 	 *	\brief Deallocates all unmarked objects.
-	 *	\param ptr The object to mark as reachable.
 	 *	\details Sets the appropriate bit in the colors array.
 	 */
 	void sweep() noexcept;
