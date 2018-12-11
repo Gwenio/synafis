@@ -49,7 +49,7 @@ inline constexpr auto const bitmap_offset =
 	((sizeof(gc::pool) % alignof(gc::pool::bit_group) == 0) ? sizeof(gc::pool) :
 			((sizeof(gc::pool) / alignof(gc::pool::bit_group)) + 1) * alignof(gc::pool::bit_group));
 
-static_assert(sizeof(pool) <= bitmap_offset,
+static_assert(sizeof(gc::pool) <= bitmap_offset,
 	"bitmap_offset must be larger than the size of a pool.");
 
 static_assert(bitmap_offset % alignof(gc::pool::bit_group) == 0,
