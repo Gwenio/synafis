@@ -140,7 +140,7 @@ public:
 	 *	\param other The hard_ptr to move.
 	 *	\post other == nullptr
 	 */
-	constexpr hard_ptr(hard_ptr && other) noexcept :
+	hard_ptr(hard_ptr && other) noexcept :
 		ptr(std::exchange(other.ptr, nullptr)),
 		type(std::exchange(other.type, nullptr)) {}
 
