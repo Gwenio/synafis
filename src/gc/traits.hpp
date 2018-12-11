@@ -48,7 +48,7 @@ typedef std::bitset<5> flag_type;
  *	\see movable<T>
  */
 template<typename T>
-class moveable_type : public std::is_trivial_copyable<T> {};
+class moveable_type : public std::is_trivially_copyable<T> {};
 
 /**	\var movable
  *	\brief A boolean value indicating if objects of a type can be moved by the collector.
@@ -64,7 +64,7 @@ class moveable_type : public std::is_trivial_copyable<T> {};
  *	\see movable_type<T>
  */
 template<typename T>
-inline constexpr bool const movable{moveable_type<std::remove_cv_t<T>>::value};
+inline constexpr bool const movable{movable_typ<std::remove_cv_t<T>>::value};
 
 /**	\class readonly_type
  *	\brief Trait to check if objects allow mutation.
@@ -120,23 +120,25 @@ inline constexpr bool const pointers{pointers_type<std::remove_cv_t<T>>::value};
 /**	\class finalize_type
  *	\brief Trait for getting the finalize_cb for a type.
  *	\tparam T The type to set the callback for.
+ *	\tparam Enable Used to enable specializations with std::enable_if_t.
  *	\details For types that are trivially destructible, the value of the pointer will be nullptr.
  *	\details
  *	\details Other types will have it set to a lambda expression that calls the destructor.
  *	\note Only specialize for types that preform clean up outside of the destructor.
  *	\see finalizer<T>
  */
-template<typename T>
+template<typename T, typename Enable>
 class finalize_type;
 
 template<typename T>
-class finalize_type<std::enable_if_t<std::is_trivially_destructible_v<T>, T>> {
+class finalize_type<T, std::enable_if_t<std::is_trivially_destructible_v<T>, T>> {
 public:
 	static constexpr finalize_cb const value{nullptr};
 };
 
 template<typename T>
-class finalize_type<std::enable_if_t<(!std::is_trivially_destructible_v<T>), T>> {
+class finalize_type<T, std::enable_if_t<(std::is_destructible_v<T> &&
+	!std::is_trivially_destructible_v<T>), T>> {
 public:
 	static constexpr finalize_cb const value{
 		[](void *obj) noexcept -> void {
@@ -157,6 +159,7 @@ inline constexpr finalize_cb const finalizer{finalize_type<std::remove_cv_t<T>>:
 /**	\class traverse_type
  *	\brief Trait for getting the traverse_cb for a type.
  *	\tparam T The type to set the callback for.
+ *	\tparam Enable Used to enable specializations with std::enable_if_t.
  *	\details For types that do not contain pointers, set to nullptr.
  *	\details
  *	\details For other types, call the member function traverse(void *, enumerate_cb).
@@ -164,17 +167,17 @@ inline constexpr finalize_cb const finalizer{finalize_type<std::remove_cv_t<T>>:
  *	\see traverser<T>
  *	\see pointers<T>
  */
-template<typename T>
+template<typename T, typename Enable>
 class traverse_type;
 
 template<typename T>
-class traverse_type<std::enable_if_t<(!pointers<T>), T>> {
+class traverse_type<T, std::enable_if_t<(!pointers<T>), T>> {
 public:
 	static constexpr traverse_cb const value{nullptr};
 };
 
 template<typename T>
-class traverse_type<std::enable_if_t<(pointers<T>), T>> {
+class traverse_type<T, std::enable_if_t<(pointers<T>), T>> {
 public:
 	static constexpr traverse_cb const value{
 		[](void const* obj, void *data, enumerate_cb cb) noexcept -> void {
@@ -198,6 +201,7 @@ inline constexpr traverse_cb const traverser{traverse_type<std::remove_cv_t<T>>:
 /**	\var transfer(T &&orig, T &dest) noexcept
  *	\brief The function used to specify how to move objects of a type.
  *	\tparam T The type to transfer.
+ *	\tparam Enable Used to enable specializations with std::enable_if_t.
  *	\param orig The original location.
  *	\param dest The destination location.
  *	\details Used in defining relocate_type<T>.
@@ -210,16 +214,16 @@ inline constexpr traverse_cb const traverser{traverse_type<std::remove_cv_t<T>>:
  *	\see relocator_type<T>
  */
 template<typename T>
-transfer(T &&orig, T &dest) noexcept;
+void transfer(T &&orig, T &dest) noexcept;
 
 template<typename T>
-inline std::enable_if_t<std::is_nothrow_move_assignable_v>
+inline std::enable_if_t<std::is_nothrow_move_assignable_v<T>>
 transfer(T &&orig, T &dest) noexcept {
 	dest = std::forward<T>(orig);
 }
 
 template<typename T> inline
-std::enable_if_t<!std::is_nothrow_move_assignable_v && std::is_nothrow_copy_assignable_v>
+std::enable_if_t<!std::is_nothrow_move_assignable_v<T> && std::is_nothrow_copy_assignable_v<T>>
 transfer(T &&orig, T &dest) noexcept {
 	T const& temp{orig};
 	dest = temp;
@@ -228,6 +232,7 @@ transfer(T &&orig, T &dest) noexcept {
 /**	\class relocate_type
  *	\brief Trait for getting the relocate_cb for a type.
  *	\tparam T The type to set the callback for.
+ *	\tparam Enable Used to enable specializations with std::enable_if_t.
  *	\details If pointers<T>, the defined callback will call the member function remap(void *, remap_cb).
  *	\details
  *	\details For those that are movable<T> and need a relocate_cb, the callback calls
@@ -240,19 +245,19 @@ transfer(T &&orig, T &dest) noexcept {
  *	\see pointers<T>
  *	\see transfer(T &&, T &) noexcept
  */
-template<typename T>
+template<typename T, typename Enable>
 class relocate_type;
 
 template<typename T>
-class relocate_type<std::enable_if_t<(!pointers<T> &&
-	(std::is_trivially_copyable_v<T> || !movable<T>)), T>> {
+class relocate_type<T, std::enable_if_t<(!pointers<T> &&
+	(std::is_trivially_copyable_v<T> || !movable<T>))>> {
 public:
 	static constexpr relocate_cb const value{nullptr};
 };
 
 template<typename T>
-class relocate_type<std::enable_if_t<(!pointers<T> &&
-	!std::is_trivially_copyable_v<T> && movable<T>), T>> {
+class relocate_type<T, std::enable_if_t<(!pointers<T> &&
+	!std::is_trivially_copyable_v<T> && movable<T>)>> {
 public:
 	static constexpr relocate_cb const value{
 		[](void *orig, void *dest, void *, remap_cb) noexcept -> void {
@@ -266,7 +271,7 @@ public:
 };
 
 template<typename T>
-class relocate_type<std::enable_if_t<(pointers<T> && !movable<T>), T>> {
+class relocate_type<T, std::enable_if_t<(pointers<T> && !movable<T>)>> {
 public:
 	static constexpr relocate_cb const value{
 		[](void *orig, void *dest, void *data, enumerate_cb cb) noexcept -> void {
@@ -279,7 +284,7 @@ public:
 };
 
 template<typename T>
-class relocate_type<std::enable_if_t<(pointers<T> && movable<T>), T>> {
+class relocate_type<T, std::enable_if_t<(pointers<T> && movable<T>)>> {
 public:
 	static constexpr relocate_cb const value{
 		[](void *orig, void *dest, void *data, remap_cb cb) noexcept -> void {
@@ -322,6 +327,7 @@ bool compare(T const& lhs, T const& rhs) noexcept {
 
 /**	\class equality_type
  *	\brief Trait for getting the equality_cb for a type.
+ *	\tparam Enable Used to enable specializations with std::enable_if_t.
  *	\tparam T The type to set the callback for.
  *	\details If pointers<T>, the defined callback will call the member function remap(void *, remap_cb).
  *	\details
@@ -335,17 +341,17 @@ bool compare(T const& lhs, T const& rhs) noexcept {
  *	\see readonly<T>
  *	\see compare(T const&, T const&) noexcept
  */
-template<typename T>
+template<typename T, typename Enable>
 class equality_type;
 
 template<typename T>
-class equality_type<std::enable_if_t<(!readonly<T>), T>> {
+class equality_type<T, std::enable_if_t<(!readonly<T>)>> {
 public:
 	static constexpr equality_cb const value{nullptr};
 };
 
 template<typename T>
-class equality_type<std::enable_if_t<(readonly<T>), T>> {
+class equality_type<T, std::enable_if_t<(readonly<T>)>> {
 public:
 	static constexpr equality_cb const value{
 		[](void const* lhs, void const* rhs) noexcept -> bool {
