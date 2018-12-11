@@ -26,7 +26,6 @@ PERFORMANCE OF THIS SOFTWARE.
 
 #include <stdexcept>
 #include <windows.h>
-#include <iostream>
 
 namespace unit_test {
 

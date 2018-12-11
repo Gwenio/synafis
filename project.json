@@ -21,7 +21,8 @@
 			"prefix": "src/",
 			"suffix": ".cpp",
 			"files": [
-				"gc/vmem"
+				"gc/vmem",
+				"gc/pool"
 			]
 		},
 		{
@@ -30,7 +31,8 @@
 			"suffix": ".cpp",
 			"files": [
 				"unit_runner",
-				"gc/vmem"
+				"gc/vmem",
+				"gc/pool"
 			],
 			"filters": [
 				{
