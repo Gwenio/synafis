@@ -108,6 +108,7 @@ const NinjaSchema = struct.partial({
 	id: struct.literal('ninja'),
 	version: 'number?',
 	directory: 'string',
+	regenerate: 'string?',
 	pools: struct.list([struct.partial({
 		id: 'string',
 		depth: struct.intersection(['number', Number.isInteger])
@@ -625,11 +626,11 @@ class Build {
 			{})
 	}
 
-	static process_sources(sources, steps) {
+	static process_sources(root, sources, steps) {
 		return _.reduce(steps, (acc, item, id) =>
 			_.set(acc, id, _.map(item.sources, (src) => {
 					const files = _.map(_.map(_.get(sources, src.group, []),
-						(file) => path.parse(file)), (file) =>
+						(file) => path.parse(path.join(root, file))), (file) =>
 							_.set(file, 'origin', path.join(file.dir, file.name)))
 					return _.merge({files: files},
 						_.pick(src, ['implicit', 'produces']))
@@ -762,7 +763,15 @@ const cmd_args = [
 		type: String,
 		typeLabel: '{underline build.ninja}',
 		defaultValue: './build.ninja',
-		description: 'The output Ninja file. The directory is to be the current directory while building. [./build.ninja]'
+		description: 'The output Ninja file. Needs to be in the current directory. [./build.ninja]'
+	},
+	{
+		name: 'root',
+		alias: 'r',
+		type: String,
+		typeLabel: '{underline path}',
+		defaultValue: '.',
+		description: 'The path to the root of the source code. [./]'
 	},
 	{
 		name: 'jobs',
@@ -805,11 +814,24 @@ if (options.help) {
 	console.log(commandLineUsage(usage))
 } else {
 
-const build_root = path.resolve(path.dirname(options.output))
+if (path.dirname(options.output) != '.') {
+	throw new Error('The output should be located in the current directory.')
+}
 
-Directory.make(build_root)
+const source_root = options.root
 
 let writer = new NinjaWriter(options.output)
+
+// Appending a 'then' to the driver promise chain caused early exits.
+let exitListener = new EventEmitter()
+
+exitListener.once('success', function() {
+	this.once('exit', () => process.exit(0))
+})
+
+exitListener.once('failure', function() {
+	this.once('exit', () => process.exit(1))
+})
 
 const driver = pipeline(options.jobs, {
 	ReadProject: async () => jsonfile.readFile(options.project),
@@ -819,6 +841,8 @@ const driver = pipeline(options.jobs, {
 	Config: ['ReadConfig',
 		async ({ReadConfig: cfg}) => ConfigSchema(cfg)],
 	NinjaCfg: ['Config', async ({Config}) => Config.generator],
+	HasRegen: ['NinjaCfg', async ({NinjaCfg}) =>
+		_.has(NinjaCfg, 'regenerate') && NinjaCfg.regenerate != ''],
 	Variants: ['Project', 'Config',
 		async (results) => {
 			const [proj, cfg] = _.at(results, ['Project.variants', 'Config.variants'])
@@ -886,7 +910,7 @@ const driver = pipeline(options.jobs, {
 			_.set(acc, id, after), {})),
 	BuildSources:
 		partitioned(['MergeSources', 'PartSteps'],
-			Build.process_sources),
+			_.partial(Build.process_sources, source_root)),
 	Destinations: ['Config', async ({Config}) =>
 		Directory.process(Config.destinations)],
 	PartDests: partition('Variants', 'Destinations', (dirs, variant) =>
@@ -900,7 +924,7 @@ const driver = pipeline(options.jobs, {
 				[NinjaCfg.directory])],
 	MkDirs: ['DirList', async ({DirList}) => {
 		_.each(DirList, (dir) =>
-			Directory.make(path.normalize(path.join(build_root, dir))))
+			Directory.make(path.normalize(dir)))
 	}],
 	Extensions: ['Config', async ({Config}) => Config.extensions],
 	PartExts: ['Variants', 'Extensions',
@@ -1055,6 +1079,15 @@ const driver = pipeline(options.jobs, {
 					_.concat(_.get(imps, id, []),
 						_.get(outs, `${id}.single`, []),
 						_.get(outs, `${id}.multiple`, []))))), {})),
+	AppendRegen: ['BuildAfter', 'HasRegen',
+		async ({BuildAfter, HasRegen}) => {
+			if (HasRegen) {
+				_.each(BuildAfter, (part) =>
+					_.each(part, (step) =>
+						step.push({path: 'build.ninja'})))
+			}
+			return BuildAfter
+		}],
 	NinjaVersion: ['NinjaCfg', async ({NinjaCfg}) => {
 		writer.variable('ninja_required_version',
 			_.get(NinjaCfg, 'version', null), false)}],
@@ -1079,8 +1112,25 @@ const driver = pipeline(options.jobs, {
 		async ({NinjaRules: rules}) => {
 			_.reduce(rules, (acc, val, key) =>
 				acc.rule(val, key), writer)}],
+	NinjaRegen: ['NinjaRulesOut', 'HasRegen', async ({NinjaCfg, HasRegen}) => {
+			if (HasRegen) {
+				const rule = NinjaCfg.regenerate
+				const s = 'setup.js'
+				const p = options.project
+				const c = options.config
+				writer.rule({
+					command: `node -- ${s} -p ${p} -c ${c} -j ${options.jobs}`,
+					description: 'regen',
+					generator: 'true'
+				}, rule)
+				writer.build(Build.create(rule, {single: [], multiple: []},
+					[{path: 'build.ninja'}], [], _.map([p, c, s], (x) => {
+						return {path: x}
+					}), [], {}))
+			}
+		}],
 	NinjaBuilds: partitioned(['BuildActions', 'BuildOutputs', 'BuildImplicits',
-		'BuildInputs', 'BuildDepends', 'BuildAfter', 'BuildVars'],
+		'BuildInputs', 'BuildDepends', 'AppendRegen', 'BuildVars'],
 		(acts, outs, imps, ins, deps, afters, vars) =>
 			_.reduce(acts, (acc, action, id) => {
 				return _.concat(acc, Build.create(action, _.get(outs, id, []),
@@ -1088,7 +1138,7 @@ const driver = pipeline(options.jobs, {
 					_.get(deps, id, []), _.get(afters, id, []),
 					_.get(vars, id, {})))
 			}, [])),
-	NinjaBuildsOut: ['NinjaRulesOut', 'NinjaBuilds',
+	NinjaBuildsOut: ['NinjaRegen', 'NinjaBuilds',
 		async ({NinjaBuilds: parts}) => {
 			_.each(parts, (builds) =>
 				_.reduce(builds, (acc, val) => acc.build(val), writer))
@@ -1121,11 +1171,14 @@ const driver = pipeline(options.jobs, {
 	if (options.verbose >= 1) {
 		display(results, options.verbose)
 	}
+	exitListener.emit('succsess')
 }, (err) => {throw err}).catch((err) => {
 	console.log('Error!')
 	console.log(err)
+	exitListener.emit('failure')
 }).finally(() => {
 	writer.close()
+	exitListener.emit('exit')
 })
 
 }
