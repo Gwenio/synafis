@@ -172,7 +172,7 @@ public:
 	 */
 	template<typename T>
 	static void unregister(T &obj) {
-		unregister_impl(get_pointer(obj);
+		unregister_impl(get_pointer(obj));
 	}
 };
 
