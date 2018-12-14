@@ -21,26 +21,36 @@ PERFORMANCE OF THIS SOFTWARE.
  *	\brief Defines test cases for gc::pool.
  */
 
-#include "pool.hpp"
-#include "../master.hpp"
-#include "vmem.hpp"
-
-#include <stdexcept>
+#include "../../src/gc/pool.hpp"
 
 namespace unit_test {
 
-;
+/**	\class tester<gc::pool>
+ *	\brief Class with access to the interals of gc::pool to make tests.
+ */
+template<>
+class tester<gc::pool> {
+	/**	\fn tester()
+	 *	\brief Deleted.
+	 */
+	tester() = delete;
 
-}
+	/**	\fn ~tester()
+	 *	\brief Deleted.
+	 */
+	~tester() = delete;
+public:
+	/**	\typedef pool
+	 *	\brief Shorthand for the class being tested.
+	 */
+	typedef gc::pool pool;
 
-namespace {
-
-using t = unit_test::tester<gc::pool>;
-using c = unit_test::case_type;
-using unit_test::pass;
-using unit_test::fail;
-using unit_test::skip;
-
-static unit_test::suite s{"pool", unit_test::gc_suite};
+	/**	\typedef handle
+	 *	\brief Shorthand for a pool::handle.
+	 */
+	typedef pool::handle handle;
+private:
+public:
+};
 
 }
