@@ -84,6 +84,17 @@ public:
 	static void relocate(identity const& id, void *orig, void *dest, void *data, remap_cb cb) noexcept {
 		id.relocate(orig, dest, data, cb);
 	}
+
+	/**	\fn unit_size() noexcept
+	 *	\brief Gets the amount of memory to allocate to objects of a type.
+	 *	\tparam T The type to get the allocation unit for.
+	 *	\returns Returns the size of the allocation unit for objects of type T.
+	 *	\see identity::unit_size
+	 */
+	template<typename T>
+	static constexpr std::size_t unit_size() noexcept {
+		return identity::unit_size<T>();
+	}
 };
 
 /**	\typedef idaccess
