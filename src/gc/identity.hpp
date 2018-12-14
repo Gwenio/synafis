@@ -195,7 +195,7 @@ private:
 		}
 	}
 public:
-	/**	\fn identity()
+	/**	\fn identity(T *)
 	 *	\brief Constructs the identity for a type.
 	 *	\tparam T The type to construct an identity for.
 	 *	\post acb != nullptr
@@ -206,7 +206,7 @@ public:
 	 *	\details assertion are enabled.
 	 */
 	template<typename T>
-	identity() : identity(traits::finalizer<T>, traits::traverser<T>,
+	identity(T *) : identity(traits::finalizer<T>, traits::traverser<T>,
 		traits::relocator<T>, traits::equalizer<T>) {
 			std::tie(allocator, acb) =
 				select_alloc(*this, unit_size<T>(), traits::get_flags<T>());
