@@ -21,8 +21,11 @@
 			"prefix": "src/",
 			"suffix": ".cpp",
 			"files": [
+				"gc",
 				"gc/vmem",
-				"gc/pool"
+				"gc/pool",
+				"gc/hard_ptr",
+				"gc/soft_ptr"
 			]
 		},
 		{
