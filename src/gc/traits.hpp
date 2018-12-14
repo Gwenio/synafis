@@ -64,7 +64,7 @@ class moveable_type : public std::is_trivially_copyable<T> {};
  *	\see movable_type<T>
  */
 template<typename T>
-inline constexpr bool const movable{movable_typ<std::remove_cv_t<T>>::value};
+inline constexpr bool const movable{moveable_type<std::remove_cv_t<T>>::value};
 
 /**	\class readonly_type
  *	\brief Trait to check if objects allow mutation.
@@ -127,18 +127,18 @@ inline constexpr bool const pointers{pointers_type<std::remove_cv_t<T>>::value};
  *	\note Only specialize for types that preform clean up outside of the destructor.
  *	\see finalizer<T>
  */
-template<typename T, typename Enable>
+template<typename T, typename Enable = void>
 class finalize_type;
 
 template<typename T>
-class finalize_type<T, std::enable_if_t<std::is_trivially_destructible_v<T>, T>> {
+class finalize_type<T, std::enable_if_t<std::is_trivially_destructible_v<T>>> {
 public:
 	static constexpr finalize_cb const value{nullptr};
 };
 
 template<typename T>
 class finalize_type<T, std::enable_if_t<(std::is_destructible_v<T> &&
-	!std::is_trivially_destructible_v<T>), T>> {
+	!std::is_trivially_destructible_v<T>)>> {
 public:
 	static constexpr finalize_cb const value{
 		[](void *obj) noexcept -> void {
@@ -167,17 +167,17 @@ inline constexpr finalize_cb const finalizer{finalize_type<std::remove_cv_t<T>>:
  *	\see traverser<T>
  *	\see pointers<T>
  */
-template<typename T, typename Enable>
+template<typename T, typename Enable = void>
 class traverse_type;
 
 template<typename T>
-class traverse_type<T, std::enable_if_t<(!pointers<T>), T>> {
+class traverse_type<T, std::enable_if_t<(!pointers<T>)>> {
 public:
 	static constexpr traverse_cb const value{nullptr};
 };
 
 template<typename T>
-class traverse_type<T, std::enable_if_t<(pointers<T>), T>> {
+class traverse_type<T, std::enable_if_t<(pointers<T>)>> {
 public:
 	static constexpr traverse_cb const value{
 		[](void const* obj, void *data, enumerate_cb cb) noexcept -> void {
@@ -245,7 +245,7 @@ transfer(T &&orig, T &dest) noexcept {
  *	\see pointers<T>
  *	\see transfer(T &&, T &) noexcept
  */
-template<typename T, typename Enable>
+template<typename T, typename Enable = void>
 class relocate_type;
 
 template<typename T>
@@ -341,7 +341,7 @@ bool compare(T const& lhs, T const& rhs) noexcept {
  *	\see readonly<T>
  *	\see compare(T const&, T const&) noexcept
  */
-template<typename T, typename Enable>
+template<typename T, typename Enable = void>
 class equality_type;
 
 template<typename T>
