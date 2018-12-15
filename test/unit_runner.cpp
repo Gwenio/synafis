@@ -341,8 +341,11 @@ void fail_msg(std::string_view msg, int lineno, std::string_view file) noexcept 
  *	\todo Process command line arguments to control the output.
  */
 int main() {
+	std::cout << "main()" << std::endl;
 	gc::initialize();
 	output.init("master");
+	std::cout << "Beginning testing..." << std::endl;
 	unit_test::suite::run(output, master);
+	std::cout << "Testing complete." << std::endl;
 	return 0;
 }
