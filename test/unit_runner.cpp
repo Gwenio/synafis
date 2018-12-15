@@ -22,6 +22,7 @@ PERFORMANCE OF THIS SOFTWARE.
  */
 
 #include "master.hpp"
+#include "../src/gc.hpp"
 
 #include <atomic>
 #include <mutex>
@@ -340,6 +341,7 @@ void fail_msg(std::string_view msg, int lineno, std::string_view file) noexcept 
  *	\todo Process command line arguments to control the output.
  */
 int main() {
+	gc::initialize();
 	output.init("master");
 	unit_test::suite::run(output, master);
 	return 0;
