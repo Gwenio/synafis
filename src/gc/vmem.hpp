@@ -135,21 +135,20 @@ public:
 	 */
 	vmem &operator=(vmem const&) = delete;
 
-	/**	\fn vmem(vmem && other) noexcept
+	/**	\fn operator=(vmem && other) noexcept
 	 *	\brief Moves the virtual memory from other to this.
+	 *	\param other The object to move the virtual memory from.
+	 *	\returns Returns *this.
 	 */
 	constexpr vmem &operator=(vmem && other) noexcept {
-		if (std::addressof(other) == this) {
-			return *this;
-		} else if (other.ptr) {
+		if (std::addressof(other) != this) {
 			if (ptr) {
 				deallocate(ptr);
 			}
 			ptr = std::exchange(other.ptr, nullptr);
 			len = std::exchange(other.len, 0);
-		} else {
-			return *this = nullptr;
 		}
+		return *this;
 	}
 
 	/**	\fn operator bool() const noexcept
@@ -224,7 +223,7 @@ public:
 	 *	\warning If any portion of a page falls in the area, the whole page
 	 *	\warning will have its protection settings changed.
 	 */
-	bool forbid(std::size_t offset, std::size_t length) noexcept;
+	bool forbid(std::size_t offset, std::size_t length);
 
 	/**	\fn readonly(std::size_t offset, std::size_t length) noexcept
 	 *	\brief Makes part of a previously allocated block have read access only.
@@ -236,7 +235,7 @@ public:
 	 *	\warning If any portion of a page falls in the area, the whole page
 	 *	\warning will have its protection settings changed.
 	 */
-	bool readonly(std::size_t offset, std::size_t length) noexcept;
+	bool readonly(std::size_t offset, std::size_t length);
 
 	/**	\fn writable(std::size_t offset, std::size_t length) noexcept
 	 *	\brief Makes part of a previously allocated block have read and write access.
@@ -248,7 +247,7 @@ public:
 	 *	\warning If any portion of a page falls in the area, the whole page
 	 *	\warning will have its protection settings changed.
 	 */
-	bool writable(std::size_t offset, std::size_t length) noexcept;
+	bool writable(std::size_t offset, std::size_t length);
 };
 
 }
