@@ -78,14 +78,9 @@ void tester<gc::pool>::null_handle(collector &) {
 }
 
 void tester<gc::pool>::creation(collector &) {
-	{
-		handle temp{};
-		SYNAFIS_ASSERT(temp.ptr == nullptr);
-	}
-	{
-		handle temp{nullptr};
-		SYNAFIS_ASSERT(temp.ptr == nullptr);
-	}
+	handle temp{id, simple_cap, simple_unit};
+	SYNAFIS_ASSERT(temp.ptr != nullptr);
+	SYNAFIS_ASSERT(tester<gc::vmem>::is_allocated(temp.ptr->region));
 }
 
 void tester<gc::pool>::destruction(collector &) {
@@ -94,8 +89,51 @@ void tester<gc::pool>::destruction(collector &) {
 		handle temp{id, simple_cap, simple_unit};
 		SYNAFIS_ASSERT(temp.ptr != nullptr);
 		addr = temp.ptr;
-		SYNAFIS_ASSERT(tester<gc::vmem>::is_allocated(temp.ptr->region));
 	}
+	SYNAFIS_ASSERT(tester<gc::vmem>::is_free(addr, gc::vmem::page_size));
+	handle temp{id, simple_cap, simple_unit};
+	SYNAFIS_ASSERT(temp.ptr != nullptr);
+	addr = temp.ptr;
+	temp = nullptr;
+	SYNAFIS_ASSERT(tester<gc::vmem>::is_free(addr, gc::vmem::page_size));
+}
+
+void tester<gc::pool>::boolean(collector &) {
+	handle x{id, simple_cap, simple_unit};
+	handle y{};
+	handle z{};
+	SYNAFIS_ASSERT(x);
+	SYNAFIS_ASSERT(x != nullptr);
+	SYNAFIS_ASSERT(x == x);
+	SYNAFIS_ASSERT(!y);
+	SYNAFIS_ASSERT(y == nullptr);
+	SYNAFIS_ASSERT(y == y);
+	SYNAFIS_ASSERT(x != y);
+	SYNAFIS_ASSERT(!z);
+	SYNAFIS_ASSERT(z == nullptr);
+	SYNAFIS_ASSERT(z == z);
+	SYNAFIS_ASSERT(z == y);
+}
+
+void tester<gc::pool>::moving(collector &) {
+	handle x{id, simple_cap, simple_unit};
+	handle y{};
+	void *addr{nullptr};
+	SYNAFIS_ASSERT(x.ptr != nullptr);
+	SYNAFIS_ASSERT(tester<gc::vmem>::is_allocated(x.ptr->region));
+	SYNAFIS_ASSERT(y.ptr == nullptr);
+	y = std::move(x);
+	SYNAFIS_ASSERT(y.ptr != nullptr);
+	SYNAFIS_ASSERT(tester<gc::vmem>::is_allocated(y.ptr->region));
+	SYNAFIS_ASSERT(x.ptr == nullptr);
+	y = std::move(y);
+	SYNAFIS_ASSERT(y.ptr != nullptr);
+	SYNAFIS_ASSERT(tester<gc::vmem>::is_allocated(y.ptr->region));
+	SYNAFIS_ASSERT(x.ptr == nullptr);
+	addr = y.ptr;
+	y = std::move(x);
+	SYNAFIS_ASSERT(x.ptr == nullptr);
+	SYNAFIS_ASSERT(y.ptr == nullptr);
 	SYNAFIS_ASSERT(tester<gc::vmem>::is_free(addr, gc::vmem::page_size));
 }
 
@@ -111,7 +149,11 @@ using unit_test::skip;
 
 static unit_test::suite s{"pool", unit_test::gc_suite};
 
-static c destruction{"null handle", s, pass, &t::destruction};
+static c moving{"moving", s, pass, &t::moving};
+
+static c boolean{"boolean", s, pass, &t::boolean};
+
+static c destruction{"destruction", s, pass, &t::destruction};
 
 static c creation{"creation", s, pass, &t::creation};
 

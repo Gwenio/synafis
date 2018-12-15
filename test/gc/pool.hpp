@@ -70,6 +70,16 @@ public:
 	 *	\brief Tests that pools are properly freed when not needed.
 	 */
 	static void destruction(collector &);
+
+	/**	\fn boolean(collector &)
+	 *	\brief Tests the boolean conversion and comparison operators of handles.
+	 */
+	static void boolean(collector &);
+
+	/**	\fn moving(collector &)
+	 *	\brief Tests moving a pool between handles.
+	 */
+	static void moving(collector &);
 };
 
 }
