@@ -110,7 +110,7 @@ public:
 		handle(handle &&other) noexcept :
 			ptr(std::exchange(other.ptr, nullptr)) {}
 
-		/**	\fn create(identity const& id, std::size_t unit) noexcept
+		/**	\fn handle(identity const& id, std::size_t unit) noexcept
 		 *	\brief Creates a new pool.
 		 *	\param id The type the pool allocates memory for.
 		 *	\param capacity The number of objects in the pool.
@@ -142,23 +142,75 @@ public:
 			return *this;
 		}
 
-		/**	\fn handle &operator=(handle const&)
+		/**	\fn operator=(handle const&)
 		 *	\brief Deleted.
 		 */
 		handle &operator=(handle const&) = delete;
 
-		/**	\fn handle &operator=(handle &&other) noexcept
+		/**	\fn operator=(handle &&other) noexcept
 		 *	\brief Moves the pointer of other to this.
 		 *	\param other The handle to take ownership from.
 		 */
 		handle &operator=(handle &&other) noexcept {
-			if (std::addressof(other) != this) {
+			if (*this != other) {
 				if (ptr) {
 					destroy();
 				}
 				ptr = std::exchange(other.ptr, nullptr);
 			}
 			return *this;
+		}
+
+		/**	\fn operator!() const noexcept
+		 *	\brief Checks that ptr is null.
+		 *	\returns Returns true if ptr is null.
+		 */
+		constexpr bool operator!() const noexcept {
+			return ptr == nullptr;
+		}
+
+		/**	\fn operator bool() const noexcept
+		 *	\brief Checks that ptr is not null.
+		 *	\returns Returns true if ptr is not null.
+		 */
+		constexpr operator bool() const noexcept {
+			return ptr != nullptr;
+		}
+
+		/**	\fn operator==(handle const&other) const noexcept
+		 *	\brief Checks if two handles have the same pool.
+		 *	\param other The other handle to compare with.
+		 *	\returns Returns true if ptr == other.ptr.
+		 *	\note Only returns true if this and other are the same handle or
+		 *	\note both have ptr value of nullptr.
+		 */
+		constexpr bool operator==(handle const&other) const noexcept {
+			return ptr == other.ptr;
+		}
+
+		/**	\fn operator!=(handle const&other) const noexcept
+		 *	\brief Checks if two handles are different objects.
+		 *	\param other The other handle to compare with.
+		 *	\returns Returns true if ptr != other.ptr.
+		 */
+		constexpr bool operator!=(handle const&other) const noexcept {
+			return ptr != other.ptr;
+		}
+
+		/**	\fn operator==(std::nullptr_t) const noexcept
+		 *	\brief Checks that ptr is null.
+		 *	\returns Returns true if ptr is null.
+		 */
+		constexpr bool operator==(std::nullptr_t) const noexcept {
+			return ptr == nullptr;
+		}
+
+		/**	\fn operator!=(std::nullptr_t) const noexcept
+		 *	\brief Checks that ptr is not null.
+		 *	\returns Returns true if ptr is not null.
+		 */
+		constexpr bool operator!=(std::nullptr_t) const noexcept {
+			return ptr != nullptr;
 		}
 
 		/**	\fn allocate() noexcept
