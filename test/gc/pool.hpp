@@ -22,6 +22,7 @@ PERFORMANCE OF THIS SOFTWARE.
  */
 
 #include "../../src/gc/pool.hpp"
+#include "../master.hpp"
 
 namespace unit_test {
 
@@ -49,8 +50,26 @@ public:
 	 *	\brief Shorthand for a pool::handle.
 	 */
 	typedef pool::handle handle;
-private:
-public:
+
+	/**	\fn capacity_selection(collector &)
+	 *	\brief Tests pool::select_capacity.
+	 */
+	static void capacity_selection(collector &);
+
+	/**	\fn null_handle(collector &)
+	 *	\brief Tests the creation of handles with no pool.
+	 */
+	static void null_handle(collector &);
+
+	/**	\fn creation(collector &)
+	 *	\brief Tests the creation of handles with a pool.
+	 */
+	static void creation(collector &);
+
+	/**	\fn destruction(collector &)
+	 *	\brief Tests that pools are properly freed when not needed.
+	 */
+	static void destruction(collector &);
 };
 
 }
