@@ -58,9 +58,7 @@ static_assert(bitmap_offset % alignof(gc::pool::bit_group) == 0,
 /**	\var bit_group_unit
  *	\brief The unit size of a gc::pool::bit_group.
  */
-inline constexpr auto const bit_group_unit =
-	((sizeof(gc::pool::bit_group) % alignof(gc::pool::bit_group) == 0) ? sizeof(gc::pool::bit_group) :
-			((sizeof(gc::pool::bit_group) / alignof(gc::pool::bit_group)) + 1) * alignof(gc::pool::bit_group));
+inline constexpr auto const bit_group_unit = gc::idaccess::unit_size<gc::pool::bit_group>();
 
 /**	\fn bitmap_length(std::size_t capacity) noexcept
  *	\brief The number of elements in the arrays for bitmap and colors.
