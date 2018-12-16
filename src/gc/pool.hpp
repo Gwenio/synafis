@@ -219,7 +219,9 @@ public:
 		 *	\pre ptr != nullptr
 		 *	\see pool::allocate
 		 */
-		void *allocate() noexcept;
+		void *allocate() noexcept {
+			return ptr->allocate();
+		}
 
 		/**	\fn mark(void *addr) noexcept
 		 *	\brief Marks an object as reachable so it will not be deallocate be sweep.
