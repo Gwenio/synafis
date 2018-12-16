@@ -115,14 +115,22 @@ pool::pool(vmem && mem, identity const& id, std::size_t cap, std::size_t u, void
 	// Sanity check the location of slots and end.
 	SYNAFIS_ASSERT(region.begin() <= slots && end <= region.end());
 	// Place all slots in the free stack.
-	void *current{sub_offset(end, unit)};
+	void *current{slots};
+	free = reinterpret_cast<node *>(current);
 	do {
 		node *temp{reinterpret_cast<node *>(current)};
-		// Set free to temp and store the old value in temp-> next.
-		temp->next = std::exchange(free, temp);
-		current = sub_offset(end, unit);
-	} while (slots < current);
-	SYNAFIS_ASSERT(slots == current);
+		// Advance current.
+		current = add_offset(current, unit);
+		if (current < end) {
+			// Set the next free slot.
+			temp->next = reinterpret_cast<node *>(current);
+		} else {
+			// There are no more free slots, set nullptr and exit loop.
+			temp->next = nullptr;
+			break;
+		}
+	} while (true);
+	SYNAFIS_ASSERT(end == current);
 }
 
 pool::~pool() noexcept {
