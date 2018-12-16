@@ -31,6 +31,7 @@ hard_ptr::hard_ptr(soft_ptr const& other) : hard_ptr() {
 hard_ptr &hard_ptr::operator=(soft_ptr const& other) {
 	if (other) {
 		std::tie(ptr, type) = get_hard(other);
+		return *this;
 	} else {
 		return *this = nullptr;
 	}
