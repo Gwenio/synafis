@@ -38,8 +38,28 @@ namespace gc {
 /**	\class allocator
  *	\brief Type to manage pools for a type of object.
  */
-class allocator {
+class allocator : public identity::iallocator {
 	friend unit_test::tester<allocator>;
+
+	allocator() = delete;
+
+	allocator(allocator const&) = delete;
+
+	allocator(allocator &&) = delete;
+private:
+public:
+	allocator(identity const&id, std::size_t unit, traits::flag_type flags) :
+		iallocator() {}
+
+	virtual ~allocator() {}
+
+	virtual void *allocate() override {
+		return nullptr;
+	}
+
+	virtual void *allocate(std::nothrow_t) noexcept override {
+		return nullptr;
+	}
 };
 
 }

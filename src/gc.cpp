@@ -88,6 +88,7 @@ public:
 
 }
 
+#include "gc/allocator.hpp"
 #include "gc/impl.hpp"
 
 namespace gc {
@@ -97,18 +98,14 @@ namespace gc {
  */
 static collector impl{};
 
-identity::~identity() {
-#warning Not implemented.
-}
+identity::~identity() {}
 
-std::tuple<void *, identity::allocate_cb>
+std::unique_ptr<identity::iallocator>
 identity::select_alloc(identity const&id, std::size_t unit, traits::flag_type flags) {
-#warning Not implemented.
-	return std::tuple<void *, identity::allocate_cb>{nullptr, nullptr};
+	return std::unique_ptr<iallocator>(dynamic_cast<iallocator *>(new allocator(id, unit, flags)));
 }
 
 identity const* identity::fetch_impl(void *obj) noexcept {
-#warning Not implemented.
 	return nullptr;
 }
 
@@ -183,13 +180,11 @@ void root::register_impl(void *obj, traverse_cb tcb, root_cb rcb) {
 	SYNAFIS_ASSERT(obj != nullptr);
 	SYNAFIS_ASSERT(tcb != nullptr);
 	SYNAFIS_ASSERT(rcb != nullptr);
-#warning Not implemented.
 	;
 }
 
 void root::unregister_impl(void *obj) {
 	SYNAFIS_ASSERT(obj != nullptr);
-#warning Not implemented.
 	;
 }
 

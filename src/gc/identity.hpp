@@ -58,22 +58,27 @@ public:
 	// So the garbage collector internals can get more access.
 	friend access;
 
-	/**	\typedef allocate_cb
-	 *	\brief The callback type for allocating a garbage collector owned object.
+	/**	\class iallocator
+	 *	\brief Defines the interface for underlying allocators.
 	 */
-	typedef void *(*allocate_cb)(identity const&, void *) noexcept;
+	class iallocator {
+		iallocator(iallocator const&) = delete;
+		iallocator(iallocator &&) = delete;
+	protected:
+		constexpr iallocator() noexcept = default;
+	public:
+		virtual ~iallocator() noexcept = default;
+
+		virtual void *allocate() = 0;
+
+		virtual void *allocate(std::nothrow_t) = 0;
+	};
 private:
 	/**	\var allocator
 	 *	\brief Data provided for passing to the allocate callback (acb).
 	 *	\see select_alloc
 	 */
-	void *allocator;
-
-	/**	\var acb
-	 *	\brief The callback used to allocate objects from the collector.
-	 *	\see select_alloc
-	 */
-	allocate_cb acb;
+	std::unique_ptr<iallocator> alloc;
 
 	/**	\var fcb
 	 *	\brief The callback used to clean up an object.
@@ -117,7 +122,7 @@ private:
 	 *	\pre Is to only be called once per identity object.
 	 *	\see traits::get_flags
 	 */
-	static std::tuple<void *, allocate_cb>
+	std::unique_ptr<iallocator>
 	select_alloc(identity const&id, std::size_t unit, traits::flag_type flags);
 
 	/**	\fn fetch_impl(void *obj) noexcept
@@ -137,7 +142,7 @@ private:
 	 *	\param e The equality check callback.
 	 */
 	constexpr identity(finalize_cb f, traverse_cb t, relocate_cb r, equality_cb e) noexcept :
-		allocator(nullptr), acb(nullptr), fcb(f), tcb(t), rcb(r), ecb(e) {}
+		alloc(nullptr), fcb(f), tcb(t), rcb(r), ecb(e) {}
 
 	/**	\fn finalize(void *obj) const noexcept
 	 *	\brief Calls the finalizer callback if it is present.
@@ -208,9 +213,8 @@ public:
 	template<typename T>
 	identity(T *) : identity(traits::finalizer<T>, traits::traverser<T>,
 		traits::relocator<T>, traits::equalizer<T>) {
-			std::tie(allocator, acb) =
-				select_alloc(*this, unit_size<T>(), traits::get_flags<T>());
-			SYNAFIS_ASSERT(acb != nullptr);
+			alloc = select_alloc(*this, unit_size<T>(), traits::get_flags<T>());
+			SYNAFIS_ASSERT(alloc != nullptr);
 			SYNAFIS_ASSERT(!traits::pointers<T> || (tcb && rcb));
 			SYNAFIS_ASSERT(std::is_trivially_destructible_v<T> || fcb != nullptr);
 			SYNAFIS_ASSERT(!traits::movable<T> || std::is_trivially_copyable_v<T> || rcb != nullptr);
@@ -233,8 +237,7 @@ public:
 	 *	\details The collector should access this function via detail::idaccess.
 	 */
 	void *allocate() const noexcept {
-		SYNAFIS_ASSERT(acb != nullptr);
-		return (*acb)(*this, allocator);
+		return alloc->allocate(std::nothrow);
 	}
 
 	/**	\fn equal(void const* lhs, void const* rhs) const noexcept
