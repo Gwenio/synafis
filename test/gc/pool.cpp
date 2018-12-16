@@ -27,6 +27,7 @@ PERFORMANCE OF THIS SOFTWARE.
 
 #include <algorithm>
 #include <stdexcept>
+#include <array>
 
 namespace {
 
@@ -81,6 +82,8 @@ void tester<gc::pool>::creation(collector &) {
 	handle temp{id, simple_cap, simple_unit};
 	SYNAFIS_ASSERT(temp.ptr != nullptr);
 	SYNAFIS_ASSERT(tester<gc::vmem>::is_allocated(temp.ptr->region));
+	SYNAFIS_ASSERT(temp.used() == 0);
+	SYNAFIS_ASSERT(temp.available() == temp.ptr->capacity);
 }
 
 void tester<gc::pool>::destruction(collector &) {
@@ -137,6 +140,54 @@ void tester<gc::pool>::moving(collector &) {
 	SYNAFIS_ASSERT(tester<gc::vmem>::is_free(addr, gc::vmem::page_size));
 }
 
+void tester<gc::pool>::allocation(collector &) {
+	handle temp{id, simple_cap, simple_unit};
+	SYNAFIS_ASSERT(temp.used() == 0);
+	SYNAFIS_ASSERT(temp.available() == temp.ptr->capacity);
+	std::array<void *, 16> store;
+	for (auto x : store) {
+		x = temp.allocate();
+	}
+	SYNAFIS_ASSERT(temp.used() == store.size());
+	SYNAFIS_ASSERT(temp.available() + temp.used() == temp.ptr->capacity);
+	for (auto x : store) {
+		SYNAFIS_ASSERT(temp.from(x));
+	}
+}
+
+void tester<gc::pool>::sweeping(collector &) {
+	handle temp{id, simple_cap, simple_unit};
+	SYNAFIS_ASSERT(temp.used() == 0);
+	SYNAFIS_ASSERT(temp.available() == temp.ptr->capacity);
+	std::array<void *, 16> store;
+	for (auto x : store) {
+		x = temp.allocate();
+	}
+	SYNAFIS_ASSERT(temp.used() == store.size());
+	SYNAFIS_ASSERT(temp.available() + temp.used() == temp.ptr->capacity);
+	for (auto x : store) {
+		SYNAFIS_ASSERT(temp.from(x));
+	}
+	for (std::size_t x = 0; x < store.size(); x++) {
+		if (x % 2 == 0) {
+			temp.mark(store[x]);
+		} else {
+			store[x] = nullptr;
+		}
+	}
+	SYNAFIS_ASSERT(temp.used() == store.size());
+	SYNAFIS_ASSERT(temp.available() + temp.used() == temp.ptr->capacity);
+	temp.sweep();
+	SYNAFIS_ASSERT(temp.used() == store.size() / 2);
+	SYNAFIS_ASSERT(temp.available() + temp.used() == temp.ptr->capacity);
+	for (std::size_t x = 0; x < store.size(); x += 2) {
+		SYNAFIS_ASSERT(temp.from(store[x]));
+	}
+	temp.sweep();
+	SYNAFIS_ASSERT(temp.used() == 0);
+	SYNAFIS_ASSERT(temp.available() == temp.ptr->capacity);
+}
+
 }
 
 namespace {
@@ -148,6 +199,10 @@ using unit_test::fail;
 using unit_test::skip;
 
 static unit_test::suite s{"pool", unit_test::gc_suite};
+
+static c sweeping{"sweeping", s, pass, &t::sweeping};
+
+static c allocation{"allocation", s, pass, &t::allocation};
 
 static c moving{"moving", s, pass, &t::moving};
 

@@ -80,6 +80,16 @@ public:
 	 *	\brief Tests moving a pool between handles.
 	 */
 	static void moving(collector &);
+
+	/**	\fn allocation(collector &)
+	 *	\brief Tests the ability to allocate objects from the pool.
+	 */
+	static void allocation(collector &);
+
+	/**	\fn sweeping(collector &)
+	 *	\brief Tests the ability to mark and sweep objects.
+	 */
+	static void sweeping(collector &);
 };
 
 }
