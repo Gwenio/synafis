@@ -24,6 +24,7 @@
 				"gc",
 				"gc/vmem",
 				"gc/pool",
+				"gc/allocator",
 				"gc/hard_ptr",
 				"gc/soft_ptr"
 			]
