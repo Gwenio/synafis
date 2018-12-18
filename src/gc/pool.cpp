@@ -247,40 +247,32 @@ void pool::mark(void *ptr) noexcept {
 }
 
 void pool::sweep() noexcept {
-	std::size_t bit{0};
 	bit_group *alloc{bitmap};
 	bit_group *marks{colors};
 	void *current{slots};
-	// Skip bit groups that have no allocated slots.
-	auto skip = [this, &alloc, &marks, &current]() -> void {
-		while (current < end) {
-			marks++;
-			if ((++alloc)->none()) {
-				SYNAFIS_ASSERT(marks->none());
-				current = add_offset(current, unit * bit_group_size);
-			} else {
-				break;
+	do {
+		// Only bits for slots that are allocated and unmarked will be true.
+		bit_group const group{*alloc ^ *marks};
+		if (group.any()) {
+			for (std::size_t bit = 0; bit < bit_group_size; bit++) {
+				if (group[bit]) {
+					SYNAFIS_ASSERT(alloc->test(bit));
+					SYNAFIS_ASSERT(!(marks->test(bit)));
+					deallocate(current);
+				}
+				current = add_offset(current, unit);
+				if (end <= current) {
+					break;
+				}
 			}
+		} else {
+			// Skip group, all are marked or unallocated.
+			current = add_offset(current, unit * bit_group_size);
 		}
-	};
-	skip();
-	while (current < end) {
-		if (alloc->test(bit) && !marks->test(bit)) {
-			deallocate(current);
-		}
-		current = add_offset(current, unit);
-		// End of bit group check.
-		if (++bit == bit_group_size) {
-			bit = 0;
-			// Clear alloc, it will be the new color set and all should start white.
-			alloc->reset();
-			skip();
-		}
-	}
-	// Reset the last bitmap element if the end of the group was not reached.
-	if (bit != 0) {
 		alloc->reset();
-	}
+		alloc++;
+		marks++;
+	} while (current < end);
 	// The black slots are the new allocated set.
 	std::swap(bitmap, colors);
 }
