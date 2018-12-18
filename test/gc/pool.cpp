@@ -145,44 +145,49 @@ void tester<gc::pool>::allocation(collector &) {
 	SYNAFIS_ASSERT(temp.used() == 0);
 	SYNAFIS_ASSERT(temp.available() == temp.ptr->capacity);
 	std::array<void *, 16> store;
-	for (auto x : store) {
+	for (auto &x : store) {
 		x = temp.allocate();
 	}
 	SYNAFIS_ASSERT(temp.used() == store.size());
 	SYNAFIS_ASSERT(temp.available() + temp.used() == temp.ptr->capacity);
+	bool in_pool{true};
 	for (auto x : store) {
-		SYNAFIS_ASSERT(temp.from(x));
+		in_pool &= temp.from(x);
 	}
+	SYNAFIS_ASSERT(in_pool);
 }
 
 void tester<gc::pool>::sweeping(collector &) {
 	handle temp{id, simple_cap, simple_unit};
 	SYNAFIS_ASSERT(temp.used() == 0);
 	SYNAFIS_ASSERT(temp.available() == temp.ptr->capacity);
-	std::array<void *, 16> store;
-	for (auto x : store) {
+	std::array<void *, 8> store1;
+	std::array<void *, 16> store2;
+	bool in_pool{true};
+	for (auto &x : store1) {
 		x = temp.allocate();
+		in_pool &= temp.from(x);
 	}
-	SYNAFIS_ASSERT(temp.used() == store.size());
+	for (auto &x : store2) {
+		x = temp.allocate();
+		in_pool &= temp.from(x);
+	}
+	SYNAFIS_ASSERT(in_pool);
+	SYNAFIS_ASSERT(temp.used() == store1.size() + store2.size());
 	SYNAFIS_ASSERT(temp.available() + temp.used() == temp.ptr->capacity);
-	for (auto x : store) {
-		SYNAFIS_ASSERT(temp.from(x));
+	for (auto x : store1) {
+			temp.mark(x);
 	}
-	for (std::size_t x = 0; x < store.size(); x++) {
-		if (x % 2 == 0) {
-			temp.mark(store[x]);
-		} else {
-			store[x] = nullptr;
-		}
-	}
-	SYNAFIS_ASSERT(temp.used() == store.size());
+	SYNAFIS_ASSERT(temp.used() == store1.size() + store2.size());
 	SYNAFIS_ASSERT(temp.available() + temp.used() == temp.ptr->capacity);
 	temp.sweep();
-	SYNAFIS_ASSERT(temp.used() == store.size() / 2);
+	SYNAFIS_ASSERT(temp.used() == store1.size());
 	SYNAFIS_ASSERT(temp.available() + temp.used() == temp.ptr->capacity);
-	for (std::size_t x = 0; x < store.size(); x += 2) {
-		SYNAFIS_ASSERT(temp.from(store[x]));
+	in_pool = true;
+	for (auto x : store1) {
+		in_pool &= temp.from(x);
 	}
+	SYNAFIS_ASSERT(in_pool);
 	temp.sweep();
 	SYNAFIS_ASSERT(temp.used() == 0);
 	SYNAFIS_ASSERT(temp.available() == temp.ptr->capacity);
