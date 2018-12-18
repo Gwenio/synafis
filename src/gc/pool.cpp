@@ -115,22 +115,24 @@ pool::pool(vmem && mem, identity const& id, std::size_t cap, std::size_t u, void
 	// Sanity check the location of slots and end.
 	SYNAFIS_ASSERT(region.begin() <= slots && end <= region.end());
 	// Place all slots in the free stack.
-	void *current{slots};
-	free = reinterpret_cast<node *>(current);
+	void *addr{slots};
+	free = reinterpret_cast<node *>(addr);
+	node *current = free;
 	do {
-		node *temp{reinterpret_cast<node *>(current)};
-		// Advance current.
-		current = add_offset(current, unit);
-		if (current < end) {
+		SYNAFIS_ASSERT(from(addr));
+		// Advance the address.
+		addr = add_offset(addr, unit);
+		if (addr < end) {
 			// Set the next free slot.
-			temp->next = reinterpret_cast<node *>(current);
+			current->next = reinterpret_cast<node *>(addr);
+			current = current->next;
 		} else {
 			// There are no more free slots, set nullptr and exit loop.
-			temp->next = nullptr;
+			current->next = nullptr;
 			break;
 		}
 	} while (true);
-	SYNAFIS_ASSERT(end == current);
+	SYNAFIS_ASSERT(end == addr);
 }
 
 pool::~pool() noexcept {
@@ -222,7 +224,12 @@ void pool::deallocate(void *ptr) noexcept {
 void *pool::allocate() noexcept {
 	if (free) {
 		space--;
-		return static_cast<void *>(std::exchange(free, free->next));
+		void *addr{static_cast<void *>(std::exchange(free, free->next))};
+		std::size_t const offset{sub_addr(addr, slots) / unit};
+		std::size_t const bit{offset % bit_group_size};
+		std::size_t const group{offset / bit_group_size};
+		bitmap[group].set(bit);
+		return addr;
 	} else {
 		return nullptr;
 	}
@@ -231,11 +238,12 @@ void *pool::allocate() noexcept {
 void pool::mark(void *ptr) noexcept {
 	SYNAFIS_ASSERT(slots <= ptr);
 	SYNAFIS_ASSERT(ptr < end);
-	std::size_t offset{sub_addr(ptr, slots) / unit};
-	std::size_t bit{offset % (bit_group_size)};
+	std::size_t const offset{sub_addr(ptr, slots) / unit};
+	std::size_t const bit{offset % bit_group_size};
+	std::size_t const group{offset / bit_group_size};
 	// Assert that the slot is allocated.
-	SYNAFIS_ASSERT(bitmap[offset / (bit_group_size)].test(bit));
-	colors[offset / (bit_group_size)].set(bit);
+	SYNAFIS_ASSERT(bitmap[group].test(bit));
+	colors[group].set(bit);
 }
 
 void pool::sweep() noexcept {
