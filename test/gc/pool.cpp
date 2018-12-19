@@ -150,11 +150,51 @@ void tester<gc::pool>::allocation(collector &) {
 	}
 	SYNAFIS_ASSERT(temp.used() == store.size());
 	SYNAFIS_ASSERT(temp.available() + temp.used() == temp.ptr->capacity);
-	bool in_pool{true};
-	for (auto x : store) {
-		in_pool &= temp.from(x);
+}
+
+void tester<gc::pool>::ownership(collector &) {
+	handle x{id, simple_cap, simple_unit};
+	handle y{id, simple_cap, simple_unit};
+	handle z{id, simple_cap, simple_unit};
+	std::array<simple *, 32> store;
+	for (std::size_t i = 0; i < store.size(); i++) {
+		if (i % 2 == 0) {
+			store[i] = reinterpret_cast<simple *>(x.allocate());
+			store[i]->data = 0;
+		} else if (i % 3 == 0) {
+			store[i] = reinterpret_cast<simple *>(y.allocate());
+			store[i]->data = 1;
+		} else {
+			store[i] = reinterpret_cast<simple *>(z.allocate());
+			store[i]->data = 2;
+		}
 	}
-	SYNAFIS_ASSERT(in_pool);
+	SYNAFIS_ASSERT(!x.from(nullptr));
+	SYNAFIS_ASSERT(!y.from(nullptr));
+	SYNAFIS_ASSERT(!z.from(nullptr));
+	bool in_pool{true};
+	bool not_pool{true};
+	for (auto i : store) {
+		switch (i->data) {
+		case 0:
+			in_pool &= x.from(i);
+			not_pool &= !(y.from(i) || z.from(i));
+			break;
+		case 1:
+			in_pool &= y.from(i);
+			not_pool &= !(x.from(i) || z.from(i));
+			break;
+		case 2:
+			in_pool &= z.from(i);
+			not_pool &= !(y.from(i) || x.from(i));
+			break;
+		default:
+			SYNAFIS_ASSERT(false && "Invalid pool number.");
+			return;
+		}
+	}
+	SYNAFIS_ASSERT(in_pool && "At least one pointer was not identified as from the correct pool.");
+	SYNAFIS_ASSERT(not_pool && "At least one pointer was identified as from an incorrect pool.");
 }
 
 void tester<gc::pool>::sweeping(collector &) {
@@ -163,16 +203,12 @@ void tester<gc::pool>::sweeping(collector &) {
 	SYNAFIS_ASSERT(temp.available() == temp.ptr->capacity);
 	std::array<void *, 8> store1;
 	std::array<void *, 16> store2;
-	bool in_pool{true};
 	for (auto &x : store1) {
 		x = temp.allocate();
-		in_pool &= temp.from(x);
 	}
 	for (auto &x : store2) {
 		x = temp.allocate();
-		in_pool &= temp.from(x);
 	}
-	SYNAFIS_ASSERT(in_pool);
 	SYNAFIS_ASSERT(temp.used() == store1.size() + store2.size());
 	SYNAFIS_ASSERT(temp.available() + temp.used() == temp.ptr->capacity);
 	for (auto x : store1) {
@@ -183,11 +219,6 @@ void tester<gc::pool>::sweeping(collector &) {
 	temp.sweep();
 	SYNAFIS_ASSERT(temp.used() == store1.size());
 	SYNAFIS_ASSERT(temp.available() + temp.used() == temp.ptr->capacity);
-	in_pool = true;
-	for (auto x : store1) {
-		in_pool &= temp.from(x);
-	}
-	SYNAFIS_ASSERT(in_pool);
 	temp.sweep();
 	SYNAFIS_ASSERT(temp.used() == 0);
 	SYNAFIS_ASSERT(temp.available() == temp.ptr->capacity);
@@ -206,6 +237,8 @@ using unit_test::skip;
 static unit_test::suite s{"pool", unit_test::gc_suite};
 
 static c sweeping{"sweeping", s, pass, &t::sweeping};
+
+static c ownership{"ownership", s, pass, &t::ownership};
 
 static c allocation{"allocation", s, pass, &t::allocation};
 
