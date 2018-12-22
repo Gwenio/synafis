@@ -27,6 +27,7 @@ PERFORMANCE OF THIS SOFTWARE.
 #include <atomic>
 #include <mutex>
 #include <iostream>
+#include <iomanip>
 #include <stack>
 #include <vector>
 #include <string>
@@ -39,6 +40,16 @@ using ::unit_test::status;
  *	\brief The status of the current test case.
  */
 static std::atomic<status> current_status;
+
+/**	\fn indentl(std::ostream &out, std::size_t indent)
+ *	\brief Outputs indentation for the start of a line.
+ *	\param out The output stream to indent.
+ *	\param indent The size of the indentation.
+ *	\returns out
+ */
+std::ostream &indentl(std::ostream &out, std::size_t indent) {
+	return out << std::setfill(' ') << std::setw(indent * 2);
+}
 
 /**	\class collector_impl
  *	\brief Implementation of unit_test::collector.
@@ -104,14 +115,8 @@ public:
 		 *	\param indent The base indentation for the output.
 		 */
 		static void print_message(std::ostream &out, msg_tuple const& msg, std::size_t indent) {
-			for (std::size_t x = 0; x < indent; x++) {
-				out << "  ";
-			}
-			out << std::get<2>(msg) << " @ " << std::get<1>(msg) << std::endl;
-			for (std::size_t x = 0; x < indent; x++) {
-				out << "  ";
-			}
-			out << std::get<0>(msg) << std::endl;
+			indentl(out, indent) << std::get<2>(msg) << " @ " << std::get<1>(msg) << std::endl;
+			indentl(out, indent) << std::get<0>(msg) << std::endl;
 		}
 	public:
 		/**	\fn results()
@@ -151,7 +156,7 @@ public:
 			for (std::size_t x = 0; x < indent; x++) {
 				out << "  ";
 			}
-			print_status(end, out << name << " :\t");
+			print_status(end, indentl(out, indent) << name << " :\t");
 			if (expect != end) {
 				print_status(expect, out << "(expected ") << ")";
 			}
@@ -196,10 +201,7 @@ public:
 	virtual void next(std::string_view name) override {
 		std::lock_guard<std::mutex> l{msg_lock};
 		indent--;
-		for (std::size_t x = 0; x < indent; x++) {
-			std::cout << "  ";
-		}
-		std::cout << name << std::endl;
+		indentl(std::cout, indent) << name << std::endl;
 		indent++;
 	}
 
@@ -240,10 +242,7 @@ public:
 	 */
 	virtual void up(std::string_view name) override {
 		std::lock_guard<std::mutex> l{msg_lock};
-		for (std::size_t x = 0; x < indent; x++) {
-			std::cout << "  ";
-		}
-		std::cout << name << std::endl;
+		indentl(std::cout, indent) << name << std::endl;
 		indent++;
 	}
 
