@@ -62,16 +62,38 @@ public:
 	 *	\brief Defines the interface for underlying allocators.
 	 */
 	class iallocator {
+		/**	\fn allocator(iallocator const&)
+		 *	\brief Deleted.
+		 */
 		iallocator(iallocator const&) = delete;
+
+		/**	\fn allocator(iallocator &&)
+		 *	\brief Deleted.
+		 */
 		iallocator(iallocator &&) = delete;
 	protected:
+		/**	\fn allocator() noexcept
+		 *	\brief Default.
+		 */
 		constexpr iallocator() noexcept = default;
 	public:
+		/**	\fn ~allocator()
+		 *	\brief Default.
+		 */
 		virtual ~iallocator() noexcept = default;
 
+		/**	\fn allocate()
+		 *	\brief Allocates memory for an object.
+		 *	\returns Returns a pointer to the allocated memory.
+		 *	\throws std::bad_alloc if memory could not be allocated.
+		 */
 		virtual void *allocate() = 0;
 
-		virtual void *allocate(std::nothrow_t) = 0;
+		/**	\fn allocate(std::nothrow_t) noexcept
+		 *	\brief Allocates memory for an object.
+		 *	\returns Returns a pointer to the allocated memory or nullptr on failure.
+		 */
+		virtual void *allocate(std::nothrow_t) noexcept = 0;
 	};
 private:
 	/**	\var allocator
@@ -226,17 +248,24 @@ public:
 	 */
 	~identity();
 
+	/**	\fn allocate() const
+	 *	\brief Allocates an object of the type the identity represents.
+	 *	\returns Returns a pointer to the allocated object.
+	 *	\pre The collector lock must be held by the calling thread.
+	 *	\throws std::bad_alloc if memory could not be allocated.
+	 */
+	void *allocate() const {
+		return alloc->allocate();
+	}
+
 	/**	\fn allocate() const noexcept
-	 *	\brief Calls the finalizer callback if it is present.
-	 *	\param obj The address of the object to clean up.
-	 *	\returns Returns a non-null point on success.
+	 *	\brief Allocates an object of the type the identity represents.
+	 *	\returns Returns a pointer to the allocated object or nullptr.
 	 *	\returns If nullptr is returned, then it means allocation failed and
 	 *	\returns the collector could not free enough memory at this time.
 	 *	\pre The collector lock must be held by the calling thread.
-	 *	\details Private so it is not accessible to the program.
-	 *	\details The collector should access this function via detail::idaccess.
 	 */
-	void *allocate() const noexcept {
+	void *allocate(std::nothrow_t) const noexcept {
 		return alloc->allocate(std::nothrow);
 	}
 
