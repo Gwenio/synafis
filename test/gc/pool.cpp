@@ -47,11 +47,13 @@ static std::size_t const simple_unit{std::max(gc::idaccess::unit_size<simple>(),
 
 static std::size_t const simple_cap{gc::pool::select_capacity(simple_unit)};
 
+using t = unit_test::tester<gc::pool>;
+
 }
 
 namespace unit_test {
 
-void tester<gc::pool>::capacity_selection(collector &) {
+void t::capacity_selection(collector &) {
 	{
 		// Test for normal cases.
 		auto const cap{pool::select_capacity(pool::min_unit)};
@@ -67,7 +69,7 @@ void tester<gc::pool>::capacity_selection(collector &) {
 	}
 }
 
-void tester<gc::pool>::null_handle(collector &) {
+void t::null_handle(collector &) {
 	{
 		handle temp{};
 		SYNAFIS_ASSERT(temp.ptr == nullptr);
@@ -78,7 +80,7 @@ void tester<gc::pool>::null_handle(collector &) {
 	}
 }
 
-void tester<gc::pool>::creation(collector &) {
+void t::creation(collector &) {
 	handle temp{id, simple_cap, simple_unit};
 	SYNAFIS_ASSERT(temp.ptr != nullptr);
 	SYNAFIS_ASSERT(tester<gc::vmem>::is_allocated(temp.ptr->region));
@@ -86,7 +88,7 @@ void tester<gc::pool>::creation(collector &) {
 	SYNAFIS_ASSERT(temp.available() == temp.ptr->capacity);
 }
 
-void tester<gc::pool>::destruction(collector &) {
+void t::destruction(collector &) {
 	void *addr{nullptr};
 	{
 		handle temp{id, simple_cap, simple_unit};
@@ -101,7 +103,7 @@ void tester<gc::pool>::destruction(collector &) {
 	SYNAFIS_ASSERT(tester<gc::vmem>::is_free(addr, gc::vmem::page_size));
 }
 
-void tester<gc::pool>::boolean(collector &) {
+void t::boolean(collector &) {
 	handle x{id, simple_cap, simple_unit};
 	handle y{};
 	handle z{};
@@ -118,7 +120,7 @@ void tester<gc::pool>::boolean(collector &) {
 	SYNAFIS_ASSERT(z == y);
 }
 
-void tester<gc::pool>::moving(collector &) {
+void t::moving(collector &) {
 	handle x{id, simple_cap, simple_unit};
 	handle y{};
 	void *addr{nullptr};
@@ -140,7 +142,7 @@ void tester<gc::pool>::moving(collector &) {
 	SYNAFIS_ASSERT(tester<gc::vmem>::is_free(addr, gc::vmem::page_size));
 }
 
-void tester<gc::pool>::allocation(collector &) {
+void t::allocation(collector &) {
 	handle temp{id, simple_cap, simple_unit};
 	SYNAFIS_ASSERT(temp.used() == 0);
 	SYNAFIS_ASSERT(temp.available() == temp.ptr->capacity);
@@ -152,7 +154,7 @@ void tester<gc::pool>::allocation(collector &) {
 	SYNAFIS_ASSERT(temp.available() + temp.used() == temp.ptr->capacity);
 }
 
-void tester<gc::pool>::ownership(collector &) {
+void t::ownership(collector &) {
 	handle x{id, simple_cap, simple_unit};
 	handle y{id, simple_cap, simple_unit};
 	handle z{id, simple_cap, simple_unit};
@@ -197,7 +199,7 @@ void tester<gc::pool>::ownership(collector &) {
 	SYNAFIS_ASSERT(not_pool && "At least one pointer was identified as from an incorrect pool.");
 }
 
-void tester<gc::pool>::sweeping(collector &) {
+void t::sweeping(collector &) {
 	handle temp{id, simple_cap, simple_unit};
 	SYNAFIS_ASSERT(temp.used() == 0);
 	SYNAFIS_ASSERT(temp.available() == temp.ptr->capacity);
@@ -228,7 +230,6 @@ void tester<gc::pool>::sweeping(collector &) {
 
 namespace {
 
-using t = unit_test::tester<gc::pool>;
 using c = unit_test::case_type;
 using unit_test::pass;
 using unit_test::fail;

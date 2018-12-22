@@ -25,61 +25,67 @@ PERFORMANCE OF THIS SOFTWARE.
 
 #include <windows.h>
 
+namespace {
+
+using t = unit_test::tester<gc::vmem>;
+
+}
+
 namespace unit_test {
 
-bool tester<gc::vmem>::invariants(vmem const& obj) noexcept {
+bool t::invariants(vmem const& obj) noexcept {
 	return !obj.ptr && (obj.len == 0) ||
 		obj.ptr && (0 < obj.len) && is_allocated(obj);
 }
 
-bool tester<gc::vmem>::no_access(vmem const& obj, std::size_t offset, std::size_t length) noexcept {
+bool t::no_access(vmem const& obj, std::size_t offset, std::size_t length) noexcept {
 	MEMORY_BASIC_INFORMATION info;
 	memset(std::addressof(info), 0, sizeof(info));
 	VirtualQuery(obj[offset], std::addressof(info), sizeof(info));
 	return (info.Protect & PAGE_NOACCESS) == PAGE_NOACCESS;
 }
 
-bool tester<gc::vmem>::is_readonly(vmem const& obj, std::size_t offset, std::size_t length) noexcept {
+bool t::is_readonly(vmem const& obj, std::size_t offset, std::size_t length) noexcept {
 	MEMORY_BASIC_INFORMATION info;
 	memset(std::addressof(info), 0, sizeof(info));
 	VirtualQuery(obj[offset], std::addressof(info), sizeof(info));
 	return (info.Protect & PAGE_READONLY) == PAGE_READONLY;
 }
 
-bool tester<gc::vmem>::is_writable(vmem const& obj, std::size_t offset, std::size_t length) noexcept {
+bool t::is_writable(vmem const& obj, std::size_t offset, std::size_t length) noexcept {
 	MEMORY_BASIC_INFORMATION info;
 	memset(std::addressof(info), 0, sizeof(info));
 	VirtualQuery(obj[offset], std::addressof(info), sizeof(info));
 	return (info.Protect & PAGE_READWRITE) == PAGE_READWRITE;
 }
 
-bool tester<gc::vmem>::is_allocated(vmem const& obj) noexcept {
+bool t::is_allocated(vmem const& obj) noexcept {
 	MEMORY_BASIC_INFORMATION info;
 	memset(std::addressof(info), 0, sizeof(info));
 	VirtualQuery(obj.ptr, std::addressof(info), sizeof(info));
 	return (info.State & MEM_COMMIT) == MEM_COMMIT;
 }
 
-bool tester<gc::vmem>::is_free(void *addr, std::size_t length) noexcept {
+bool t::is_free(void *addr, std::size_t length) noexcept {
 	MEMORY_BASIC_INFORMATION info;
 	memset(std::addressof(info), 0, sizeof(info));
 	VirtualQuery(addr, std::addressof(info), sizeof(info));
 	return (info.State & MEM_FREE) == MEM_FREE;
 }
 
-void tester<gc::vmem>::sane_page_size(collector &) {
+void t::sane_page_size(collector &) {
 	SYNAFIS_ASSERT(0 < vmem::page_size);
 	SYNAFIS_ASSERT(alignof(std::max_align_t) < vmem::page_size);
 	SYNAFIS_ASSERT(vmem::page_size % alignof(std::max_align_t) == 0);
 }
 
-void tester<gc::vmem>::def_init(collector &) {
+void t::def_init(collector &) {
 	vmem temp{};
 	SYNAFIS_ASSERT(temp.ptr == nullptr);
 	SYNAFIS_ASSERT(temp.len == 0);
 }
 
-void tester<gc::vmem>::reg_init(collector &) {
+void t::reg_init(collector &) {
 	{
 		vmem temp{vmem::page_size, true};
 		SYNAFIS_ASSERT(temp.ptr != nullptr);
@@ -96,7 +102,7 @@ void tester<gc::vmem>::reg_init(collector &) {
 	}
 }
 
-void tester<gc::vmem>::move_init(collector &) {
+void t::move_init(collector &) {
 	vmem temp1{vmem::page_size, true};
 	SYNAFIS_ASSERT(temp1.ptr != nullptr);
 	{
@@ -114,7 +120,7 @@ void tester<gc::vmem>::move_init(collector &) {
 	}
 }
 
-void tester<gc::vmem>::destruct(collector &) {
+void t::destruct(collector &) {
 	void *addr{nullptr};
 	{
 		vmem temp{vmem::page_size, true};
@@ -124,7 +130,7 @@ void tester<gc::vmem>::destruct(collector &) {
 	SYNAFIS_ASSERT(is_free(addr, vmem::page_size));
 }
 
-void tester<gc::vmem>::null_assign(collector &) {
+void t::null_assign(collector &) {
 	vmem temp{vmem::page_size, true};
 	SYNAFIS_ASSERT(temp.ptr != nullptr);
 	SYNAFIS_ASSERT(invariants(temp));
@@ -135,7 +141,7 @@ void tester<gc::vmem>::null_assign(collector &) {
 	SYNAFIS_ASSERT(is_free(addr, vmem::page_size));
 }
 
-void tester<gc::vmem>::move_assign(collector &) {
+void t::move_assign(collector &) {
 	{
 		vmem temp1{vmem::page_size, true};
 		vmem temp2{};
@@ -178,14 +184,14 @@ void tester<gc::vmem>::move_assign(collector &) {
 	}
 }
 
-void tester<gc::vmem>::bool_convert(collector &) {
+void t::bool_convert(collector &) {
 	vmem temp1{};
 	vmem temp2{vmem::page_size, true};
 	SYNAFIS_ASSERT(!temp1);
 	SYNAFIS_ASSERT(temp2);
 }
 
-void tester<gc::vmem>::bounds(collector &) {
+void t::bounds(collector &) {
 	vmem temp1{};
 	vmem temp2{vmem::page_size, true};
 	SYNAFIS_ASSERT(temp1.begin() == nullptr);
@@ -196,7 +202,7 @@ void tester<gc::vmem>::bounds(collector &) {
 	SYNAFIS_ASSERT(temp2.size() == temp2.len);
 }
 
-void tester<gc::vmem>::access(collector &) {
+void t::access(collector &) {
 	vmem temp{vmem::page_size, true};
 	SYNAFIS_ASSERT(temp[0] == temp.ptr);
 	SYNAFIS_ASSERT(temp[vmem::page_size / 2] == gc::add_offset(temp.ptr, temp.len / 2));
@@ -227,7 +233,7 @@ void tester<gc::vmem>::access(collector &) {
 	}
 }
 
-void tester<gc::vmem>::protect(collector &) {
+void t::protect(collector &) {
 	vmem temp{vmem::page_size * 4, false};
 	SYNAFIS_ASSERT(no_access(temp, 0, vmem::page_size));
 	SYNAFIS_ASSERT(no_access(temp, vmem::page_size, vmem::page_size));
@@ -254,7 +260,6 @@ void tester<gc::vmem>::protect(collector &) {
 
 namespace {
 
-using t = unit_test::tester<gc::vmem>;
 using c = unit_test::case_type;
 using unit_test::pass;
 using unit_test::fail;

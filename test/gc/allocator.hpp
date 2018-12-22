@@ -49,7 +49,7 @@ public:
 	/**	\typedef handle
 	 *	\brief Shorthand for a pool::handle.
 	 */
-	typedef pool::handle handle;
+	typedef gc::pool::handle handle;
 
 	/**	\fn creation(collector &)
 	 *	\brief Tests the construction of an allocator.
