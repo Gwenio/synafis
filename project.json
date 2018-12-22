@@ -36,7 +36,8 @@
 			"files": [
 				"unit_runner",
 				"gc/vmem",
-				"gc/pool"
+				"gc/pool",
+				"gc/allocator"
 			],
 			"filters": [
 				{
