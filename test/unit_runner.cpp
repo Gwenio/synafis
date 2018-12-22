@@ -48,7 +48,10 @@ static std::atomic<status> current_status;
  *	\returns out
  */
 std::ostream &indentl(std::ostream &out, std::size_t indent) {
-	return out << std::setfill(' ') << std::setw(indent * 2);
+	for (std::size_t x = 0; x < indent; x++) {
+		out << "  ";
+	}
+	return out;
 }
 
 /**	\class collector_impl
@@ -153,9 +156,6 @@ public:
 		 *	\param indent The base indentation for the output.
 		 */
 		void print(std::ostream &out, status end, std::size_t indent) const {
-			for (std::size_t x = 0; x < indent; x++) {
-				out << "  ";
-			}
 			print_status(end, indentl(out, indent) << name << " :\t");
 			if (expect != end) {
 				print_status(expect, out << "(expected ") << ")";
@@ -200,9 +200,7 @@ public:
 	 */
 	virtual void next(std::string_view name) override {
 		std::lock_guard<std::mutex> l{msg_lock};
-		indent--;
 		indentl(std::cout, indent) << name << std::endl;
-		indent++;
 	}
 
 	/**	\fn begin(std::string_view name, status expect) noexcept override
@@ -236,13 +234,11 @@ public:
 		cases.top().append(msg, lineno, file);
 	}
 
-	/**	\fn up(std::string_view name) override
+	/**	\fn up() override
 	 *	\brief Move to the first child of the current test suite.
-	 *	\param name The name of the test suite we are switching to.
 	 */
-	virtual void up(std::string_view name) override {
+	virtual void up() override {
 		std::lock_guard<std::mutex> l{msg_lock};
-		indentl(std::cout, indent) << name << std::endl;
 		indent++;
 	}
 
@@ -259,8 +255,7 @@ public:
 	 *	\param start The name of the primary test suite.
 	 */
 	void init(std::string_view start) {
-		std::cout << start << std::endl;
-		indent = 1;
+		indent = 0;
 	}
 };
 
@@ -282,29 +277,24 @@ unit_test::suite gc_suite{"gc", master};
 
 void suite::run(collector &out, suite &root) {
 	suite *current{std::addressof(root)};
-	do {
+	//do {
+		out.next(current->name);
 		{
 			suite *child{root.children};
-			if (child) {
-				out.up(child->name);
-				do {
-					run(out, *child);
-					child = child->next;
-				} while(child);
-				out.down();
+			out.up();
+			while (child) {
+				run(out, *child);
+				child = child->next;
 			}
+			out.down();
 		}
+		out.up();
 		case_type::each(root.cases, [&out](case_type &c) -> void {
 			c(out);
 		});
-		current = current->next;
-		if (current) {
-			out.next(current->name);
-			continue;
-		} else {
-			break;
-		}
-	} while(true);
+		out.down();
+		/*current = current->next;
+	} while(current);*/
 }
 
 case_type::context::context() noexcept : saved(current_status.load()) {

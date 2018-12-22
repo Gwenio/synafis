@@ -75,11 +75,10 @@ public:
 	 */
 	virtual void message(std::string_view msg, int lineno, std::string_view file) noexcept = 0;
 
-	/**	\fn up(std::string_view name)
+	/**	\fn up()
 	 *	\brief Move to the first child of the current test suite.
-	 *	\param name The name of the test suite we are switching to.
 	 */
-	virtual void up(std::string_view name) = 0;
+	virtual void up() = 0;
 
 	/**	\fn down()
 	 *	\brief All children of a test suite have completed.
