@@ -115,10 +115,10 @@ public:
 		 *	\param id The type the pool allocates memory for.
 		 *	\param capacity The number of objects in the pool.
 		 *	\param unit The size of the unit of allocation.
-		 *	\returns Returns a new pool or nullptr if virtual memory could not be allocated.
+		 *	\throws std::bad_alloc if virtual memory could not be allocated.
 		 *	\pre Must be at least min unit.
 		 *	\note To deallocate the pool, directly call its destructor.
-		 *	\see select_capacity
+		 *	\see gc::pool::select_capacity
 		 */
 		handle(identity const& id, std::size_t capacity, std::size_t unit);
 
