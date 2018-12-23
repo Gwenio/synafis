@@ -58,6 +58,27 @@ void t::creation(collector &) {
 	SYNAFIS_ASSERT(temp.pools.front());
 }
 
+void t::growth(collector &) {
+	allocator temp{id, simple_unit, simple_flags};
+	SYNAFIS_ASSERT(!temp.pools.empty());
+	auto &h = temp.grow();
+	SYNAFIS_ASSERT(std::addressof(h) == std::addressof(temp.pools.front()));
+	std::size_t x{0};
+	for (auto &y : temp.pools) {
+		if (y) {
+			x++;
+		} else {
+			SYNAFIS_FAILURE("A pool was not allocated.");
+			return;
+		}
+	}
+	if (x < 2) {
+		SYNAFIS_FAILURE("The allocator contained too few pools.");
+	} else if (x > 2) {
+		SYNAFIS_FAILURE("The allocator contained too many pools.");
+	}
+}
+
 }
 
 namespace {
@@ -68,6 +89,8 @@ using unit_test::fail;
 using unit_test::skip;
 
 static unit_test::suite s{"allocator", unit_test::gc_suite};
+
+static c growth{"growth", s, pass, &t::growth};
 
 static c creation{"creation", s, pass, &t::creation};
 

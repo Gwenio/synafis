@@ -55,6 +55,11 @@ public:
 	 *	\brief Tests the construction of an allocator.
 	 */
 	static void creation(collector &);
+
+	/**	\fn growth(collector &)
+	 *	\brief Tests addition of pools to an allocator.
+	 */
+	static void growth(collector &);
 };
 
 }
