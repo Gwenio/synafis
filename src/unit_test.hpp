@@ -65,16 +65,30 @@ void fail_msg(std::string_view msg, int lineno, std::string_view file) noexcept;
  *	\details
  *	\details Otherwise will be omitted so as to not impact release proformace.
  */
+
+/**	\macro SYNAFIS_FAILURE(msg)
+ *	\brief Generates a failed assertion.
+ *	\param msg A string literal containing a message explaining the failure.
+ *	\details In unit testing will case the current case to fail.
+ *	\details
+ *	\details For debugging will use assert(x) from <cassert>.
+ *	\details
+ *	\details Otherwise will be omitted so as to not impact release proformace.
+ */
 #if defined(SYNAFIS_UNIT_TEST)
 
 #define SYNAFIS_ASSERT(x) if (!(x)) { ::unit_test::fail_msg(#x, __LINE__, __FILE__); }
+
+#define SYNAFIS_FAILURE(msg) { ::unit_test::fail_msg(msg, __LINE__, __FILE__); }
 
 #elif !defined(NDEBUG)
 // Use generic assert for debug without unit testing.
 #include <cassert>
 #define SYNAFIS_ASSERT(x) assert(x)
+#define SYNAFIS_FAILURE(msg) assert(false && msg)
 #else
 #define SYNAFIS_ASSERT(x)
+#define SYNAFIS_FAILURE(msg)
 #endif
 
 #endif

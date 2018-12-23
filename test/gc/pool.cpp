@@ -175,28 +175,32 @@ void t::ownership(collector &) {
 	SYNAFIS_ASSERT(!y.from(nullptr));
 	SYNAFIS_ASSERT(!z.from(nullptr));
 	bool in_pool{true};
-	bool not_pool{true};
+	bool not_pool{false};
 	for (auto i : store) {
 		switch (i->data) {
 		case 0:
 			in_pool &= x.from(i);
-			not_pool &= !(y.from(i) || z.from(i));
+			not_pool |= (y.from(i) || z.from(i));
 			break;
 		case 1:
 			in_pool &= y.from(i);
-			not_pool &= !(x.from(i) || z.from(i));
+			not_pool |= (x.from(i) || z.from(i));
 			break;
 		case 2:
 			in_pool &= z.from(i);
-			not_pool &= !(y.from(i) || x.from(i));
+			not_pool |= (y.from(i) || x.from(i));
 			break;
 		default:
-			SYNAFIS_ASSERT(false && "Invalid pool number.");
+			SYNAFIS_FAILURE("Invalid pool number.");
 			return;
 		}
 	}
-	SYNAFIS_ASSERT(in_pool && "At least one pointer was not identified as from the correct pool.");
-	SYNAFIS_ASSERT(not_pool && "At least one pointer was identified as from an incorrect pool.");
+	if (!in_pool) {
+		SYNAFIS_FAILURE("At least one pointer was not identified as from the correct pool.");
+	}
+	if (not_pool) {
+		SYNAFIS_FAILURE("At least one pointer was identified as from an incorrect pool.");
+	}
 }
 
 void t::sweeping(collector &) {
