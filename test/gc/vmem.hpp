@@ -62,7 +62,7 @@ public:
 	 */
 	static bool no_access(vmem const& obj, std::size_t offset, std::size_t length) noexcept;
 
-	/**	\fn no_readonly(vmem const& obj, std::size_t offset, std::size_t length) noexcept
+	/**	\fn is_readonly(vmem const& obj, std::size_t offset, std::size_t length) noexcept
 	 *	\brief Checks that an area of memory in a vmem is readonly.
 	 *	\param obj The object to check.
 	 *	\param offset The starting point in the vmem.
@@ -71,7 +71,7 @@ public:
 	 */
 	static bool is_readonly(vmem const& obj, std::size_t offset, std::size_t length) noexcept;
 
-	/**	\fn no_writable(vmem const& obj, std::size_t offset, std::size_t length) noexcept
+	/**	\fn is_writable(vmem const& obj, std::size_t offset, std::size_t length) noexcept
 	 *	\brief Checks that an area of memory in a vmem is writable.
 	 *	\param obj The object to check.
 	 *	\param offset The starting point in the vmem.
