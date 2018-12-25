@@ -93,11 +93,6 @@ public:
 
 namespace gc {
 
-/**	\var impl
- *	\brief The singleton of type collector.
- */
-static collector impl{};
-
 identity::~identity() {}
 
 std::unique_ptr<identity::iallocator>
@@ -116,18 +111,18 @@ thread_local std::size_t lock_count{0};
 
 scoped_lock::scoped_lock() {
 	if (lock_count++ == 0) {
-		impl.lock();
+		collector::lock();
 	}
 }
 
 scoped_lock::~scoped_lock() {
 	if (--lock_count == 0) {
-		impl.unlock();
+		collector::unlock();
 	}
 }
 
 soft_ptr::data *soft_ptr::get_soft(hard_ptr const&other) {
-	return copy(impl.get_soft_ptr(other.ptr));
+	return copy(collector::get_soft_ptr(other.ptr));
 }
 
 soft_ptr::data *soft_ptr::copy(soft_ptr::data *other) noexcept {
@@ -158,7 +153,7 @@ soft_ptr::data *soft_ptr::update(soft_ptr::data *old) noexcept {
 void soft_ptr::free(soft_ptr::data *other) noexcept {
 	std::size_t temp{other->count.fetch_sub(1, std::memory_order_seq_cst)};
 	if ((!(other->ptr) || other->next) && temp == 1) {	// temp == 1 means it is now zero
-		impl.free_soft_ptr(other);
+		collector::free_soft_ptr(other);
 	}
 }
 
@@ -173,7 +168,7 @@ std::tuple<void *, identity const*> hard_ptr::get_hard(soft_ptr const&other) {
 }
 
 void *hard_ptr::base_ptr(void *source) noexcept {
-	return impl.base_ptr(source);
+	return collector::base_ptr(source);
 }
 
 void root::register_impl(void *obj, traverse_cb tcb, root_cb rcb) {
@@ -189,7 +184,7 @@ void root::unregister_impl(void *obj) {
 }
 
 void initialize() {
-	impl.init();
+	collector::init();
 }
 
 }

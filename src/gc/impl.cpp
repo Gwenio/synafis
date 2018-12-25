@@ -25,20 +25,22 @@ collector::collector() noexcept {}
 
 collector::~collector() noexcept {}
 
-void collector::init() {}
+void collector::init_impl() {}
 
-void collector::lock() {}
+void collector::lock_impl() {}
 
-void collector::unlock() {}
+void collector::unlock_impl() {}
 
-soft_ptr::data *collector::get_soft_ptr(void *ptr) {
+soft_ptr::data *collector::get_soft_ptr_impl(void *ptr) {
 	return nullptr;
 }
 
-void collector::free_soft_ptr(soft_ptr::data *ptr) {}
+void collector::free_soft_ptr_impl(soft_ptr::data *ptr) {}
 
-void *collector::base_ptr(void *ptr) noexcept {
+void *collector::base_ptr_impl(void *ptr) noexcept {
 	return ptr;
 }
+
+collector collector::singleton{};
 
 }
