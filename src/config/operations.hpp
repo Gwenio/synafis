@@ -31,10 +31,20 @@ PERFORMANCE OF THIS SOFTWARE.
 
 // Set default configurations for those not specified.
 
+/**	\def SYNAFIS_CONFIG_OPTIMIZE
+ *	\brief The value for config::optimize.
+ *	\note Define this value in the compiler commandline.
+ *	\see config::optimize
+ */
 #ifndef SYNAFIS_CONFIG_OPTIMIZE
 #define SYNAFIS_CONFIG_OPTIMIZE (!config::debug)
 #endif
 
+/**	\def SYNAFIS_CONFIG_PEEPHOLE
+ *	\brief The value for config::peephole.
+ *	\note Define this value in the compiler commandline.
+ *	\see config::peephole
+ */
 #ifndef SYNAFIS_CONFIG_PEEPHOLE
 #define SYNAFIS_CONFIG_PEEPHOLE true
 #endif
