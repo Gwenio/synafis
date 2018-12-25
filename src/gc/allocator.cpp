@@ -19,6 +19,10 @@ PERFORMANCE OF THIS SOFTWARE.
 
 #include "allocator.hpp"
 
+#ifndef SYNAFIS_GC_IMPL_HPP
+#include "impl.hpp"
+#endif
+
 /**	\file gc/allocator.cpp
  *	\brief Defines the implementation of gc::allocator.
  */

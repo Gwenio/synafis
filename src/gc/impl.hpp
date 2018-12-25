@@ -21,6 +21,10 @@ PERFORMANCE OF THIS SOFTWARE.
 #define SYNAFIS_GC_IMPL_HPP
 #pragma once
 
+#ifndef SYNAFIS_GC_HPP
+#include "../gc.hpp"
+#endif
+
 /**	\file gc/impl.hpp
  *	\brief Defines the garbage collector implementation.
  */
@@ -33,36 +37,37 @@ namespace gc {
  */
 class collector {
 public:
+private:
+public:
 	/**	\fn collector() noexcept
-	 *	\brief Sets up the collector as much as possible in a constexpr function.
-	 *	\note The reason for constexpr is to ensure a certain amount of setup
-	 *	\note will be done regardless of the order global objects are initialized in.
+	 *	\brief Sets most of the collector.
+	 *	\note Needs to be independent of the order global objects are constructed in.
 	 */
-	constexpr collector() noexcept {}
+	collector() noexcept;
 
 	/**	\fn ~collector() noexcept
 	 *	\brief Sets up the collector as much as possible in a constexpr function.
 	 */
-	~collector() noexcept {}
+	~collector() noexcept;
 
 	/**	\fn init()
 	 *	\brief Finishes setting up the collector.
 	 */
-	void init() {}
+	void init();
 
 	/**	\fn lock()
 	 *	\brief Locks against collection.
 	 *	\details Called by the program when entering a section in which the collector must not run.
 	 *	\todo In particular this call starts the thread that preforms collection.
 	 */
-	void lock() {}
+	void lock();
 
 	/**	\fn unlock()
 	 *	\brief Allows collection again.
 	 *	\details Called by the program when leaving a section in which the collector must not run.
 	 *	\note If the collector needs to run, this call will block until after it runs.
 	 */
-	void unlock() {}
+	void unlock();
 
 	/**	\fn get_soft_ptr(void *ptr)
 	 *	\brief Gets the soft pointer associated with an object.
@@ -71,7 +76,7 @@ public:
 	 *	\throws Throws std::bad_alloc if a soft_ptr::data needed to be allocated but memory was lacking.
 	 *	\details Gets the existing data if there is one or creates it if there is not.
 	 */
-	soft_ptr::data *get_soft_ptr(void *ptr) {return nullptr;}
+	soft_ptr::data *get_soft_ptr(void *ptr);
 
 	/**	\fn free_soft_ptr(soft_ptr::data *ptr)
 	 *	\brief Frees the soft pointer data.
@@ -81,14 +86,14 @@ public:
 	 *	\post The data object is no longer valid.
 	 *	\details Deallocates the memory if needed.
 	 */
-	void free_soft_ptr(soft_ptr::data *ptr) {}
+	void free_soft_ptr(soft_ptr::data *ptr);
 
 	/**	\fn base_ptr() noexcept
 	 *	\brief Gets the originally allocated address.
 	 *	\param ptr The pointer to get a base address for.
 	 *	\returns Returns the address originally allocated for the object ptr points to a location within.
 	 */
-	void *base_ptr(void *ptr) noexcept {return ptr;}
+	void *base_ptr(void *ptr) noexcept;
 };
 
 }
