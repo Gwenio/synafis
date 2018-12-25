@@ -69,4 +69,8 @@ inline constexpr bool const peephole = optimize && SYNAFIS_CONFIG_PEEPHOLE;
 
 }
 
+//	Remove preprocessor definitions that are no longer needed.
+#undef SYNAFIS_CONFIG_OPTIMIZE
+#undef SYNAFIS_CONFIG_PEEPHOLE
+
 #endif

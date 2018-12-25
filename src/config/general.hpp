@@ -56,4 +56,7 @@ inline constexpr bool const debug = SYNAFIS_CONFIG_DEBUG;
 
 }
 
+//	Remove preprocessor definitions that are no longer needed.
+#undef SYNAFIS_CONFIG_DEBUG
+
 #endif

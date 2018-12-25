@@ -91,4 +91,9 @@ inline constexpr std::size_t const max_pool = SYNAFIS_CONFIG_MAX_POOL;
 
 }
 
+//	Remove preprocessor definitions that are no longer needed.
+#undef SYNAFIS_CONFIG_GUARD_PAGES
+#undef SYNAFIS_CONFIG_MIN_POOL
+#undef SYNAFIS_CONFIG_MAX_POOL
+
 #endif

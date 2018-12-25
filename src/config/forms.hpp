@@ -51,4 +51,7 @@ inline constexpr bool const remove_env_noop = optimize && SYNAFIS_CONFIG_ENV_NOO
 
 }
 
+//	Remove preprocessor definitions that are no longer needed.
+#undef SYNAFIS_CONFIG_ENV_NOOP
+
 #endif

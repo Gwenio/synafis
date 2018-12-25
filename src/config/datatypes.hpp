@@ -72,4 +72,8 @@ static_assert(mutable_env || keep_call,
 
 }
 
+//	Remove preprocessor definitions that are no longer needed.
+#undef SYNAFIS_CONFIG_MUTABLE_ENV
+#undef SYNAFIS_CONFIG_KEEP_CALL
+
 #endif
