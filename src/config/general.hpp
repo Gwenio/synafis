@@ -31,6 +31,11 @@ PERFORMANCE OF THIS SOFTWARE.
 
 // Set default configurations for those not specified.
 
+/**	\def SYNAFIS_CONFIG_DEBUG
+ *	\brief The value for config::debug.
+ *	\note Define this value in the compiler commandline.
+ *	\see config::debug
+ */
 #ifdef NDEBUG
 #define SYNAFIS_CONFIG_DEBUG false
 #else
