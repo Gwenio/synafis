@@ -2,6 +2,8 @@
 bin
 tmp
 deps
+doxygen
+Doxyfile
 .vscode
 *.ninja
 config.json
