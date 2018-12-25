@@ -48,6 +48,15 @@ class collector {
 	 */
 	collector(collector &&) = delete;
 public:
+	/**	\class region
+	 *	\brief Represents regions of memory that may be allocated.
+	 *	\details Used for bookkeeping that needs to know where an object was allocated from.
+	 */
+	class region {
+		friend unit_test::tester<collector>;
+	private:
+	public:
+	};
 private:
 	/**	\fn collector() noexcept
 	 *	\brief Sets most of the collector.
@@ -76,16 +85,19 @@ private:
 	void unlock_impl();
 
 	/**	\fn get_soft_ptr_impl(void *ptr)
+	 *	\param ptr A pointer to the object to get the soft pointer data for.
 	 *	\see get_soft_ptr(void *ptr)
 	 */
 	soft_ptr::data *get_soft_ptr_impl(void *ptr);
 
 	/**	\fn free_soft_ptr_impl(soft_ptr::data *ptr)
+	 *	\param ptr The data to deallocate.
 	 *	\see free_soft_ptr(soft_ptr::data *ptr)
 	 */
 	void free_soft_ptr_impl(soft_ptr::data *ptr);
 
 	/**	\fn base_ptr_impl(void *ptr) noexcept
+	 *	\param ptr The pointer to get a base address for.
 	 *	\see base_ptr(void *ptr) noexcept
 	 */
 	void *base_ptr_impl(void *ptr) noexcept;
