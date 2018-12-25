@@ -31,12 +31,22 @@ PERFORMANCE OF THIS SOFTWARE.
 
 // Set default configurations for those not specified.
 
+/**	\def SYNAFIS_CONFIG_MUTABLE_ENV
+ *	\brief The value for config::mutable_env.
+ *	\note Define this value in the compiler commandline.
+ *	\see config::mutable_env
+ */
 #ifndef SYNAFIS_CONFIG_MUTABLE_ENV
 #define SYNAFIS_CONFIG_MUTABLE_ENV false
 #endif
 
+/**	\def SYNAFIS_CONFIG_KEEP_CALL
+ *	\brief The value for config::keep_call.
+ *	\note Define this value in the compiler commandline.
+ *	\see config::keep_call
+ */
 #ifndef SYNAFIS_CONFIG_KEEP_CALL
-#define SYNAFIS_CONFIG_KEEP_CALL false
+#define SYNAFIS_CONFIG_KEEP_CALL (!mutable_env)
 #endif
 
 namespace config {
@@ -47,7 +57,7 @@ namespace config {
  *	\details is created as a child of the old environment that contains the binding
  *	\details to become the new current environemnt.
  */
-constexpr bool const mutable_env = ALES_CONFIG_MUTABLE_ENV;
+constexpr bool const mutable_env = SYNAFIS_CONFIG_MUTABLE_ENV;
 
 /**	\var keep_call
  *	\brief If true then called closures will remain on top of the stack after exec_call.
@@ -55,7 +65,7 @@ constexpr bool const mutable_env = ALES_CONFIG_MUTABLE_ENV;
  *	\details when environments are immutable.
  *	\see operation::exec_call
  */
-constexpr bool const keep_call = ALES_CONFIG_KEEP_CALL;
+constexpr bool const keep_call = SYNAFIS_CONFIG_KEEP_CALL;
 
 static_assert(mutable_env || keep_call,
 	"Environments must be mutable or we must keep closures on the stack after calling them.");
