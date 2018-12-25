@@ -152,6 +152,15 @@ void t::allocation(collector &) {
 	}
 	SYNAFIS_ASSERT(temp.used() == store.size());
 	SYNAFIS_ASSERT(temp.available() + temp.used() == temp.ptr->capacity);
+	auto const stop = store.end() - 1;
+	for (auto cur = store.begin(); cur < stop; cur++) {
+		for (auto comp = cur + 1; comp < store.end(); comp++) {
+			if (*cur == *comp) {
+				SYNAFIS_FAILURE("An address was allocated more than once without being freed.");
+				return;
+			}
+		}
+	}
 }
 
 void t::ownership(collector &) {
