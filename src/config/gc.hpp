@@ -31,14 +31,29 @@ PERFORMANCE OF THIS SOFTWARE.
 
 // Set default configurations for those not specified.
 
+/**	\def SYNAFIS_CONFIG_GUARD_PAGES
+ *	\brief The value for config::guard_pages.
+ *	\note Define this value in the compiler commandline.
+ *	\see config::guard_pages
+ */
 #ifndef SYNAFIS_CONFIG_GUARD_PAGES
 #define SYNAFIS_CONFIG_GUARD_PAGES (config::debug)
 #endif
 
+/**	\def SYNAFIS_CONFIG_MIN_POOL
+ *	\brief The value for config::min_pool.
+ *	\note Define this value in the compiler commandline.
+ *	\see config::min_pool
+ */
 #ifndef SYNAFIS_CONFIG_MIN_POOL
 #define SYNAFIS_CONFIG_MIN_POOL (sizeof(std::size_t) * 8)
 #endif
 
+/**	\def SYNAFIS_CONFIG_MAX_POOL
+ *	\brief The value for config::max_pool.
+ *	\note Define this value in the compiler commandline.
+ *	\see config::max_pool
+ */
 #ifndef SYNAFIS_CONFIG_MAX_POOL
 #define SYNAFIS_CONFIG_MAX_POOL (sizeof(std::size_t) * 8)
 #endif
