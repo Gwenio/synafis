@@ -17,8 +17,8 @@ OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
 PERFORMANCE OF THIS SOFTWARE.
 */
 
-/**	\file test/gc/pool.cpp
- *	\brief Defines test cases for gc::pool.
+/**	\file test/gc/pool.hpp
+ *	\brief Declares test cases for gc::pool.
  */
 
 #include "../../src/gc/pool.hpp"

@@ -18,7 +18,7 @@ PERFORMANCE OF THIS SOFTWARE.
 */
 
 /**	\file test/gc/vmem.hpp
- *	\brief Defines the tester for gc::vmem.
+ *	\brief Declares the tester for gc::vmem.
  */
 
 #include "../../src/gc/vmem.hpp"

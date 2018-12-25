@@ -17,8 +17,8 @@ OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
 PERFORMANCE OF THIS SOFTWARE.
 */
 
-/**	\file test/gc/allocator.cpp
- *	\brief Defines test cases for gc::allocator.
+/**	\file test/gc/allocator.hpp
+ *	\brief Declares test cases for gc::allocator.
  */
 
 #include "../../src/gc/allocator.hpp"
