@@ -17,7 +17,7 @@ OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
 PERFORMANCE OF THIS SOFTWARE.
 */
 
-/**	\file test/gc/ptr_map.cpp
+/**	\file test/gc/ptr_math.cpp
  *	\brief Defines test cases for the pointer math functions.
  */
 
