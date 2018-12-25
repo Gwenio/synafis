@@ -55,7 +55,7 @@ void fail_msg(std::string_view msg, int lineno, std::string_view file) noexcept;
 
 }
 
-/**	\macro SYNAFIS_ASSERT(x)
+/**	\def SYNAFIS_ASSERT(x)
  *	\brief Determine if if the expression 'x' is true.
  *	\param x The expression to evaluate.
  *	\pre 'x' should not have side affects.
@@ -66,12 +66,12 @@ void fail_msg(std::string_view msg, int lineno, std::string_view file) noexcept;
  *	\details Otherwise will be omitted so as to not impact release proformace.
  */
 
-/**	\macro SYNAFIS_FAILURE(msg)
+/**	\def SYNAFIS_FAILURE(msg)
  *	\brief Generates a failed assertion.
  *	\param msg A string literal containing a message explaining the failure.
  *	\details In unit testing will case the current case to fail.
  *	\details
- *	\details For debugging will use assert(x) from <cassert>.
+ *	\details For debugging will use assert(false && msg) from <cassert>.
  *	\details
  *	\details Otherwise will be omitted so as to not impact release proformace.
  */
