@@ -21,6 +21,10 @@ PERFORMANCE OF THIS SOFTWARE.
 
 #include <atomic>
 
+/**	\file src/gc.cpp
+ *	\brief Defines the implementation for parts of the GC API.
+ */
+
 namespace gc {
 
 class soft_ptr::data {

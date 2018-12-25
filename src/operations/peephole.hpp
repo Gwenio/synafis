@@ -23,7 +23,7 @@ PERFORMANCE OF THIS SOFTWARE.
 #define SYNAFIS_OPERATIONS_PEEPHOLE_HPP
 #pragma once
 
-/**	\file operations/peephole.hpp
+/**	\file src/operations/peephole.hpp
  *	\brief Provides declarations needed for injecting peephole optimizations.
  */
 

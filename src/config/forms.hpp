@@ -27,7 +27,7 @@ PERFORMANCE OF THIS SOFTWARE.
 #include "general.hpp"
 #endif
 
-/**	\file config/forms.hpp
+/**	\file src/config/forms.hpp
  *	\brief Configures spedial forms.
  */
 

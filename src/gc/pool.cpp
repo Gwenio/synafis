@@ -19,7 +19,7 @@ PERFORMANCE OF THIS SOFTWARE.
 
 #include "pool.hpp"
 
-/**	\file gc/pool.cpp
+/**	\file src/gc/pool.cpp
  *	\brief Defines the implementation of gc::pool.
  */
 

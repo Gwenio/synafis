@@ -23,7 +23,7 @@ PERFORMANCE OF THIS SOFTWARE.
 #define SYNAFIS_GC_HARD_PTR_HPP
 #pragma once
 
-/**	\file gc/hard_ptr.hpp
+/**	\file src/gc/hard_ptr.hpp
  *	\brief Defines the type for hard garbage collector pointers.
  */
 

@@ -21,7 +21,7 @@ PERFORMANCE OF THIS SOFTWARE.
 #define SYNAFIS_GC_PTR_MATH_HPP
 #pragma once
 
-/**	\file gc/ptr_math.hpp
+/**	\file src/gc/ptr_math.hpp
  *	\brief Provides helpers for working with void pointers.
  */
 

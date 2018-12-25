@@ -21,11 +21,11 @@ PERFORMANCE OF THIS SOFTWARE.
 #define SYNAFIS_OPERATIONS_HPP
 #pragma once
 
-/**	\file operations.hpp
+/**	\file src/operations.hpp
  *	\brief The primary header for operations.
  */
 
-/**	\dir operations
+/**	\dir src/operations
  *	\brief Contains the headers included by 'operations.hpp'.
  */
 

@@ -23,7 +23,7 @@ PERFORMANCE OF THIS SOFTWARE.
 #define SYNAFIS_DATATYPES_LITERALS_HPP
 #pragma once
 
-/**	\file datatypes/literals.hpp
+/**	\file src/datatypes/literals.hpp
  *	\brief Defines the types for literals.
  */
 

@@ -27,7 +27,7 @@ PERFORMANCE OF THIS SOFTWARE.
 #include "general.hpp"
 #endif
 
-/**	\file config/datatypes.hpp
+/**	\file src/config/datatypes.hpp
  *	\brief Configures implementation details of datatypes.
  */
 

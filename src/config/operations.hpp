@@ -27,7 +27,7 @@ PERFORMANCE OF THIS SOFTWARE.
 #include "general.hpp"
 #endif
 
-/**	\file config/operations.hpp
+/**	\file src/config/operations.hpp
  *	\brief Configures implementation details for operations.
  */
 

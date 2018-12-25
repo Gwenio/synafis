@@ -25,7 +25,7 @@ PERFORMANCE OF THIS SOFTWARE.
 #include "../gc.hpp"
 #endif
 
-/**	\file gc/idaccess.hpp
+/**	\file src/gc/idaccess.hpp
  *	\brief Implements identity::access.
  *	\warning Should only be included where the more access to identity
  *	\warning is appropriate.

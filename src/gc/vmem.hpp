@@ -31,7 +31,7 @@ PERFORMANCE OF THIS SOFTWARE.
 #include "ptr_math.hpp"
 #endif
 
-/**	\file gc/vmem.hpp
+/**	\file src/gc/vmem.hpp
  *	\brief Defines an abstraction layer for the host's virtual memory system.
  */
 

@@ -23,7 +23,7 @@ PERFORMANCE OF THIS SOFTWARE.
 #define SYNAFIS_DATATYPES_BLOCK_HPP
 #pragma once
 
-/**	\file datatypes/block.hpp
+/**	\file src/datatypes/block.hpp
  *	\brief Defines a type to represent a block of meta code.
  */
 

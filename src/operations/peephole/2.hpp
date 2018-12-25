@@ -23,7 +23,7 @@ PERFORMANCE OF THIS SOFTWARE.
 #define SYNAFIS_OPERATIONS_PEEPHOLE_2_HPP
 #pragma once
 
-/**	\file operations/peephole/2.hpp
+/**	\file src/operations/peephole/2.hpp
  *	\brief Defines optimizations of various patterns of two operations.
  *	\note These specializations should only be present when config::peephole == true.
  *	\todo Add more optimization cases. The current set is more an example than a meaningful set.

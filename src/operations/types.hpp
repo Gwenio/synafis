@@ -23,7 +23,7 @@ PERFORMANCE OF THIS SOFTWARE.
 #define SYNAFIS_OPERATIONS_TYPES_HPP
 #pragma once
 
-/**	\file operations/types.hpp
+/**	\file src/operations/types.hpp
  *	\brief Defines the operation types.
  *	\details An operation type is a type used to specialize block::step or block::finish.
  *	\note These types are only declared and not defined.

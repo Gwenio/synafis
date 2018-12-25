@@ -23,7 +23,7 @@ PERFORMANCE OF THIS SOFTWARE.
 #define SYNAFIS_GC_COLLECTOR_HPP
 #pragma once
 
-/**	\file gc/collector.hpp
+/**	\file src/gc/collector.hpp
  *	\brief Defines functions for interacting with the collector.
  *	\todo Add functions for getting collector statistics.
  */

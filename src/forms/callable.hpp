@@ -23,7 +23,7 @@ PERFORMANCE OF THIS SOFTWARE.
 #define SYNAFIS_FORMS_CALLABLE_HPP
 #pragma once
 
-/**	\file forms/callable.hpp
+/**	\file src/forms/callable.hpp
  *	\brief Special forms for creating closures and continuations.
  */
 

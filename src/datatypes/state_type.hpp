@@ -23,7 +23,7 @@ PERFORMANCE OF THIS SOFTWARE.
 #define SYNAFIS_DATATYPES_TYPE_HPP
 #pragma once
 
-/**	\file datatypes/state_type.hpp
+/**	\file src/datatypes/state_type.hpp
  *	\brief Defines a type to manage execution state.
  */
 

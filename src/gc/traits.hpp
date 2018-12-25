@@ -23,7 +23,7 @@ PERFORMANCE OF THIS SOFTWARE.
 #define SYNAFIS_GC_TRAITS_HPP
 #pragma once
 
-/**	\file gc/traits.hpp
+/**	\file src/gc/traits.hpp
  *	\brief Type traits for types that the garbage collector will interact with.
  */
 

@@ -23,7 +23,7 @@ PERFORMANCE OF THIS SOFTWARE.
 #define SYNAFIS_FORMS_ENVIRONMENT_HPP
 #pragma once
 
-/**	\file forms/environment.hpp
+/**	\file src/forms/environment.hpp
  *	\brief Environment interaction special forms.
  */
 

@@ -21,11 +21,11 @@ PERFORMANCE OF THIS SOFTWARE.
 #define SYNAFIS_DATATYPES_HPP
 #pragma once
 
-/**	\file datatypes.hpp
+/**	\file src/datatypes.hpp
  *	\brief The primary header for datatypes.
  */
 
-/**	\dir datatypes
+/**	\dir src/datatypes
  *	\brief Contains the headers included by 'datatypes.hpp'.
  */
 

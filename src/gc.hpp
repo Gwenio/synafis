@@ -21,11 +21,11 @@ PERFORMANCE OF THIS SOFTWARE.
 #define SYNAFIS_GC_HPP
 #pragma once
 
-/**	\file gc.hpp
+/**	\file src/gc.hpp
  *	\brief The primary header for garbage collector code.
  */
 
-/**	\dir gc
+/**	\dir src/gc
  *	\brief Contains the headers included by 'gc.hpp'.
  */
 

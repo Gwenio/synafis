@@ -21,11 +21,11 @@ PERFORMANCE OF THIS SOFTWARE.
 #define SYNAFIS_FORMS_HPP
 #pragma once
 
-/**	\file forms.hpp
+/**	\file src/forms.hpp
  *	\brief The primary header for operations.
  */
 
-/**	\dir forms
+/**	\dir src/forms
  *	\brief Contains the headers included by 'forms.hpp'.
  */
 

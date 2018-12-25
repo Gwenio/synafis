@@ -25,7 +25,7 @@ PERFORMANCE OF THIS SOFTWARE.
  *	\brief Contains the configuration header files.
  */
 
-/**	\file config/general.hpp
+/**	\file src/config/general.hpp
  *	\brief General configurations useful to all parts of the program.
  */
 

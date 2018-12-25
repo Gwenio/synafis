@@ -27,7 +27,7 @@ PERFORMANCE OF THIS SOFTWARE.
 
 #include <string_view>
 
-/**	\file unit_test/collector.hpp
+/**	\file src/unit_test/collector.hpp
  *	\brief Defines the interface for collecting test results.
  */
 

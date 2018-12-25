@@ -23,7 +23,7 @@ PERFORMANCE OF THIS SOFTWARE.
 #define SYNAFIS_GC_LOCK_HPP
 #pragma once
 
-/**	\file gc/lock.hpp
+/**	\file src/gc/lock.hpp
  *	\brief Defines tools for preventing garbage collection during mutation.
  */
 

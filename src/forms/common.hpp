@@ -23,7 +23,7 @@ PERFORMANCE OF THIS SOFTWARE.
 #define SYNAFIS_FORMS_COMMON_HPP
 #pragma once
 
-/**	\file forms/common.hpp
+/**	\file src/forms/common.hpp
  *	\brief Helpers for writing special forms.
  *	\details Template heavy code benefits from minimizing variation.
  *	\details This header standardizes the sequence of operations for frequent

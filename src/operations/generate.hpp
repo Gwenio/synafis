@@ -23,7 +23,7 @@ PERFORMANCE OF THIS SOFTWARE.
 #define SYNAFIS_OPERATIONS_GENERATE_HPP
 #pragma once
 
-/**	\file operation/generate.hpp
+/**	\file src/operation/generate.hpp
  *	\brief Defines helpers for generating tuples of operations.
  *	\note Also useful for otherwise manipulating said tuples.
  */

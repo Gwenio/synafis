@@ -23,7 +23,7 @@ PERFORMANCE OF THIS SOFTWARE.
 #define SYNAFIS_GC_CALLBACKS_HPP
 #pragma once
 
-/**	\file gc/callbacks.hpp
+/**	\file src/gc/callbacks.hpp
  *	\brief Defines typedefs for callback function pointers.
  */
 

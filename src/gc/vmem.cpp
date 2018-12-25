@@ -19,7 +19,7 @@ PERFORMANCE OF THIS SOFTWARE.
 
 #include "vmem.hpp"
 
-/**	\file gc/vmem.cpp
+/**	\file src/gc/vmem.cpp
  *	\todo For now only a Windows implementation will be provided.
  *	\todo Eventually it should be possible to select other systems.
  *	\note "WIN32_LEAN_AND_MEAN" might need to be defined if there are errors

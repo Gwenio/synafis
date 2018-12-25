@@ -29,7 +29,7 @@ PERFORMANCE OF THIS SOFTWARE.
 #include "pool.hpp"
 #endif
 
-/**	\file gc/allocator.hpp
+/**	\file src/gc/allocator.hpp
  *	\brief Defines the type that manages the pools for a type of object.
  */
 

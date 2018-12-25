@@ -23,7 +23,7 @@ PERFORMANCE OF THIS SOFTWARE.
 #define SYNAFIS_GC_SOFT_PTR_HPP
 #pragma once
 
-/**	\file gc/soft_ptr.hpp
+/**	\file src/gc/soft_ptr.hpp
  *	\brief Defines the type for soft garbage collector pointers.
  */
 

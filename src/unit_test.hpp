@@ -21,11 +21,11 @@ PERFORMANCE OF THIS SOFTWARE.
 #define SYNAFIS_UNIT_TEST_HPP
 #pragma once
 
-/**	\file unit_test.hpp
+/**	\file src/unit_test.hpp
  *	\brief Defines utilities for constructing unit tests.
  */
 
-/**	\dir unit_test
+/**	\dir src/unit_test
  *	\brief Contains the headers defining testing infostructure.
  */
 

@@ -23,7 +23,7 @@ PERFORMANCE OF THIS SOFTWARE.
 #define SYNAFIS_DATATYPES_ENVIRONMENT_TYPE_HPP
 #pragma once
 
-/**	\file datatypes/environment_type.hpp
+/**	\file src/datatypes/environment_type.hpp
  *	\brief Defines the type for key-value bindings for symbol lookup.
  */
 

@@ -29,7 +29,7 @@ PERFORMANCE OF THIS SOFTWARE.
 #include "vmem.hpp"
 #endif
 
-/**	\file gc/pool.hpp
+/**	\file src/gc/pool.hpp
  *	\brief Defines the type for managing a memory pool.
  */
 

@@ -25,7 +25,7 @@ PERFORMANCE OF THIS SOFTWARE.
 #include "general.hpp"
 #endif
 
-/**	\file config/gc.hpp
+/**	\file src/config/gc.hpp
  *	\brief Configures the garbage collector.
  */
 

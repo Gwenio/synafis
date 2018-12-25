@@ -23,7 +23,7 @@ PERFORMANCE OF THIS SOFTWARE.
 #include "impl.hpp"
 #endif
 
-/**	\file gc/allocator.cpp
+/**	\file src/gc/allocator.cpp
  *	\brief Defines the implementation of gc::allocator.
  */
 

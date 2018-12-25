@@ -25,7 +25,7 @@ PERFORMANCE OF THIS SOFTWARE.
 #include "../gc.hpp"
 #endif
 
-/**	\file gc/impl.hpp
+/**	\file src/gc/impl.hpp
  *	\brief Defines the garbage collector implementation.
  */
 

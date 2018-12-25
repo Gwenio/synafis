@@ -23,7 +23,7 @@ PERFORMANCE OF THIS SOFTWARE.
 #define SYNAFIS_FORMS_CONTROL_HPP
 #pragma once
 
-/**	\file forms/control.hpp
+/**	\file src/forms/control.hpp
  *	\brief Flow control special forms.
  */
 

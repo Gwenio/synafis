@@ -23,7 +23,7 @@ PERFORMANCE OF THIS SOFTWARE.
 
 #include <string_view>
 
-/**	\file unit_test/suite.hpp
+/**	\file src/unit_test/suite.hpp
  *	\brief Defines the suite class for grouping tests.
  */
 namespace unit_test {

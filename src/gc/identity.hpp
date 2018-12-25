@@ -23,7 +23,7 @@ PERFORMANCE OF THIS SOFTWARE.
 #define SYNAFIS_GC_IDENTITY_HPP
 #pragma once
 
-/**	\file gc/identity.hpp
+/**	\file src/gc/identity.hpp
  *	\brief Defines tools for identifying types to the garbage collector.
  */
 

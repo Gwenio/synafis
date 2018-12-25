@@ -23,7 +23,7 @@ PERFORMANCE OF THIS SOFTWARE.
 #define SYNAFIS_DATATYPES_VALUE_TYPE_HPP
 #pragma once
 
-/**	\file datatypes/value_type.hpp
+/**	\file src/datatypes/value_type.hpp
  *	\brief Defines the type for storing type erased values.
  */
 

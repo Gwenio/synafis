@@ -23,7 +23,7 @@ PERFORMANCE OF THIS SOFTWARE.
 #define SYNAFIS_GC_ROOT_HPP
 #pragma once
 
-/**	\file gc/root.hpp
+/**	\file src/gc/root.hpp
  *	\brief Defines tools for (un)registering root objects with the collector.
  */
 

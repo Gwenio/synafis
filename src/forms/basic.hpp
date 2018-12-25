@@ -23,7 +23,7 @@ PERFORMANCE OF THIS SOFTWARE.
 #define SYNAFIS_FORMS_BASIC_HPP
 #pragma once
 
-/**	\file forms/basic.hpp
+/**	\file src/forms/basic.hpp
  *	\brief Some simple special forms.
  */
 

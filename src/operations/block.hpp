@@ -23,7 +23,7 @@ PERFORMANCE OF THIS SOFTWARE.
 #define SYNAFIS_OPERATIONS_BLOCK_HPP
 #pragma once
 
-/**	\file operations/block.hpp
+/**	\file src/operations/block.hpp
  *	\brief Expands on datatypes/block.hpp by defining and specializing some functions.
  */
 

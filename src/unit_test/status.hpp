@@ -23,7 +23,7 @@ PERFORMANCE OF THIS SOFTWARE.
 #define SYNAFIS_UNIT_TEST_STATUS_HPP
 #pragma once
 
-/**	\file unit_test/status.hpp
+/**	\file src/unit_test/status.hpp
  *	\brief Defines the result values of test cases.
  */
 

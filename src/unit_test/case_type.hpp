@@ -40,7 +40,7 @@ PERFORMANCE OF THIS SOFTWARE.
 #include <string_view>
 #include <optional>
 
-/**	\file unit_test/case_type.hpp
+/**	\file src/unit_test/case_type.hpp
  *	\brief Defines type for test cases.
  */
 namespace unit_test {
