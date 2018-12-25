@@ -31,6 +31,11 @@ PERFORMANCE OF THIS SOFTWARE.
 
 // Set default configurations for those not specified.
 
+/**	\def SYNAFIS_CONFIG_ENV_NOOP
+ *	\brief The value for config::remove_env_noop.
+ *	\note Define this value in the compiler commandline.
+ *	\see config::remove_env_noop
+ */
 #ifndef SYNAFIS_CONFIG_ENV_NOOP
 #define SYNAFIS_CONFIG_ENV_NOOP true
 #endif
