@@ -17,11 +17,13 @@ OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
 PERFORMANCE OF THIS SOFTWARE.
 */
 
-#if !defined(SYNAFIS_UNIT_TEST_HPP)
-#include "../unit_test.hpp"
-#elif !defined(SYNAFIS_UNIT_TEST_STATUS_HPP)
+#ifndef SYNAFIS_UNIT_TEST_STATUS_HPP
 #define SYNAFIS_UNIT_TEST_STATUS_HPP
 #pragma once
+
+#ifndef SYNAFIS_UNIT_TEST_STATUS_HPP
+#include "status.hpp"
+#endif
 
 /**	\file src/unit_test/status.hpp
  *	\brief Defines the result values of test cases.
