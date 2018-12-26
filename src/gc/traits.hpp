@@ -29,11 +29,12 @@ PERFORMANCE OF THIS SOFTWARE.
  *	\brief Type traits for types that the garbage collector will interact with.
  */
 
-namespace gc {
-
-/**	\namespace traits
+/**	\namespace gc::traits
  *	\brief Defines garbage collector type traits.
  */
+
+namespace gc {
+
 namespace traits {
 
 /**	\typedef flag_type
@@ -132,6 +133,11 @@ inline constexpr bool const pointers{pointers_type<std::remove_cv_t<T>>::value};
 template<typename T, typename Enable = void>
 class finalize_type;
 
+/**
+ *	\brief Specialization for when there is no finalizer.
+ *	\tparam T The type to set the callback for.
+ *	\see finalize_type\<T, Enable\>
+ */
 template<typename T>
 class finalize_type<T, std::enable_if_t<std::is_trivially_destructible_v<T>>> {
 public:
@@ -141,6 +147,11 @@ public:
 	static constexpr finalize_cb const value{nullptr};
 };
 
+/**
+ *	\brief Specialization for when the finalizer calls the type's destructor.
+ *	\tparam T The type to set the callback for.
+ *	\see finalize_type\<T, Enable\>
+ */
 template<typename T>
 class finalize_type<T, std::enable_if_t<(std::is_destructible_v<T> &&
 	!std::is_trivially_destructible_v<T>)>> {
@@ -178,6 +189,11 @@ inline constexpr finalize_cb const finalizer{finalize_type<std::remove_cv_t<T>>:
 template<typename T, typename Enable = void>
 class traverse_type;
 
+/**
+ *	\brief Specialization for types that do not contain pointers.
+ *	\tparam T The type to set the callback for.
+ *	\see traverse_type\<T, Enable\>
+ */
 template<typename T>
 class traverse_type<T, std::enable_if_t<(!pointers<T>)>> {
 public:
@@ -187,6 +203,12 @@ public:
 	static constexpr traverse_cb const value{nullptr};
 };
 
+
+/**
+ *	\brief Specialization for types that contain pointers.
+ *	\tparam T The type to set the callback for.
+ *	\see traverse_type\<T, Enable\>
+ */
 template<typename T>
 class traverse_type<T, std::enable_if_t<(pointers<T>)>> {
 public:
@@ -212,7 +234,7 @@ public:
 template<typename T>
 inline constexpr traverse_cb const traverser{traverse_type<std::remove_cv_t<T>>::value};
 
-/**	\var transfer(T &&orig, T &dest) noexcept
+/**	\fn transfer(T &&orig, T &dest) noexcept
  *	\brief The function used to specify how to move objects of a type.
  *	\tparam T The type to transfer.
  *	\tparam Enable Used to enable specializations with std::enable_if_t.
@@ -230,12 +252,26 @@ inline constexpr traverse_cb const traverser{traverse_type<std::remove_cv_t<T>>:
 template<typename T>
 void transfer(T &&orig, T &dest) noexcept;
 
+/**
+ *	\brief Specialization for when move assignment is usable.
+ *	\tparam T The type to transfer.
+ *	\param orig The original location.
+ *	\param dest The destination location.
+ *	\see transfer\<T, Enable\>()
+ */
 template<typename T>
 inline std::enable_if_t<std::is_nothrow_move_assignable_v<T>>
 transfer(T &&orig, T &dest) noexcept {
 	dest = std::forward<T>(orig);
 }
 
+/**
+ *	\brief Specialization for when copy assignment is usable but not move assignment.
+ *	\tparam T The type to transfer.
+ *	\param orig The original location.
+ *	\param dest The destination location.
+ *	\see transfer\<T, Enable\>()
+ */
 template<typename T> inline
 std::enable_if_t<!std::is_nothrow_move_assignable_v<T> && std::is_nothrow_copy_assignable_v<T>>
 transfer(T &&orig, T &dest) noexcept {
@@ -262,6 +298,11 @@ transfer(T &&orig, T &dest) noexcept {
 template<typename T, typename Enable = void>
 class relocate_type;
 
+/**
+ *	\brief Specialization for when there is no relocation callback.
+ *	\tparam T The type to set the callback for.
+ *	\see relocate_type\<T, Enable\>
+ */
 template<typename T>
 class relocate_type<T, std::enable_if_t<(!pointers<T> &&
 	(std::is_trivially_copyable_v<T> || !movable<T>))>> {
@@ -272,6 +313,11 @@ public:
 	static constexpr relocate_cb const value{nullptr};
 };
 
+/**
+ *	\brief Specialization for when the callback utilizes transfer().
+ *	\tparam T The type to set the callback for.
+ *	\see relocate_type\<T, Enable\>
+ */
 template<typename T>
 class relocate_type<T, std::enable_if_t<(!pointers<T> &&
 	!std::is_trivially_copyable_v<T> && movable<T>)>> {
@@ -290,6 +336,11 @@ public:
 	};
 };
 
+/**
+ *	\brief Specialization for when the callback calls remap().
+ *	\tparam T The type to set the callback for.
+ *	\see relocate_type\<T, Enable\>
+ */
 template<typename T>
 class relocate_type<T, std::enable_if_t<(pointers<T> && !movable<T>)>> {
 public:
@@ -307,6 +358,11 @@ public:
 	};
 };
 
+/**
+ *	\brief Specialization for when the callback utilizes transfer() and calls remap().
+ *	\tparam T The type to set the callback for.
+ *	\see relocate_type\<T, Enable\>
+ */
 template<typename T>
 class relocate_type<T, std::enable_if_t<(pointers<T> && movable<T>)>> {
 public:
@@ -339,7 +395,7 @@ public:
 template<typename T>
 inline constexpr relocate_cb const relocator{relocate_type<std::remove_cv_t<T>>::value};
 
-/**	\var compare(T const& lhs, T const& rhs) noexcept
+/**	\fn compare(T const& lhs, T const& rhs) noexcept
  *	\brief The function used to check if two objects will always be equal.
  *	\tparam T The type being compared.
  *	\param lhs The left hand side of the comparison.
@@ -356,8 +412,8 @@ bool compare(T const& lhs, T const& rhs) noexcept {
 
 /**	\class equality_type
  *	\brief Trait for getting the equality_cb for a type.
- *	\tparam Enable Used to enable specializations with std::enable_if_t.
  *	\tparam T The type to set the callback for.
+ *	\tparam Enable Used to enable specializations with std::enable_if_t.
  *	\details If pointers\<T\>, the defined callback will call the member function remap(void *, remap_cb).
  *	\details
  *	\details For those that are movable\<T\> and need a relocate_cb, the callback calls
@@ -373,6 +429,11 @@ bool compare(T const& lhs, T const& rhs) noexcept {
 template<typename T, typename Enable = void>
 class equality_type;
 
+/**
+ *	\brief Specialization for when there is not equality callback.
+ *	\tparam T The type to set the callback for.
+ *	\see equality_type\<T, Enable\>
+ */
 template<typename T>
 class equality_type<T, std::enable_if_t<(!readonly<T>)>> {
 public:
@@ -382,6 +443,11 @@ public:
 	static constexpr equality_cb const value{nullptr};
 };
 
+/**
+ *	\brief Specialization for when the callback utilizes compare().
+ *	\tparam T The type to set the callback for.
+ *	\see equality_type\<T, Enable\>
+ */
 template<typename T>
 class equality_type<T, std::enable_if_t<(readonly<T>)>> {
 public:
@@ -415,7 +481,7 @@ public:
 template<typename T>
 inline constexpr equality_cb const equalizer{equality_type<std::remove_volatile_t<T>>::value};
 
-/**	\var get_flags() noexcept
+/**	\fn get_flags() noexcept
  *	\brief Gets a set of flags summarizing trait information to pass to the collector.
  *	\tparam T The type to get a summary for.
  *	\details The flags from least to most significant are:
