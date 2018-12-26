@@ -40,6 +40,16 @@ class value_type {
 	friend unit_test::tester<value_type>;
 	//!	\endcond
 private:
+	/**	\class traverse_visitor
+	 *	\brief Type for visiting store for garbage collector traversal.
+	 */
+	class traverse_visitor;
+
+	/**	\class remap_visitor
+	 *	\brief Type for visiting store for garbage collector remapping.
+	 */
+	class remap_visitor;
+
 	/**	\var store
 	 *	\brief Stores the value.
 	 */
@@ -57,8 +67,20 @@ public:
 		store(other.store) {}
 	value_type(value_type && other) noexcept :
 		store(std::move(other.store)) {}
+
+	/**	\fn value_type(empty_type) noexcept
+	 *	\brief Initializes to contain empty_type.
+	 */
 	constexpr value_type(empty_type) noexcept : store(empty::value) {}
+
+	/**	\fn value_type(inert_type) noexcept
+	 *	\brief Initializes to contain inert_type.
+	 */
 	constexpr value_type(inert_type) noexcept : store(inert::value) {}
+
+	/**	\fn value_type(ignore_type) noexcept
+	 *	\brief Initializes to contain ignore_type.
+	 */
 	constexpr value_type(ignore_type) noexcept : store(ignore::value) {}
 	constexpr value_type(bool b) noexcept : store(b) {}
 	constexpr value_type(block b) noexcept : store(b) {}
@@ -74,6 +96,9 @@ public:
 	 */
 	~value_type() = default;
 
+	/**	\fn operator bool() const
+	 *	\brief Implicit convertion to a boolean value.
+	 */
 	operator bool() const {
 		return std::get<bool>(store);
 	}
@@ -101,16 +126,31 @@ public:
 		}
 		return *this;
 	}
-	value_type &operator=(empty_type const& value) noexcept {
-		store = value;
+
+	/**	\fn operator=(empty_type) noexcept
+	 *	\brief Set store to empty_type.
+	 *	\returns *this
+	 */
+	value_type &operator=(empty_type) noexcept {
+		store = empty::value;
 		return *this;
 	}
-	value_type &operator=(inert_type const& value) noexcept {
-		store = value;
+
+	/**	\fn operator=(inert_type) noexcept
+	 *	\brief Set store to inert_type.
+	 *	\returns *this
+	 */
+	value_type &operator=(inert_type) noexcept {
+		store = inert::value;
 		return *this;
 	}
-	value_type &operator=(ignore_type const& value) noexcept {
-		store = value;
+
+	/**	\fn operator=(ignore_type) noexcept
+	 *	\brief Set store to ignore_type.
+	 *	\returns *this
+	 */
+	value_type &operator=(ignore_type) noexcept {
+		store = ignore::value;
 		return *this;
 	}
 	value_type &operator=(gc::hard_ptr const& value) noexcept {
@@ -153,6 +193,10 @@ namespace gc {
 
 namespace traits {
 
+/**
+ *	\brief Specialization for datatype::value_type.
+ *	\see pointers_type\<T\>
+ */
 template<>
 class pointers_type<datatype::value_type> :
 	public std::integral_constant<bool, true> {};

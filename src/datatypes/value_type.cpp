@@ -21,40 +21,72 @@ PERFORMANCE OF THIS SOFTWARE.
 
 namespace datatype {
 
-/**	\class traverse_visitor
- *	\brief Type for visiting store for garbage collector traversal.
- */
-class traverse_visitor {
+class value_type::traverse_visitor {
 private:
+	/**	\var arg
+	 *	\brief The argument passed to value_type::traverse().
+	 */
 	void *arg;
+
+	/**	\var cb
+	 *	\brief The callback passed to value_type::traverse().
+	 */
 	gc::enumerate_cb cb;
 public:
+	/**	\fn traverse_visitor()
+	 *	\brief Deleted.
+	 */
 	traverse_visitor() = delete;
 	constexpr traverse_visitor(void *a, gc::enumerate_cb c) noexcept :
 		arg(a), cb(c) {}
+
+	/**	\fn ~traverse_visitor() noexcept
+	 *	\brief Default.
+	 */
 	~traverse_visitor() noexcept = default;
 	void operator()(gc::hard_ptr const&ptr) const noexcept {
 		ptr.traverse(arg, cb);
 	}
+
+	/**	\fn operator()(T const&) const noexcept
+	 *	\brief All types not overloaded will have a noop definition.
+	 *	\tparam T The type being visited.
+	 */
 	template<typename T>
 	void operator()(T const&) const noexcept {}
 };
 
-/**	\class remap_visitor
- *	\brief Type for visiting store for garbage collector remapping.
- */
-class remap_visitor {
+class value_type::remap_visitor {
 private:
+	/**	\var arg
+	 *	\brief The argument passed to value_type::remap().
+	 */
 	void *arg;
+
+	/**	\var cb
+	 *	\brief The callback passed to value_type::remap().
+	 */
 	gc::remap_cb cb;
 public:
+	/**	\fn remap_visitor()
+	 *	\brief Deleted.
+	 */
 	remap_visitor() = delete;
 	constexpr remap_visitor(void *a, gc::remap_cb c) noexcept :
 		arg(a), cb(c) {}
+
+	/**	\fn ~remap_visitor() noexcept
+	 *	\brief Default.
+	 */
 	~remap_visitor() noexcept = default;
 	void operator()(gc::hard_ptr &ptr) const noexcept {
 		ptr.remap(arg, cb);
 	}
+
+	/**	\fn operator()(T const&) const noexcept
+	 *	\brief All types not overloaded will have a noop definition.
+	 *	\tparam T The type being visited.
+	 */
 	template<typename T>
 	void operator()(T const&) const noexcept {}
 };
