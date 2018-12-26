@@ -21,7 +21,6 @@ PERFORMANCE OF THIS SOFTWARE.
 
 namespace datatype {
 
-
 /**	\class traverse_visitor
  *	\brief Type for visiting store for garbage collector traversal.
  */
