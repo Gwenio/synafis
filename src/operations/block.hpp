@@ -36,7 +36,7 @@ inline void block::step(state_type &state) {
 	state = T::intrinsic(*state);
 }
 
-/**	\fn block::step<operation::env_lookup<Key>>(state_type &state)
+/**
  *	\brief Step for looking up the value bound to a key in the environment.
  *	\tparam Key A type with a static member named 'value', which will be the key to lookup.
  *	\param state The state of execution.
@@ -48,7 +48,7 @@ void block::step<operation::env_lookup<Key>>(state_type &state) {
 	state = state[Key::value];
 }
 
-/**	\fn block::step<operation::env_assign<Keys>>(state_type &state)
+/**
  *	\brief Step for binding a value to a key in the environment.
  *	\tparam Keys A type with a static member named 'value', which will be the key(s) to bind values to.
  *	\param state The state of execution.
@@ -68,14 +68,14 @@ void block::step<operation::env_assign<Keys>>(state_type &state) {
 	state.bind(Keys::value, *state);
 }
 
-/**	\fn block::step<operation::env_assign<ignore>>(state_type &)
+/**
  *	\brief No binding occurs when the Keys used is ignore.
  *	\see config::mutable_env
  */
 template<> inline
 void block::step<operation::env_assign<ignore>>(state_type &) {}
 
-/**	\fn block::step<operation::env_swap>(state_type &state)
+/**
  *	\brief Step for swapping the current environment with the value in the accumulator.
  *	\param state The state of execution.
  *	\pre The accumulator must contain an environment.
@@ -83,7 +83,7 @@ void block::step<operation::env_assign<ignore>>(state_type &) {}
 template<>
 void block::step<operation::env_swap>(state_type &state);
 
-/**	\fn block::step<operation::env_child>(state_type &state)
+/**
  *	\brief Step for getting a child of the current environment.
  *	\param state The state of execution.
  *	\details The old environment is placed in the accumulator while the child is the new environment.
@@ -94,7 +94,7 @@ void block::step<operation::env_swap>(state_type &state);
 template<>
 void block::step<operation::env_child>(state_type &state);
 
-/**	\fn block::step<operation::env_fresh>(state_type &state)
+/**
  *	\brief Step for getting a fresh environment.
  *	\param state The state of execution.
  *	\details The old environment is placed in the accumulator while the fresh one is the new environment.
@@ -105,7 +105,7 @@ void block::step<operation::env_child>(state_type &state);
 template<>
 void block::step<operation::env_fresh>(state_type &state);
 
-/**	\fn block::step<operation::stack_pop>(state_type &state)
+/**
  *	\brief Step for removing the top of the stack and placing it in the accumulator.
  *	\param state The state of execution.
  *	\note Cases where the accumulator is immediately overwritten can have the assignment optimized out.
@@ -113,21 +113,21 @@ void block::step<operation::env_fresh>(state_type &state);
 template<>
 void block::step<operation::stack_pop>(state_type &state);
 
-/**	\fn block::step<operation::stack_push>(state_type &state)
+/**
  *	\brief Step for placing a copy of the accumulator on top of the stack.
  *	\param state The state of execution.
  */
 template<>
 void block::step<operation::stack_push>(state_type &state);
 
-/**	\fn block::step<operation::stack_swap>(state_type &state)
+/**
  *	\brief Step for swapping the values of the accumulator and the top of the stack.
  *	\param state The state of execution.
  */
 template<>
 void block::step<operation::stack_swap>(state_type &state);
 
-/**	\fn block::step<operation::stack_cons>(state_type &state)
+/**
  *	\brief Step for making a pair with the accumulator and the top of the stack.
  *	\param state The state of execution.
  *	\details Pops the top of the stack and places it in the head of a pair and
@@ -137,7 +137,7 @@ void block::step<operation::stack_swap>(state_type &state);
 template<>
 void block::step<operation::stack_cons>(state_type &state);
 
-/**	\fn block::step<operation::stack_frame>(state_type &state)
+/**
  *	\brief Step for saving the stack state to be restored later.
  *	\param state The state of execution.
  *	\details The created 'stack frame' is stored on top of the stack after saving the state.
@@ -146,7 +146,7 @@ void block::step<operation::stack_cons>(state_type &state);
 template<>
 void block::step<operation::stack_frame>(state_type &state);
 
-/**	\fn block::step<operation::acc_data<T>>(state_type &state)
+/**
  *	\brief Step for placing a certain value in the accumulator.
  *	\tparam T A type with a static variable named 'value'.
  *	\param state The state of execution.
@@ -159,9 +159,9 @@ void block::step<operation::acc_data<T>>(state_type &state) {
 	state = T::value;
 }
 
-/**	\fn block::step<operation::acc_closure<T>>(state_type &state)
+/**
  *	\brief Step for creating a closure.
- *	\tparam T A type to be T in block::block<T>().
+ *	\tparam T A type to be T in block::block\<T\>().
  *	\param state The state of execution.
  *	\details A closure is a pair with an environment as the head and a block as the tail.
  *	\details The environment used is the current environment, and a block is created with T.
@@ -177,19 +177,19 @@ inline block block::finish(state_type &state) {
 	return T::intrinsic(*state);
 }
 
-/**	\fn block::impl<std::tuple<Args...>>(state_type &state)
+/**
  *	\brief Injects peephole optimizations.
  *	\tparam Args Types to check for a peephole optimization.
  *	\param state The state of execution.
  *	\returns Returns the next block to execute.
  *	\details Only enabled with config::peephole is true.
  *	\details
- *	\details If peephole<Args...>::head == std::tuple<Args...> then
- *	\details operation::peep_finish<std::tuple<Args...>>(state) is called.
+ *	\details If peephole\<Args...\>::head == std::tuple\<Args...\> then
+ *	\details operation::peep_finish\<std::tuple\<Args...\>\>(state) is called.
  *	\details Otherwise, we call operation::peep_step and the return depends
- *	\details on peephole<Args...>::value.
+ *	\details on peephole\<Args...\>::value.
  *	\details
- *	\details If peephole<Args...>::value is true then block::impl is returned.
+ *	\details If peephole\<Args...\>::value is true then block::impl is returned.
  *	\details Otherwise, block::finish is used.
  */
 template<typename... Args> inline
@@ -218,13 +218,13 @@ block::impl<std::tuple<Args...>>(state_type &state) {
 	return finish<typename operation::peephole<Args...>::tail>(state);
 }
 
-/**	\fn block::impl<std::tuple<<Head, Tail...>>(state_type &state)
+/**
  *	\brief Specialized to omit unnecessary operations.
  *	\tparam Head The current step to execute.
  *	\tparam Tail A list of operations following the set being executed.
  *	\param state The state of execution.
  *	\returns Returns the next block to execute.
- *	\details Executes step<Head>(state) and then returns impl<Tail...>(state).
+ *	\details Executes step\<Head\>(state) and then returns impl\<Tail...\>(state).
  */
 template<typename Head, typename... Tail> inline
 std::enable_if_t<(2 <= sizeof...(Tail) &&
@@ -235,13 +235,13 @@ block::impl<std::tuple<Head, Tail...>>(state_type &state) {
 	return impl<std::tuple<Tail...>>(state);
 }
 
-/**	\fn block::impl<std::tuple<Head, Tail>>(state_type &state)
+/**
  *	\brief The last pair of steps in a block.
  *	\tparam Head The current step to execute.
  *	\tparam Tail The final operation in the block.
  *	\param state The state of execution.
  *	\returns Returns the next block to execute.
- *	\details The last step is preformed with finish<Tail> rather than block::impl.
+ *	\details The last step is preformed with finish\<Tail\> rather than block::impl.
  */
 template<typename Head, typename Tail> inline
 std::enable_if_t<(std::is_same_v<operation::peephole<Head, Tail...>::tail,
@@ -251,13 +251,13 @@ block::impl<std::tuple<Head, Tail>>(state_type &state) {
 	return finish<Tail>(state);
 }
 
-/**	\fn block::finish<operation::exec_branch<T, F>>(state_type &state)
+/**
  *	\brief Select from two possible blocks based on the value in the accumulator.
  *	\tparam T The first possible option.
  *	\tparam F The second possible option.
  *	\param state The state of execution.
  *	\pre The accumulator of state must contain true or false.
- *	\returns Returns block<T>{} if the accumulator contains true; otherwise, block<F>{} is returned.
+ *	\returns Returns block\<T\>{} if the accumulator contains true; otherwise, block\<F\>{} is returned.
  */
 template<typename T, typename F>
 inline block
@@ -265,7 +265,7 @@ block::finish<operation::exec_branch<T, F>>(state_type &state) {
 	return state ? block<T>{} : block<F>{};
 }
 
-/**	\fn block::finish<operation::exec_call>(state_type &state)
+/**
  *	\brief Calls the closure or continuation stored on top of the stack.
  *	\param state The state of execution.
  *	\details A continuation is a list of pair with a 'stack frame' in the head
@@ -274,14 +274,14 @@ block::finish<operation::exec_branch<T, F>>(state_type &state) {
  *	\details and discard the rest. The proceed to call the trailing closure.
  *	\details For closures the environment is made current and the block is returned.
  *	\pre The top of the stack must contain a closure or a continuation.
- *	\see acc_closure<T> for the definition of a closure.
+ *	\see acc_closure\<T\> for the definition of a closure.
  *	\see stack_frame for information about 'stack frames'.
  *	\see config::keep_call
  */
 template<>
 block block::finish<operation::exec_call>(state_type &state);
 
-/**	\fn block::impl<std::tuple<operation::exec_prep, operation::exec_call>>(state_type &state)
+/**
  *	\brief Prepares the state for applying a closure.
  *	\param state The state of execution.
  *	\details Shuffle around more values than other operations can handle.
