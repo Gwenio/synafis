@@ -69,6 +69,7 @@ public:
 	/**	\fn suite(std::string_view n, suite &parent) noexcept
 	 *	\brief Initializes a child suite.
 	 *	\param n The name of the suite.
+	 *	\param parent The parent the new suite is a child of.
 	 *	\pre 'n' should be initialized with a string literal so that it is not deallocated.
 	 *	\warning It is assumed that static variable contructors are run on a single thread and
 	 *	\warning that the constexpr initialization is preformed for all suites before the part
