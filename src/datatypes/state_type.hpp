@@ -186,6 +186,10 @@ namespace gc {
 
 namespace traits {
 
+/**
+ *	\brief Specialization for datatype::state_type.
+ *	\see pointers_type\<T\>
+ */
 template<>
 class pointers_type<datatype::state_type> :
 	public std::integral_constant<bool, true> {};
