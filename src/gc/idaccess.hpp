@@ -39,13 +39,13 @@ class identity::access {
 	 */
 	access() = delete;
 
-	/**	\fn ~idaccess()
+	/**	\fn ~access()
 	 *	\brief Deleted.
 	 */
 	~access() = delete;
 public:
 	/**	\fn finalize(identity const& id, void *ptr) noexcept
-	 *	\brief Wrapper for identity::finalize that provides access to it.
+	 *	\brief Wrapper for identity::finalize() that provides access to it.
 	 *	\param id The identity of the object.
 	 *	\param ptr A pointer to the object to clean up.
 	 */
@@ -53,7 +53,7 @@ public:
 		id.finalize(ptr);
 	}
 
-	/**	\fn finalize(identity const& id) noexcept
+	/**	\fn has_finalizer(identity const& id) noexcept
 	 *	\brief Checks if id has a finalizer callback.
 	 *	\param id The identity of the object type.
 	 *	\returns Returns true if id has a finalizer callback.
@@ -63,7 +63,7 @@ public:
 	}
 
 	/**	\fn traverse(identity const& id, void const* ptr, void *data, enumerate_cb cb) noexcept
-	 *	\brief Wrapper for identity::traverse that provides access to it.
+	 *	\brief Wrapper for identity::traverse() that provides access to it.
 	 *	\param id The identity of the object.
 	 *	\param ptr A pointer to the object to traverse.
 	 *	\param data Parameter to pass to cb.
@@ -74,10 +74,10 @@ public:
 	}
 
 	/**	\fn relocate(identity const& id, void *orig, void *dest, void *data, remap_cb cb)
-	 *	\brief Wrapper for identity::relocate that provides access to it.
+	 *	\brief Wrapper for identity::relocate() that provides access to it.
 	 *	\param id The identity of the object.
 	 *	\param orig The original address of the object.
-	 *	\param orig The destination address of the object.
+	 *	\param dest The destination address of the object.
 	 *	\param data Parameter to pass to cb.
 	 *	\param cb Callback to remap pointers.
 	 */
@@ -89,7 +89,7 @@ public:
 	 *	\brief Gets the amount of memory to allocate to objects of a type.
 	 *	\tparam T The type to get the allocation unit for.
 	 *	\returns Returns the size of the allocation unit for objects of type T.
-	 *	\see identity::unit_size
+	 *	\see identity::unit_size()
 	 */
 	template<typename T>
 	static constexpr std::size_t unit_size() noexcept {
