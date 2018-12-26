@@ -50,8 +50,9 @@ public:
  *	\brief An expression template for binding value(s) to key(s) in the environment.
  *	\tparam K A type with a static member 'value' to be the key(s) used in the assign operation.
  *	\tparam V An expression template to evaluate to get the value(s) to bind.
+ *	\tparam Enable Used to enable specializations with std::enable_if_t.
  */
-template<typename K, typename V>
+template<typename K, typename V, typename Enable = void>
 class assign {
 public:
 	/**	\typedef impl
@@ -62,12 +63,13 @@ public:
 	using impl = typename V::impl<concat<op::env_assign<K>, Next>>;
 };
 
-/**	\class assign<std::enable_if_t<config::remove_env_noop, lit::ignore>, V>
+/**
  *	\brief Specialized to remove unneeded operations.
  *	\tparam V An expression template to evaluate to get the value(s) to bind.
+ *	\see assign\<K, V, Enable\>
  */
 template<typename V>
-class assign<std::enable_if_t<config::remove_env_noop, lit::ignore>, V> {
+class assign<lit::ignore, V, std::enable_if_t<config::remove_env_noop>> {
 public:
 	/**	\typedef impl
 	 *	\brief The type to pass to block::block<T>().
@@ -77,12 +79,13 @@ public:
 	using impl = typename V::impl<Next>;
 };
 
-/**	\class assign<std::enable_if_t<config::remove_env_noop, lit::ignore>, literal<V>>
+/**
  *	\brief Specialized to remove unneeded operations.
  *	\tparam V Placeholder for the type literal is specialized with.
+ *	\see assign\<K, V, Enable\>
  */
 template<typename V>
-class assign<std::enable_if_t<config::remove_env_noop, lit::ignore>, literal<V>> {
+class assign<lit::ignore, literal<V>, std::enable_if_t<config::remove_env_noop>> {
 public:
 	/**	\typedef impl
 	 *	\brief The type to pass to block::block<T>().
@@ -93,12 +96,13 @@ public:
 	using impl = Next;
 };
 
-/**	\class assign<std::enable_if_t<config::remove_env_noop, lit::ignore>, lookup<K>>
+/**
  *	\brief Specialized to remove unneeded operations.
  *	\tparam K Placeholder for the type key for lookup.
+ *	\see assign\<K, V, Enable\>
  */
-template<typename V>
-class assign<std::enable_if_t<config::remove_env_noop, lit::ignore>, lookup<K>> {
+template<typename K>
+class assign<lit::ignore, lookup<K>, std::enable_if_t<config::remove_env_noop>> {
 public:
 	/**	\typedef impl
 	 *	\brief The type to pass to block::block<T>().
@@ -115,9 +119,10 @@ public:
  *	\tparam K The keys to bind value(s) to in the new environment.
  *	\tparam V The expression for getting the value(s) to bind.
  *	\tparam B The expression to evaluate in the scope.
+ *	\tparam Enable Used to enable specializations with std::enable_if_t.
  *	\note V is evaluated in the original environment before creating the new one.
  */
-template<typename Op, typename K, typename V, typename B>
+template<typename Op, typename K, typename V, typename B, typename Enable = void>
 class scope_common {
 static_assert(std::is_same_v<op::env_child, Op> || std::is_same_v<op::env_fresh, Op>,
 	"Op must be op::env_child or op::env_fresh.");
@@ -132,15 +137,16 @@ protected:
 		op::env_assign<K>, B::impl<Next>>>;
 };
 
-/**	\class scope_common<std::enable_if_t<config::remove_env_noop, lit::ignore>, V, B>
+/**
  *	\brief Specialized to remove unneeded operations.
  *	\tparam Op The operation type for making the new environment.
  *	\tparam V The expression for getting the value(s) to bind.
  *	\tparam B The expression to evaluate in the scope.
  *	\note V is evaluated in the original environment before creating the new one.
+ *	\see scope_common\<Op, K, V, B, Enable\>
  */
 template<typename Op, typename V, typename B>
-class scope_common<std::enable_if_t<config::remove_env_noop, lit::ignore>, V, B> {
+class scope_common<Op, lit::ignore, V, B, std::enable_if_t<config::remove_env_noop>> {
 static_assert(std::is_same_v<op::env_child, Op> || std::is_same_v<op::env_fresh, Op>,
 	"Op must be op::env_child or op::env_fresh.");
 protected:
@@ -154,14 +160,15 @@ protected:
 			op::stack_push, B::impl<Next>>>;
 };
 
-/**	\class scope_common<std::enable_if_t<config::remove_env_noop, lit::ignore>, literal<V>, B>
+/**
  *	\brief Specialized to remove unneeded operations.
  *	\tparam Op The operation type for making the new environment.
  *	\tparam V Placeholder for the type literal is specialized with.
  *	\tparam B The expression to evaluate in the scope.
+ *	\see scope_common\<Op, K, V, B, Enable\>
  */
 template<typename Op, typename V, typename B>
-class scope_common<std::enable_if_t<config::remove_env_noop, lit::ignore>, literal<V>, B> {
+class scope_common<Op, lit::ignore, literal<V>, B, std::enable_if_t<config::remove_env_noop>> {
 static_assert(std::is_same_v<op::env_child, Op> || std::is_same_v<op::env_fresh, Op>,
 	"Op must be op::env_child or op::env_fresh.");
 protected:
@@ -175,14 +182,15 @@ protected:
 			op::stack_push, B::impl<Next>>;
 };
 
-/**	\class scope_common<std::enable_if_t<config::remove_env_noop, lit::ignore>, lookup<K>, B>
+/**
  *	\brief Specialized to remove unneeded operations.
  *	\tparam Op The operation type for making the new environment.
  *	\tparam K Placeholder for the type key for lookup.
  *	\tparam B The expression to evaluate in the scope.
+ *	\see scope_common\<Op, K, V, B, Enable\>
  */
 template<typename Op, typename K, typename B>
-class scope_common<std::enable_if_t<config::remove_env_noop, lit::ignore>, lookup<K>, B> {
+class scope_common<Op, lit::ignore, lookup<K>, B, std::enable_if_t<config::remove_env_noop>> {
 static_assert(std::is_same_v<op::env_child, Op> || std::is_same_v<op::env_fresh, Op>,
 	"Op must be op::env_child or op::env_fresh.");
 protected:
