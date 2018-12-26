@@ -43,7 +43,7 @@ namespace unit_test {
 template<typename T>
 class tester;
 
-/**	\fn fail_msg(std::string_view msg) noexcept
+/**	\fn fail_msg(std::string_view msg, int lineno, std::string_view file) noexcept
  *	\brief Sets the current test status to fail.
  *	\param msg A message about why the test failed.
  *	\param lineno The line number the failure occurred at.
@@ -61,7 +61,7 @@ void fail_msg(std::string_view msg, int lineno, std::string_view file) noexcept;
  *	\pre 'x' should not have side affects.
  *	\details In unit testing will case the current case to fail if evaluates false.
  *	\details
- *	\details For debugging will use assert(x) from <cassert>.
+ *	\details For debugging will use assert(x) from \<cassert\>.
  *	\details
  *	\details Otherwise will be omitted so as to not impact release proformace.
  */
@@ -71,7 +71,7 @@ void fail_msg(std::string_view msg, int lineno, std::string_view file) noexcept;
  *	\param msg A string literal containing a message explaining the failure.
  *	\details In unit testing will case the current case to fail.
  *	\details
- *	\details For debugging will use assert(false && msg) from <cassert>.
+ *	\details For debugging will use assert(false && msg) from \<cassert\>.
  *	\details
  *	\details Otherwise will be omitted so as to not impact release proformace.
  */
