@@ -35,7 +35,7 @@ PERFORMANCE OF THIS SOFTWARE.
  *	\details terms of the number of operations being replaced.
  */
 
-/**	\page operation_peephole Operations
+/**	\page operation_peephole Peephole
  *	\tableofcontents
  *	\section peephole_overview Overview
  *	\details How peephole optimizations work is when the starting types
