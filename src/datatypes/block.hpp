@@ -95,8 +95,8 @@ private:
 	static block finish(state_type &state);
 public:
 	/**	\fn block() noexcept
-	 *	\brief Member ptr is set to &block::impl<T>.
-	 *	\tparam T The type for block::impl<T>.
+	 *	\brief Member ptr is set to &block::impl\<T\>.
+	 *	\tparam T The type for block::impl\<T\>.
 	 */
 	template<typename T>
 	constexpr block() noexcept : ptr(&block::impl<T>) noexcept {}
