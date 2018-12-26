@@ -21,6 +21,7 @@ PERFORMANCE OF THIS SOFTWARE.
 
 namespace datatype {
 
+//!	\cond impl_details
 template<>
 void block::step<operation::env_swap>(state_type &state) {
 	auto temp = state.current();
@@ -108,5 +109,6 @@ template block block::impl<std::tuple<operation::exec_prep,
 	operation::exec_call>>(state_type &);
 
 template block block::finish<operation::exec_call>(state_type &);
+//!	\endcond
 
 }

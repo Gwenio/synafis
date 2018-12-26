@@ -99,7 +99,7 @@ public:
 	 *	\tparam T The type for block::impl\<T\>.
 	 */
 	template<typename T>
-	constexpr block() noexcept : ptr(&block::impl<T>) noexcept {}
+	constexpr block() noexcept : ptr(&block::impl<T>) {}
 
 	/**	\fn block(block const& other) noexcept
 	 *	\brief Default.
