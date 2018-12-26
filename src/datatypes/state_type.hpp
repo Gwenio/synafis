@@ -39,7 +39,9 @@ namespace datatype {
  *	\todo Document once the interface is more stable.
  */
 class state_type {
+	//!	\cond friends
 	friend unit_test::tester<state_type>;
+	//!	\endcond
 private:
 	/**	\var accumulator
 	 *	\brief Store the accumulated result of operations so far.

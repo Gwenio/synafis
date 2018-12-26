@@ -36,7 +36,9 @@ namespace datatype {
  *	\todo Document once the interface is more stable.
  */
 class value_type {
+	//!	\cond friends
 	friend unit_test::tester<value_type>;
+	//!	\endcond
 private:
 	/**	\var store
 	 *	\brief Stores the value.

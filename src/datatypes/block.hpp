@@ -37,8 +37,10 @@ class state_type;
  *	\brief Represents a block of meta-assembled code.
  */
 class block {
+	//!	\cond friends
 	// for so internals can be accessed for testing
 	friend unit_test::tester<block>;
+	//!	\endcond
 private:
 	/**	\var ptr
 	 *	\brief A pointer to the block's code.
