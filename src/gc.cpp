@@ -52,7 +52,7 @@ public:
 
 	/**	\fn data(void *obj) noexcept
 	 *	\brief Creates a new data object.
-	 *	\param ptr The address of the object the data points to.
+	 *	\param obj The address of the object the data points to.
 	 *	\details The reference count starts at zero so we can increment it with
 	 *	\details copy when returned by collector::get_soft_ptr just as we would
 	 *	\details for a pre-existing data.
