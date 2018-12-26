@@ -90,11 +90,12 @@ class peephole {
  *	\brief Base class for peephole specializations.
  *	\tparam Head A tuple of consumed operations.
  *	\tparam Tail The trailing operation.
+ *	\tparam Enable Used to enable specializations with std::enable_if_t.
  *	\note The member value inherited from std::integral_constant is
  *	\note used to check if tail should be passed to block::impl.
  *	\see peephole
  */
-template<typename Head, typename Tail>
+template<typename Head, typename Tail, typename Enable = void>
 class peepbase : public std::integral_constant<bool, false> {
 public:
 	/**	\typedef head
@@ -108,16 +109,16 @@ public:
 	using tail = Tail;
 };
 
-/**	\class peepbase<std::enable_if_t<(sizeof...(Tail) > 1), Head>, std::tuple<Tail...>>
+/**
  *	\brief Base class for peephole specializations.
  *	\tparam Head A tuple of consumed operations.
  *	\tparam Tail The trailing operations.
  *	\details Specialization for when there are more than one trailing operation.
- *	\see operation_peephole
+ *	\see peepbase\<Head, Tail, Enable\>
  *
  */
 template<typename Head, typename... Tail>
-class peepbase<std::enable_if_t<(sizeof...(Tail) > 1), Head>, std::tuple<Tail...>> :
+class peepbase<Head, std::tuple<Tail...>, std::enable_if_t<(sizeof...(Tail) > 1)>> :
 	public std::integral_constant<bool, true> {
 public:
 	/**	\typedef head
@@ -131,13 +132,13 @@ public:
 	using tail = std::tuple<Tail...>;
 };
 
-/**	\class peepbase<Head, void>
+/**
  *	\brief Base class for peephole specializations with no trailing operation(s).
  *	\tparam Head A tuple of consumed operations.
- *	\see operation_peephole
+ *	\see peepbase\<Head, Tail, Enable\>
  */
 template<typename Head>
-class peepbase<Head, void> : public std::integral_constant<bool, false> {
+class peepbase<Head, void, void> : public std::integral_constant<bool, false> {
 public:
 	/**	\typedef head
 	 *	\brief The operations consumed by the optimization.
@@ -159,7 +160,7 @@ void peep_step(state_type &state);
  *	\tparam T A tuple of operations to optimize.
  *	\param state The state of execution.
  *	\returns Returns the next block to execute.
- *	\see peephole<Head, void>
+ *	\see peephole\<Head, void\>
  *	\see operation_peephole
  */
 template<typename T>
