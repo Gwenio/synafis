@@ -37,9 +37,11 @@ class hard_ptr;
  *	\brief Type for managing soft or weak pointers.
  */
 class soft_ptr {
+	//!	\cond friends
 	friend soft_ptr;
 	friend hard_ptr;
 	friend unit_test::tester<soft_ptr>;
+	//!	\endcond
 public:
 	/**	\class data
 	 *	\brief Opaque type for soft pointer data.
@@ -94,7 +96,7 @@ public:
 	 */
 	constexpr soft_ptr() noexcept : ptr(nullptr) {}
 
-	/**	\fn soft_ptr(std::nullptr_t)
+	/**	\fn soft_ptr(std::nullptr_t) noexcept
 	 *	\brief Initialize with a null pointer and no type.
 	 */
 	constexpr soft_ptr(std::nullptr_t) noexcept : soft_ptr() {}
@@ -156,7 +158,7 @@ public:
 	/**	\fn soft_ptr &operator=(hard_ptr const& other) noexcept
 	 *	\brief Set this to the soft_ptr of other.
 	 *	\param other The hard_ptr to get a soft_ptr for.
-	 *	\detail We avoid getting a soft_ptr if other is null and set this to nullptr instead.
+	 *	\details We avoid getting a soft_ptr if other is null and set this to nullptr instead.
 	 *	\see get_soft
 	 */
 	soft_ptr &operator=(hard_ptr const& other) noexcept;

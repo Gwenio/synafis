@@ -42,7 +42,9 @@ namespace gc {
  *	\brief Type to manage pools for a type of object.
  */
 class allocator : public identity::iallocator {
+	//!	\cond friends
 	friend unit_test::tester<allocator>;
+	//!	\endcond
 
 	/**	\fn allocator()
 	 *	\brief Deleted.

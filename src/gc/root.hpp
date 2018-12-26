@@ -40,8 +40,10 @@ namespace gc {
  *	\details so they can manage themselves.
  */
 class root {
+	//!	\cond friends
 	friend root;
 	friend unit_test::tester<root>;
+	//!	\endcond
 private:
 	/**	\fn register_impl(void *obj, traverse_cb tcb, root_cb rcb)
 	 *	\brief Registers an object as a root with the collector.
@@ -92,7 +94,7 @@ private:
 		return static_cast<void *>(const_cast<std::remove_cv_t<T> *>(std::addressof(obj)));
 	}
 
-	/**	\var
+	/**	\var obj
 	 *	\brief Pointer to the root object.
 	 */
 	void *obj;

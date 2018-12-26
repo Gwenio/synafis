@@ -39,9 +39,11 @@ class soft_ptr;
  *	\invariant If ptr != nullptr then type must not be nullptr.
  */
 class hard_ptr {
+	//!	\cond friends
 	friend soft_ptr;
 	friend hard_ptr;
 	friend unit_test::tester<hard_ptr>;
+	//!	\endcond
 private:
 	/**	\var ptr
 	 *	\brief Pointer to object.
@@ -104,7 +106,7 @@ public:
 
 	/**	\fn hard_ptr(T *obj)
 	 *	\brief Tries to initialize the hard_ptr with obj.
-	 *	\tparam The type pointed to by obj.
+	 *	\tparam T The type pointed to by obj.
 	 *	\param obj The object to try making a hard_ptr for.
 	 *	\throws Throws std::runtime_error if unable to get an identity for obj.
 	 *	\post ptr != nullptr && type != nullptr
@@ -242,7 +244,7 @@ public:
 	 */
 	bool operator==(hard_ptr const& other) const noexcept;
 
-	/**	\fn operator!=(T *other) const noexcept
+	/**	\fn operator==(T *other) const noexcept
 	 *	\brief Checks if other points to the same object as ptr.
 	 *	\tparam T The type of the object other points to.
 	 *	\param other The pointer to compare with.

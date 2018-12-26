@@ -36,7 +36,9 @@ namespace gc {
  *	\todo This is a stub waiting to be implemented.
  */
 class collector {
+	//!	\cond friends
 	friend unit_test::tester<collector>;
+	//!	\endcond
 
 	/**	\fn collector(collector const&)
 	 *	\brief Deleted.
@@ -53,7 +55,9 @@ public:
 	 *	\details Used for bookkeeping that needs to know where an object was allocated from.
 	 */
 	class region {
+		//!	\cond friends
 		friend unit_test::tester<collector>;
+		//!	\endcond
 	private:
 	public:
 	};

@@ -48,7 +48,9 @@ namespace gc {
  *	\note const and/or volatile as qualifiers.
  */
 class identity {
+	//!	\cond friends
 	friend unit_test::tester<identity>;
+	//!	\endcond
 public:
 	/**	\class access
 	 *	\brief Type to access restricted parts of the identity class.
@@ -57,29 +59,31 @@ public:
 	 */
 	class access;
 
+	//!	\cond friends
 	// So the garbage collector internals can get more access.
 	friend access;
+	//!	\endcond
 
 	/**	\class iallocator
 	 *	\brief Defines the interface for underlying allocators.
 	 */
 	class iallocator {
-		/**	\fn allocator(iallocator const&)
+		/**	\fn iallocator(iallocator const&)
 		 *	\brief Deleted.
 		 */
 		iallocator(iallocator const&) = delete;
 
-		/**	\fn allocator(iallocator &&)
+		/**	\fn iallocator(iallocator &&)
 		 *	\brief Deleted.
 		 */
 		iallocator(iallocator &&) = delete;
 	protected:
-		/**	\fn allocator() noexcept
+		/**	\fn iallocator() noexcept
 		 *	\brief Default.
 		 */
 		constexpr iallocator() noexcept = default;
 	public:
-		/**	\fn ~allocator()
+		/**	\fn ~iallocator()
 		 *	\brief Default.
 		 */
 		virtual ~iallocator() noexcept = default;
@@ -98,7 +102,7 @@ public:
 		virtual void *allocate(std::nothrow_t) noexcept = 0;
 	};
 private:
-	/**	\var allocator
+	/**	\var alloc
 	 *	\brief Data provided for passing to the allocate callback (acb).
 	 *	\see select_alloc
 	 */
@@ -140,11 +144,11 @@ private:
 	 *	\brief Gets the allocation callback and the allocator data.
 	 *	\param id The identity of the type to get an allocator for.
 	 *	\param unit The return value of unit_size for the type to select an allocator for.
-	 *	\param flags The flags from traits::get_flags.
+	 *	\param flags The flags from traits::get_flags().
 	 *	\returns Returns a tuple with the allocator data and callback.
 	 *	\returns The data maybe nullptr, but the callback must be valid.
 	 *	\pre Is to only be called once per identity object.
-	 *	\see traits::get_flags
+	 *	\see traits::get_flags()
 	 */
 	std::unique_ptr<iallocator>
 	select_alloc(identity const&id, std::size_t unit, traits::flag_type flags);
@@ -228,9 +232,9 @@ public:
 	 *	\brief Constructs the identity for a type.
 	 *	\tparam T The type to construct an identity for.
 	 *	\post acb != nullptr
-	 *	\post !traits::pointers<T> || (tcb && rcb)
-	 *	\post std::is_trivially_destructible_v<T> || fcb != nullptr
-	 *	\post !traits::movable<T> || std::is_trivially_copyable_v<T> || rcb != nullptr
+	 *	\post !traits::pointers\<T\> || (tcb && rcb)
+	 *	\post std::is_trivially_destructible_v\<T\> || fcb != nullptr
+	 *	\post !traits::movable\<T\> || std::is_trivially_copyable_v\<T\> || rcb != nullptr
 	 *	\details Sets the allocator and preforms sanity checks if
 	 *	\details assertion are enabled.
 	 */
@@ -260,7 +264,7 @@ public:
 		return alloc->allocate();
 	}
 
-	/**	\fn allocate() const noexcept
+	/**	\fn allocate(std::nothrow_t) const noexcept
 	 *	\brief Allocates an object of the type the identity represents.
 	 *	\returns Returns a pointer to the allocated object or nullptr.
 	 *	\returns If nullptr is returned, then it means allocation failed and

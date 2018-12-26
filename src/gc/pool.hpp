@@ -39,7 +39,9 @@ namespace gc {
  *	\brief Type to manage a pool of fixed size memory slots.
  */
 class pool {
+	//!	\cond friends
 	friend unit_test::tester<pool>;
+	//!	\endcond
 
 	/**	\fn pool()
 	 *	\brief Deleted.
@@ -71,9 +73,14 @@ public:
 	 */
 	typedef std::bitset<(sizeof(std::uintptr_t) * 8)> bit_group;
 
+	/**	\class handle
+	 *	\brief Manages the ownership and lifetime of a pool.
+	 */
 	class handle {
 		// Shares a tester with pool.
+		//!	\cond friends
 		friend unit_test::tester<pool>;
+		//!	\endcond
 	private:
 		/** \var ptr
 		 *	\brief The pointer to the managed pool object.
@@ -110,7 +117,7 @@ public:
 		handle(handle &&other) noexcept :
 			ptr(std::exchange(other.ptr, nullptr)) {}
 
-		/**	\fn handle(identity const& id, std::size_t unit) noexcept
+		/**	\fn handle(identity const& id, std::size_t capacity, std::size_t unit) noexcept
 		 *	\brief Creates a new pool.
 		 *	\param id The type the pool allocates memory for.
 		 *	\param capacity The number of objects in the pool.
@@ -276,7 +283,9 @@ public:
 		}
 	};
 
+	//!	\cond friends
 	friend handle;
+	//!	\endcond
 private:
 	/**	\class node
 	 *	\brief Used to form a stack of free locations.

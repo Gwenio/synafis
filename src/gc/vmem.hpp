@@ -43,7 +43,9 @@ namespace gc {
  *	\note Execute privalage is considered unneeded at this time.
  */
 class vmem {
+	//!	\cond friends
 	friend unit_test::tester<vmem>;
+	//!	\endcond
 private:
 	/**	\var ptr
 	 *	\brief The address of the virtual memory.
@@ -82,7 +84,7 @@ public:
 	 */
 	constexpr vmem() noexcept : ptr(nullptr), len(0) {}
 
-	/**	\fn (std::size_t const s, bool const access) noexcept
+	/**	\fn vmem(std::size_t const s, bool const access) noexcept
 	 *	\brief Initializes with a new virtual memory block.
 	 *	\param s The size of the block.
 	 *	\param access If true start with read and write access; otherwise, start with no access.
