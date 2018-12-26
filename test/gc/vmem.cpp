@@ -33,6 +33,8 @@ using t = unit_test::tester<gc::vmem>;
 
 namespace unit_test {
 
+//!	\cond impl_details
+
 bool t::invariants(vmem const& obj) noexcept {
 	return !obj.ptr && (obj.len == 0) ||
 		obj.ptr && (0 < obj.len) && is_allocated(obj);
@@ -255,6 +257,8 @@ void t::protect(collector &) {
 	SYNAFIS_ASSERT(is_writable(temp, vmem::page_size * 2, vmem::page_size));
 	SYNAFIS_ASSERT(no_access(temp, vmem::page_size * 3, vmem::page_size));
 }
+
+//!	\endcond
 
 }
 

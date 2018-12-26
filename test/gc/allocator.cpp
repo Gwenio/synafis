@@ -52,6 +52,8 @@ using t = unit_test::tester<gc::allocator>;
 
 namespace unit_test {
 
+//!	\cond impl_details
+
 void t::creation(collector &) {
 	allocator temp{id, simple_unit, simple_flags};
 	SYNAFIS_ASSERT(!temp.pools.empty());
@@ -78,6 +80,8 @@ void t::growth(collector &) {
 		SYNAFIS_FAILURE("The allocator contained too many pools.");
 	}
 }
+
+//!	\endcond
 
 }
 

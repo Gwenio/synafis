@@ -53,6 +53,8 @@ using t = unit_test::tester<gc::pool>;
 
 namespace unit_test {
 
+//!	\cond impl_details
+
 void t::capacity_selection(collector &) {
 	{
 		// Test for normal cases.
@@ -238,6 +240,8 @@ void t::sweeping(collector &) {
 	SYNAFIS_ASSERT(temp.used() == 0);
 	SYNAFIS_ASSERT(temp.available() == temp.ptr->capacity);
 }
+
+//!	\endcond
 
 }
 
