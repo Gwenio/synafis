@@ -94,7 +94,7 @@ public:
 template<typename... Steps>
 class sequence;
 
-/**	\class sequence<Tail>
+/**
  *	\brief The last part of a sequence.
  *	\tparam Tail The last sub-expression of a sequence.
  */
@@ -109,7 +109,7 @@ public:
 	using impl = typename Tail::impl<Next>;
 };
 
-/**	\class sequence<Tail>
+/**
  *	\brief The recursive part of a sequence.
  *	\tparam Head The sub-expression to expand.
  *	\tparam Tail The remaining sub-expressions to expand recursively.
