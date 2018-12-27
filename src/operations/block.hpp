@@ -184,12 +184,12 @@ inline block block::finish(state_type &state) {
  *	\returns Returns the next block to execute.
  *	\details Only enabled with config::peephole is true.
  *	\details
- *	\details If peephole\<Args...\>::head == std::tuple\<Args...\> then
+ *	\details If peephole\<Args...\>::%head == std::tuple\<Args...\> then
  *	\details operation::peep_finish\<std::tuple\<Args...\>\>(state) is called.
  *	\details Otherwise, we call operation::peep_step and the return depends
- *	\details on peephole\<Args...\>::value.
+ *	\details on peephole\<Args...\>::%value.
  *	\details
- *	\details If peephole\<Args...\>::value is true then block::impl is returned.
+ *	\details If peephole\<Args...\>::%value is true then block::impl is returned.
  *	\details Otherwise, block::finish is used.
  */
 template<typename... Args> inline

@@ -232,9 +232,9 @@ public:
 	 *	\brief Constructs the identity for a type.
 	 *	\tparam T The type to construct an identity for.
 	 *	\post acb != nullptr
-	 *	\post !traits::pointers\<T\> || (tcb && rcb)
+	 *	\post !traits::%pointers\<T\> || (tcb && rcb)
 	 *	\post std::is_trivially_destructible_v\<T\> || fcb != nullptr
-	 *	\post !traits::movable\<T\> || std::is_trivially_copyable_v\<T\> || rcb != nullptr
+	 *	\post !traits::%movable\<T\> || std::is_trivially_copyable_v\<T\> || rcb != nullptr
 	 *	\details Sets the allocator and preforms sanity checks if
 	 *	\details assertion are enabled.
 	 */

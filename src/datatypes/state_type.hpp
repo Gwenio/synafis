@@ -96,7 +96,7 @@ public:
 	 *	\brief Call the value on the top of the stack.
 	 *	\returns Returns the next block to execute.
 	 *	\details Sets the environment and the stack frame as needed.
-	 *	\details Removes the top of the stack if !config::keep_call and we did not restore a frame.
+	 *	\details Removes the top of the stack if config::keep_call is false and we did not restore a frame.
 	 *	\see config::keep_call
 	 */
 	block operator()();

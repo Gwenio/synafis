@@ -183,7 +183,7 @@ template<typename Head, typename Tail>
 class flatten_type<std::tuple<Head, Tail>> : public concat_type<Head, Tail> {};
 
 /**	\typedef flatten
- *	\brief Shorthand for typename flatten_type\<std::tuple\<Types...\>\>::type.
+ *	\brief Shorthand for typename flatten_type\<std::tuple\<Types...\>\>::%type.
  *	\tparam Types The types to flatten into a single tuple.
  *	\note If there is only two types then it is equivalent to concat\<Types...\>.
  *	\note As such using concat directly in such cases may reduce compile time.
