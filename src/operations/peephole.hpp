@@ -80,10 +80,10 @@ class peephole {
 	 */
 	~peephole() = delete;
 
-	/**	\typedef tail
+	/**
 	 *	\brief The trailing operations.
 	 */
-	using tail = std::tuple<Args...>;
+	typedef std::tuple<Args...> tail;
 };
 
 /**	\class peepbase
@@ -98,15 +98,15 @@ class peephole {
 template<typename Head, typename Tail, typename Enable = void>
 class peepbase : public std::integral_constant<bool, false> {
 public:
-	/**	\typedef head
+	/**
 	 *	\brief The operations consumed by the optimization.
 	 */
-	using head = Head;
+	typedef Head head;
 
-	/**	\typedef tail
+	/**
 	 *	\brief The trailing operation.
 	 */
-	using tail = Tail;
+	typedef Tail tail;
 };
 
 /**
@@ -121,15 +121,15 @@ template<typename Head, typename... Tail>
 class peepbase<Head, std::tuple<Tail...>, std::enable_if_t<(sizeof...(Tail) > 1)>> :
 	public std::integral_constant<bool, true> {
 public:
-	/**	\typedef head
+	/**
 	 *	\brief The operations consumed by the optimization.
 	 */
-	using head = Head;
+	typedef Head head;
 
-	/**	\typedef tail
+	/**
 	 *	\brief The trailing operations.
 	 */
-	using tail = std::tuple<Tail...>;
+	typedef std::tuple<Tail...> tail;
 };
 
 /**
@@ -140,31 +140,63 @@ public:
 template<typename Head>
 class peepbase<Head, void, void> : public std::integral_constant<bool, false> {
 public:
-	/**	\typedef head
+	/**
 	 *	\brief The operations consumed by the optimization.
 	 */
-	using head = Head;
+	typedef Head head;
 };
 
 /**	\fn peep_step(state_type &state)
  *	\brief Function for the implementation of peephole optimizations.
  *	\tparam T A tuple of operations to optimize.
+ *	\tparam Enable Used to enable specializations with std::enable_if_t.
  *	\param state The state of execution.
  *	\see operation_peephole
  */
-template<typename T>
+template<typename T, typename Enable = std::enable_if_t<config::peephole>>
 void peep_step(state_type &state);
 
 /**	\fn peep_finish(state_type &state)
  *	\brief Function for the implementation of peephole optimizations.
  *	\tparam T A tuple of operations to optimize.
+ *	\tparam Enable Used to enable specializations with std::enable_if_t.
  *	\param state The state of execution.
  *	\returns Returns the next block to execute.
- *	\see peephole\<Head, void\>
+ *	\see peepbase\<Head\>
  *	\see operation_peephole
  */
-template<typename T>
+template<typename T, typename Enable = std::enable_if_t<config::peephole>>
 block peep_finish(state_type &state);
+
+/**	\typedef enable_peep_finish
+ *	\brief Condition for enabling peep_finish() to optimize a series of operations.
+ *	\tparam Args The series of operations to check for.
+ *	\see peep_finish(state_type &state)
+ */
+template<typename... Args>
+using enable_peep_finish = typename std::enable_if_t<config::peephole &&
+	std::is_same_v<operation::peephole<Args...>::head, std::tuple<Args...>>>;
+
+/**	\typedef enable_peep_step
+ *	\brief Condition for enabling peep_step() to optimize a series of operations.
+ *	\tparam Args The series of operations to check for.
+ *	\see peep_step(state_type &state)
+ */
+template<typename... Args>
+using enable_peep_step = typename std::enable_if_t<config::peephole &&
+	!std::is_same_v<operation::peephole<Args...>::head, std::tuple<Args...>> &&
+	operation::peephole<Args...>::value>;
+
+/**	\var no_peep
+ *	\brief Condition for disabling peep_step() and peep_finish() to optimize a series of operations.
+ *	\tparam Args The series of operations to check for.
+ *	\see peep_step(state_type &state)
+ *	\see peep_finish(state_type &state)
+ */
+template<typename... Args>
+static inline constexpr bool no_peep{!config::peephole ||
+	!(std::is_same_v<operation::peephole<Args...>::head, std::tuple<Args...>> ||
+	operation::peephole<Args...>::value)};
 
 }
 

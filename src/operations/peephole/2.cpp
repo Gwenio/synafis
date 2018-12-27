@@ -21,22 +21,24 @@ PERFORMANCE OF THIS SOFTWARE.
 
 namespace operation {
 
-template<>
-std::enable_if_t<(config::peephole)>
+//!	\cond impl_details
+
+template<> void
 peep_step<std::tuple<stack_swap, stack_pop>>(state_type &state) {
 	state.pop();
 }
 
-template<>
-std::enable_if_t<(config::peephole)>
+template<> void
 peep_step<std::tuple<stack_pop, stack_push>>(state_type &state) {
 	state = state.top();
 }
 
-template std::enable_if_t<(config::peephole)>
-peep_step<std::tuple<stack_swap, stack_pop>>(state_type &);
+template void
+peep_step<std::tuple<stack_swap, stack_pop>>(state_type &state);
 
-template std::enable_if_t<(config::peephole)>
-peep_step<std::tuple<stack_pop, stack_push>>(state_type &);
+template void
+peep_step<std::tuple<stack_pop, stack_push>>(state_type &state);
+
+//!	\endcond
 
 }

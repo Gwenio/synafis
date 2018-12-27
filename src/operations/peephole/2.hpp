@@ -34,30 +34,40 @@ PERFORMANCE OF THIS SOFTWARE.
 
 namespace operation {
 
+/**
+ *	\brief Specialization.
+ *	\tparam Tail The trailing steps.
+ *	\see peephole
+ *	\see peep_step\<std::tuple\<stack_swap, stack_pop\>\>(state_type &state)
+ */
 template<typename... Tail>
 class peephole<stack_swap, stack_pop, Tail...> :
 	public peepbase<std::tuple<stack_swap, stack_pop>, std::tuple<Tail...>> {};
 
-/**	\fn peep_step<std::tuple<stack_swap, stack_pop>>(state_type &state)
+/**
  *	\brief Optimizes to remove the top of the stack without other state changes.
  *	\param state The state of execution.
  *	\see config::peephole
  */
-template<>
-std::enable_if_t<(config::peephole)>
+extern template void
 peep_step<std::tuple<stack_swap, stack_pop>>(state_type &state);
 
+/**
+ *	\brief Specialization.
+ *	\tparam Tail The trailing steps.
+ *	\see peephole
+ *	\see peep_step\<std::tuple\<stack_pop, stack_push\>\>(state_type &state)
+ */
 template<typename... Tail>
 class peephole<stack_pop, stack_push, Tail...> :
-	public peepbase<std::tuple<stack_pop, stack_push>, , std::tuple<Tail...>> {};
+	public peepbase<std::tuple<stack_pop, stack_push>, std::tuple<Tail...>> {};
 
-/**	\fn peep_step<std::tuple<stack_swap, stack_pop>>(state_type &state)
+/**
  *	\brief Optimizes to set the accumulator to equal the top of the stack.
  *	\param state The state of execution.
  *	\see config::peephole
  */
-template<>
-std::enable_if_t<(config::peephole)>
+extern template void
 peep_step<std::tuple<stack_pop, stack_push>>(state_type &state);
 
 }
