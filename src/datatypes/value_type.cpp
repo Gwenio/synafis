@@ -37,6 +37,12 @@ public:
 	 *	\brief Deleted.
 	 */
 	traverse_visitor() = delete;
+
+	/**	\fn traverse_visitor(void *a, gc::enumerate_cb c)
+	 *	\brief Constructor.
+	 *	\param a The value for arg.
+	 *	\param c The value for cb.
+	 */
 	constexpr traverse_visitor(void *a, gc::enumerate_cb c) noexcept :
 		arg(a), cb(c) {}
 
@@ -44,6 +50,11 @@ public:
 	 *	\brief Default.
 	 */
 	~traverse_visitor() noexcept = default;
+
+	/**	\fn operator()(gc::hard_ptr const&ptr) const noexcept
+	 *	\brief Overload for when store contains a gc::hard_pointer.
+	 *	\param ptr A reference to the gc::hard_ptr in store.
+	 */
 	void operator()(gc::hard_ptr const&ptr) const noexcept {
 		ptr.traverse(arg, cb);
 	}
@@ -72,6 +83,12 @@ public:
 	 *	\brief Deleted.
 	 */
 	remap_visitor() = delete;
+
+	/**	\fn remap_visitor(void *a, gc::remap_cb c)
+	 *	\brief Constructor.
+	 *	\param a The value for arg.
+	 *	\param c The value for cb.
+	 */
 	constexpr remap_visitor(void *a, gc::remap_cb c) noexcept :
 		arg(a), cb(c) {}
 
@@ -79,6 +96,11 @@ public:
 	 *	\brief Default.
 	 */
 	~remap_visitor() noexcept = default;
+
+	/**	\fn operator()(gc::hard_ptr &ptr) const noexcept
+	 *	\brief Overload for when store contains a gc::hard_pointer.
+	 *	\param ptr A reference to the gc::hard_ptr in store.
+	 */
 	void operator()(gc::hard_ptr &ptr) const noexcept {
 		ptr.remap(arg, cb);
 	}
