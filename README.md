@@ -53,8 +53,10 @@ The documentation is written to be generated from the source files by Doxygen.
 
 - src			: Contains the source files for the project.
 - test			: Contains tests cases.
+- templates		: Contains examples of various configuration files for tools.
 - LICENSE		: The license for the project's code.
 - README.md		: This file.
+- templates.md	: Lists the uses of the files in templates and modifications that may be needed to use them.
 - setup.md      : Documents setup.js and the associated json files.
 - setup.js	    : Script for generating build files.
 - project.json	: Describes the project for setup.js.

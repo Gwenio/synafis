@@ -4,6 +4,7 @@ tmp
 deps
 doxygen
 Doxyfile
+!templates/Doxyfile
 .vscode
 *.ninja
 config.json
