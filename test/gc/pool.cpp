@@ -34,7 +34,8 @@ namespace {
 /**	\class simple
  *	\brief A simple type for pool testing.
  */
-class simple {
+class simple
+{
 public:
 	simple() = default;
 	~simple() = default;
@@ -43,7 +44,8 @@ public:
 
 static gc::identity const id(static_cast<simple *>(nullptr));
 
-static std::size_t const simple_unit{std::max(gc::idaccess::unit_size<simple>(), gc::pool::min_unit)};
+static std::size_t const simple_unit{
+	std::max(gc::idaccess::unit_size<simple>(), gc::pool::min_unit)};
 
 static std::size_t const simple_cap{gc::pool::select_capacity(simple_unit)};
 
@@ -55,7 +57,8 @@ namespace unit_test {
 
 //!	\cond impl_details
 
-void t::capacity_selection(collector &) {
+void t::capacity_selection(collector &)
+{
 	{
 		// Test for normal cases.
 		auto const cap{pool::select_capacity(pool::min_unit)};
@@ -64,14 +67,16 @@ void t::capacity_selection(collector &) {
 	}
 	{
 		// Test for large objects.
-		std::size_t const unit{(config::max_pool * gc::vmem::page_size / config::min_pool) + pool::min_unit};
+		std::size_t const unit{
+			(config::max_pool * gc::vmem::page_size / config::min_pool) + pool::min_unit};
 		auto const cap{pool::select_capacity(unit)};
 		SYNAFIS_ASSERT(config::min_pool <= cap);
 		SYNAFIS_ASSERT(cap * unit >= config::max_pool * gc::vmem::page_size);
 	}
 }
 
-void t::null_handle(collector &) {
+void t::null_handle(collector &)
+{
 	{
 		handle temp{};
 		SYNAFIS_ASSERT(temp.ptr == nullptr);
@@ -82,7 +87,8 @@ void t::null_handle(collector &) {
 	}
 }
 
-void t::creation(collector &) {
+void t::creation(collector &)
+{
 	handle temp{id, simple_cap, simple_unit};
 	SYNAFIS_ASSERT(temp.ptr != nullptr);
 	SYNAFIS_ASSERT(tester<gc::vmem>::is_allocated(temp.ptr->region));
@@ -90,7 +96,8 @@ void t::creation(collector &) {
 	SYNAFIS_ASSERT(temp.available() == temp.ptr->capacity);
 }
 
-void t::destruction(collector &) {
+void t::destruction(collector &)
+{
 	void *addr{nullptr};
 	{
 		handle temp{id, simple_cap, simple_unit};
@@ -105,7 +112,8 @@ void t::destruction(collector &) {
 	SYNAFIS_ASSERT(tester<gc::vmem>::is_free(addr, gc::vmem::page_size));
 }
 
-void t::boolean(collector &) {
+void t::boolean(collector &)
+{
 	handle x{id, simple_cap, simple_unit};
 	handle y{};
 	handle z{};
@@ -122,7 +130,8 @@ void t::boolean(collector &) {
 	SYNAFIS_ASSERT(z == y);
 }
 
-void t::moving(collector &) {
+void t::moving(collector &)
+{
 	handle x{id, simple_cap, simple_unit};
 	handle y{};
 	void *addr{nullptr};
@@ -144,7 +153,8 @@ void t::moving(collector &) {
 	SYNAFIS_ASSERT(tester<gc::vmem>::is_free(addr, gc::vmem::page_size));
 }
 
-void t::allocation(collector &) {
+void t::allocation(collector &)
+{
 	handle temp{id, simple_cap, simple_unit};
 	SYNAFIS_ASSERT(temp.used() == 0);
 	SYNAFIS_ASSERT(temp.available() == temp.ptr->capacity);
@@ -165,7 +175,8 @@ void t::allocation(collector &) {
 	}
 }
 
-void t::ownership(collector &) {
+void t::ownership(collector &)
+{
 	handle x{id, simple_cap, simple_unit};
 	handle y{id, simple_cap, simple_unit};
 	handle z{id, simple_cap, simple_unit};
@@ -214,7 +225,8 @@ void t::ownership(collector &) {
 	}
 }
 
-void t::sweeping(collector &) {
+void t::sweeping(collector &)
+{
 	handle temp{id, simple_cap, simple_unit};
 	SYNAFIS_ASSERT(temp.used() == 0);
 	SYNAFIS_ASSERT(temp.available() == temp.ptr->capacity);
@@ -229,7 +241,7 @@ void t::sweeping(collector &) {
 	SYNAFIS_ASSERT(temp.used() == store1.size() + store2.size());
 	SYNAFIS_ASSERT(temp.available() + temp.used() == temp.ptr->capacity);
 	for (auto x : store1) {
-			temp.mark(x);
+		temp.mark(x);
 	}
 	SYNAFIS_ASSERT(temp.used() == store1.size() + store2.size());
 	SYNAFIS_ASSERT(temp.available() + temp.used() == temp.ptr->capacity);

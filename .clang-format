@@ -81,6 +81,3 @@ UseTab: Always
 Language: JavaScript
 DisableFormat: true
 ---
-Language: None
-DisableFormat: true
----

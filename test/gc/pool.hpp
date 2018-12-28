@@ -30,7 +30,8 @@ namespace unit_test {
  *	\brief Class with access to the interals of gc::pool to make tests.
  */
 template<>
-class tester<gc::pool> {
+class tester<gc::pool>
+{
 	/**	\fn tester()
 	 *	\brief Deleted.
 	 */
@@ -40,6 +41,7 @@ class tester<gc::pool> {
 	 *	\brief Deleted.
 	 */
 	~tester() = delete;
+
 public:
 	/**	\typedef pool
 	 *	\brief Shorthand for the class being tested.

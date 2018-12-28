@@ -30,7 +30,8 @@ namespace unit_test {
  *	\brief Class with access to the interals of gc::allocator to make tests.
  */
 template<>
-class tester<gc::allocator> {
+class tester<gc::allocator>
+{
 	/**	\fn tester()
 	 *	\brief Deleted.
 	 */
@@ -40,6 +41,7 @@ class tester<gc::allocator> {
 	 *	\brief Deleted.
 	 */
 	~tester() = delete;
+
 public:
 	/**	\typedef allocator
 	 *	\brief Shorthand for the class being tested.

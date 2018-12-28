@@ -33,7 +33,8 @@ namespace {
 /**	\class simple
  *	\brief A simple type for allocator testing.
  */
-class simple {
+class simple
+{
 public:
 	simple() = default;
 	~simple() = default;
@@ -42,7 +43,8 @@ public:
 
 static gc::identity const id(static_cast<simple *>(nullptr));
 
-static std::size_t const simple_unit{std::max(gc::idaccess::unit_size<simple>(), gc::pool::min_unit)};
+static std::size_t const simple_unit{
+	std::max(gc::idaccess::unit_size<simple>(), gc::pool::min_unit)};
 
 static auto const simple_flags = gc::traits::get_flags<simple>();
 
@@ -54,13 +56,15 @@ namespace unit_test {
 
 //!	\cond impl_details
 
-void t::creation(collector &) {
+void t::creation(collector &)
+{
 	allocator temp{id, simple_unit, simple_flags};
 	SYNAFIS_ASSERT(!temp.pools.empty());
 	SYNAFIS_ASSERT(temp.pools.front());
 }
 
-void t::growth(collector &) {
+void t::growth(collector &)
+{
 	allocator temp{id, simple_unit, simple_flags};
 	SYNAFIS_ASSERT(!temp.pools.empty());
 	auto &h = temp.grow();

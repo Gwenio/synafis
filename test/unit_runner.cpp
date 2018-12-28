@@ -47,7 +47,8 @@ static std::atomic<status> current_status;
  *	\param indent The size of the indentation.
  *	\returns out
  */
-std::ostream &indentl(std::ostream &out, std::size_t indent) {
+std::ostream &indentl(std::ostream &out, std::size_t indent)
+{
 	for (std::size_t x = 0; x < indent; x++) {
 		out << "  ";
 	}
@@ -60,12 +61,14 @@ std::ostream &indentl(std::ostream &out, std::size_t indent) {
  *	\todo In the future it would be good to output to files and
  *	\todo have the option for JSON output.
  */
-class collector_impl : public ::unit_test::collector {
+class collector_impl : public ::unit_test::collector
+{
 public:
 	/**	\class results
 	 *	\brief Stores test cases that have not completed.
 	 */
-	class results {
+	class results
+	{
 	private:
 		/**	\typedef msg_tuple
 		 *	\brief Shorthand for container of messages.
@@ -93,8 +96,9 @@ public:
 		 *	\param out The stream to output to.
 		 *	\Returns A reference to 'out'.
 		 */
-		static std::ostream &print_status(status s, std::ostream &out) {
-			switch(s) {
+		static std::ostream &print_status(status s, std::ostream &out)
+		{
+			switch (s) {
 			case unit_test::pass:
 				out << "pass";
 				break;
@@ -111,16 +115,18 @@ public:
 			return out;
 		}
 
-		/**	\fn print_message(std::ostream &out, msg_tuple const& msg, std::size_t indent)
+		/**	\fn print_message(std::ostream &out, msg_tuple const &msg, std::size_t indent)
 		 *	\brief Prints a message.
 		 *	\param out The output sink.
 		 *	\param msg The message to output.
 		 *	\param indent The base indentation for the output.
 		 */
-		static void print_message(std::ostream &out, msg_tuple const& msg, std::size_t indent) {
+		static void print_message(std::ostream &out, msg_tuple const &msg, std::size_t indent)
+		{
 			indentl(out, indent) << std::get<2>(msg) << " @ " << std::get<1>(msg) << std::endl;
 			indentl(out, indent) << std::get<0>(msg) << std::endl;
 		}
+
 	public:
 		/**	\fn results()
 		 *	\brief Deleted.
@@ -145,7 +151,8 @@ public:
 		 *	\param lineno The line number of the message.
 		 *	\param file The file the message is from.
 		 */
-		void append(std::string_view msg, int lineno, std::string_view file) {
+		void append(std::string_view msg, int lineno, std::string_view file)
+		{
 			messages.emplace_back(msg, lineno, file);
 		}
 
@@ -155,11 +162,10 @@ public:
 		 *	\param end The final status of the test case.
 		 *	\param indent The base indentation for the output.
 		 */
-		void print(std::ostream &out, status end, std::size_t indent) const {
+		void print(std::ostream &out, status end, std::size_t indent) const
+		{
 			print_status(end, indentl(out, indent) << name << " :\t");
-			if (expect != end) {
-				print_status(expect, out << "(expected ") << ")";
-			}
+			if (expect != end) { print_status(expect, out << "(expected ") << ")"; }
 			out << std::endl;
 			indent++;
 			for (auto m : messages) {
@@ -168,6 +174,7 @@ public:
 			out << std::endl;
 		}
 	};
+
 private:
 	/**	\var msg_lock
 	 *	\brief A mutex for output synchronisation.
@@ -183,6 +190,7 @@ private:
 	 *	\brief A stack of unfinished test cases.
 	 */
 	std::stack<results> cases;
+
 public:
 	/**	\fn collector_impl()
 	 *	\brief Default.
@@ -198,7 +206,8 @@ public:
 	 *	\brief Move to the next sibling of the current test suite.
 	 *	\param name The name of the test suite we are switching to.
 	 */
-	virtual void next(std::string_view name) override {
+	virtual void next(std::string_view name) override
+	{
 		std::lock_guard<std::mutex> l{msg_lock};
 		indentl(std::cout, indent) << name << std::endl;
 	}
@@ -208,7 +217,8 @@ public:
 	 *	\param name The name of the test case that is about to begin.
 	 *	\param expect The expected result of the test case.
 	 */
-	virtual void begin(std::string_view name, status expect) noexcept override {
+	virtual void begin(std::string_view name, status expect) noexcept override
+	{
 		std::lock_guard<std::mutex> l{msg_lock};
 		cases.emplace(name, expect);
 	}
@@ -217,7 +227,8 @@ public:
 	 *	\brief Indicates the test case has ended.
 	 *	\param result The result of the test case.
 	 */
-	virtual void end(status result) noexcept override {
+	virtual void end(status result) noexcept override
+	{
 		std::lock_guard<std::mutex> l{msg_lock};
 		cases.top().print(std::cout, result, indent);
 		cases.pop();
@@ -229,7 +240,8 @@ public:
 	 *	\param lineno The line number of the message.
 	 *	\param file The file the message is from.
 	 */
-	virtual void message(std::string_view msg, int lineno, std::string_view file) noexcept override {
+	virtual void message(std::string_view msg, int lineno, std::string_view file) noexcept override
+	{
 		std::lock_guard<std::mutex> l{msg_lock};
 		cases.top().append(msg, lineno, file);
 	}
@@ -237,7 +249,8 @@ public:
 	/**	\fn up() override
 	 *	\brief Move to the first child of the current test suite.
 	 */
-	virtual void up() override {
+	virtual void up() override
+	{
 		std::lock_guard<std::mutex> l{msg_lock};
 		indent++;
 	}
@@ -245,7 +258,8 @@ public:
 	/**	\fn down() override
 	 *	\brief All children of a test suite have completed.
 	 */
-	virtual void down() override {
+	virtual void down() override
+	{
 		std::lock_guard<std::mutex> l{msg_lock};
 		indent--;
 	}
@@ -254,9 +268,7 @@ public:
 	 *	\brief Sets up the collector.
 	 *	\param start The name of the primary test suite.
 	 */
-	void init(std::string_view start) {
-		indent = 0;
-	}
+	void init(std::string_view start) { indent = 0; }
 };
 
 /**	\var master
@@ -275,50 +287,43 @@ namespace unit_test {
 
 unit_test::suite gc_suite{"gc", master};
 
-void suite::run(collector &out, suite &root) {
+void suite::run(collector &out, suite &root)
+{
 	suite *current{std::addressof(root)};
-	//do {
-		out.next(current->name);
-		{
-			suite *child{root.children};
-			out.up();
-			while (child) {
-				run(out, *child);
-				child = child->next;
-			}
-			out.down();
-		}
+	out.next(current->name);
+	{
+		suite *child{root.children};
 		out.up();
-		case_type::each(root.cases, [&out](case_type &c) -> void {
-			c(out);
-		});
+		while (child) {
+			run(out, *child);
+			child = child->next;
+		}
 		out.down();
-		/*current = current->next;
-	} while(current);*/
+	}
+	out.up();
+	case_type::each(root.cases, [&out](case_type &c) -> void { c(out); });
+	out.down();
 }
 
-case_type::context::context() noexcept : saved(current_status.load()) {
+case_type::context::context() noexcept : saved(current_status.load())
+{
 	current_status.store(pass);
 }
 
-case_type::context::~context() noexcept {
-	current_status.store(saved);
-}
+case_type::context::~context() noexcept { current_status.store(saved); }
 
-void case_type::context::failed() noexcept {
-	current_status.store(fail);
-}
+void case_type::context::failed() noexcept { current_status.store(fail); }
 
-void case_type::context::skipping() noexcept {
+void case_type::context::skipping() noexcept
+{
 	status expected{pass};
 	current_status.compare_exchange_strong(expected, skip);
 }
 
-status case_type::context::get() noexcept {
-	return current_status.load();
-}
+status case_type::context::get() noexcept { return current_status.load(); }
 
-void fail_msg(std::string_view msg, int lineno, std::string_view file) noexcept {
+void fail_msg(std::string_view msg, int lineno, std::string_view file) noexcept
+{
 	case_type::context::failed();
 	output.message(msg, lineno, file);
 }
@@ -329,7 +334,8 @@ void fail_msg(std::string_view msg, int lineno, std::string_view file) noexcept 
  *	\brief The main function of the unit test runner.
  *	\todo Process command line arguments to control the output.
  */
-int main() {
+int main()
+{
 	std::cout << "main()" << std::endl;
 	gc::initialize();
 	output.init("master");

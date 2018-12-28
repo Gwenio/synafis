@@ -34,17 +34,21 @@ using std::uintptr_t;
 using std::ptrdiff_t;
 
 static_assert(sizeof(void *) == sizeof(std::uintptr_t),
-	"The size of void* and std::uintptr_t must be the same for pointer arithmetic to function correctly.");
+	"The size of void* and std::uintptr_t must be the same for pointer arithmetic to function "
+	"correctly.");
 
-void adding(collector &) {
+void adding(collector &)
+{
 	SYNAFIS_ASSERT(add_offset(nullptr, 1024) == reinterpret_cast<void *>(1024));
 }
 
-void subtract(collector &) {
+void subtract(collector &)
+{
 	SYNAFIS_ASSERT(sub_offset(reinterpret_cast<void *>(1024), 1024) == nullptr);
 }
 
-void difference(collector &) {
+void difference(collector &)
+{
 	SYNAFIS_ASSERT(sub_addr(reinterpret_cast<void *>(1024), reinterpret_cast<void *>(1024)) == 0);
 	SYNAFIS_ASSERT(sub_addr(reinterpret_cast<void *>(512), reinterpret_cast<void *>(1024)) == -512);
 	SYNAFIS_ASSERT(sub_addr(reinterpret_cast<void *>(1024), reinterpret_cast<void *>(512)) == 512);
