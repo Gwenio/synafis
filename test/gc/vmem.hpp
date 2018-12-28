@@ -30,7 +30,8 @@ namespace unit_test {
  *	\brief Class with access to the interals of gc::vmem to make tests.
  */
 template<>
-class tester<gc::vmem> {
+class tester<gc::vmem>
+{
 	/**	\fn tester()
 	 *	\brief Deleted.
 	 */
@@ -40,52 +41,53 @@ class tester<gc::vmem> {
 	 *	\brief Deleted.
 	 */
 	~tester() = delete;
+
 public:
 	/**	\typedef vmem
 	 *	\brief Shorthand for the class being tested.
 	 */
 	typedef gc::vmem vmem;
 
-	/**	\fn invariants(vmem const& obj) noexcept
+	/**	\fn invariants(vmem const &obj) noexcept
 	 *	\brief Checks invariants for objects of the vmem class.
 	 *	\param obj The object to check.
 	 *	\returns Returns true if obj satisfy invariants.
 	 */
-	static bool invariants(vmem const& obj) noexcept;
+	static bool invariants(vmem const &obj) noexcept;
 
-	/**	\fn no_access(vmem const& obj, std::size_t offset, std::size_t length) noexcept
+	/**	\fn no_access(vmem const &obj, std::size_t offset, std::size_t length) noexcept
 	 *	\brief Checks that an area of memory in a vmem is unaccessible.
 	 *	\param obj The object to check.
 	 *	\param offset The starting point in the vmem.
 	 *	\param length The size of the area to check.
 	 *	\returns Returns true if the memory is unaccessible.
 	 */
-	static bool no_access(vmem const& obj, std::size_t offset, std::size_t length) noexcept;
+	static bool no_access(vmem const &obj, std::size_t offset, std::size_t length) noexcept;
 
-	/**	\fn is_readonly(vmem const& obj, std::size_t offset, std::size_t length) noexcept
+	/**	\fn is_readonly(vmem const &obj, std::size_t offset, std::size_t length) noexcept
 	 *	\brief Checks that an area of memory in a vmem is readonly.
 	 *	\param obj The object to check.
 	 *	\param offset The starting point in the vmem.
 	 *	\param length The size of the area to check.
 	 *	\returns Returns true if the memory is readonly.
 	 */
-	static bool is_readonly(vmem const& obj, std::size_t offset, std::size_t length) noexcept;
+	static bool is_readonly(vmem const &obj, std::size_t offset, std::size_t length) noexcept;
 
-	/**	\fn is_writable(vmem const& obj, std::size_t offset, std::size_t length) noexcept
+	/**	\fn is_writable(vmem const &obj, std::size_t offset, std::size_t length) noexcept
 	 *	\brief Checks that an area of memory in a vmem is writable.
 	 *	\param obj The object to check.
 	 *	\param offset The starting point in the vmem.
 	 *	\param length The size of the area to check.
 	 *	\returns Returns true if the memory is writable.
 	 */
-	static bool is_writable(vmem const& obj, std::size_t offset, std::size_t length) noexcept;
+	static bool is_writable(vmem const &obj, std::size_t offset, std::size_t length) noexcept;
 
-	/**	\fn is_allocated(vmem const& obj) noexcept
+	/**	\fn is_allocated(vmem const &obj) noexcept
 	 *	\brief Checks that an memory in a vmem is allocated.
 	 *	\param obj The object to check.
 	 *	\returns Returns true if the memory is allocated.
 	 */
-	static bool is_allocated(vmem const& obj) noexcept;
+	static bool is_allocated(vmem const &obj) noexcept;
 
 	/**	\fn is_free(void *addr, std::size_t length) noexcept
 	 *	\brief Checks that an area of memory is free.

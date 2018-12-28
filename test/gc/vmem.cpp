@@ -35,59 +35,67 @@ namespace unit_test {
 
 //!	\cond impl_details
 
-bool t::invariants(vmem const& obj) noexcept {
-	return !obj.ptr && (obj.len == 0) ||
-		obj.ptr && (0 < obj.len) && is_allocated(obj);
+bool t::invariants(vmem const &obj) noexcept
+{
+	return !obj.ptr && (obj.len == 0) || obj.ptr && (0 < obj.len) && is_allocated(obj);
 }
 
-bool t::no_access(vmem const& obj, std::size_t offset, std::size_t length) noexcept {
+bool t::no_access(vmem const &obj, std::size_t offset, std::size_t length) noexcept
+{
 	MEMORY_BASIC_INFORMATION info;
 	memset(std::addressof(info), 0, sizeof(info));
 	VirtualQuery(obj[offset], std::addressof(info), sizeof(info));
 	return (info.Protect & PAGE_NOACCESS) == PAGE_NOACCESS;
 }
 
-bool t::is_readonly(vmem const& obj, std::size_t offset, std::size_t length) noexcept {
+bool t::is_readonly(vmem const &obj, std::size_t offset, std::size_t length) noexcept
+{
 	MEMORY_BASIC_INFORMATION info;
 	memset(std::addressof(info), 0, sizeof(info));
 	VirtualQuery(obj[offset], std::addressof(info), sizeof(info));
 	return (info.Protect & PAGE_READONLY) == PAGE_READONLY;
 }
 
-bool t::is_writable(vmem const& obj, std::size_t offset, std::size_t length) noexcept {
+bool t::is_writable(vmem const &obj, std::size_t offset, std::size_t length) noexcept
+{
 	MEMORY_BASIC_INFORMATION info;
 	memset(std::addressof(info), 0, sizeof(info));
 	VirtualQuery(obj[offset], std::addressof(info), sizeof(info));
 	return (info.Protect & PAGE_READWRITE) == PAGE_READWRITE;
 }
 
-bool t::is_allocated(vmem const& obj) noexcept {
+bool t::is_allocated(vmem const &obj) noexcept
+{
 	MEMORY_BASIC_INFORMATION info;
 	memset(std::addressof(info), 0, sizeof(info));
 	VirtualQuery(obj.ptr, std::addressof(info), sizeof(info));
 	return (info.State & MEM_COMMIT) == MEM_COMMIT;
 }
 
-bool t::is_free(void *addr, std::size_t length) noexcept {
+bool t::is_free(void *addr, std::size_t length) noexcept
+{
 	MEMORY_BASIC_INFORMATION info;
 	memset(std::addressof(info), 0, sizeof(info));
 	VirtualQuery(addr, std::addressof(info), sizeof(info));
 	return (info.State & MEM_FREE) == MEM_FREE;
 }
 
-void t::sane_page_size(collector &) {
+void t::sane_page_size(collector &)
+{
 	SYNAFIS_ASSERT(0 < vmem::page_size);
 	SYNAFIS_ASSERT(alignof(std::max_align_t) < vmem::page_size);
 	SYNAFIS_ASSERT(vmem::page_size % alignof(std::max_align_t) == 0);
 }
 
-void t::def_init(collector &) {
+void t::def_init(collector &)
+{
 	vmem temp{};
 	SYNAFIS_ASSERT(temp.ptr == nullptr);
 	SYNAFIS_ASSERT(temp.len == 0);
 }
 
-void t::reg_init(collector &) {
+void t::reg_init(collector &)
+{
 	{
 		vmem temp{vmem::page_size, true};
 		SYNAFIS_ASSERT(temp.ptr != nullptr);
@@ -104,7 +112,8 @@ void t::reg_init(collector &) {
 	}
 }
 
-void t::move_init(collector &) {
+void t::move_init(collector &)
+{
 	vmem temp1{vmem::page_size, true};
 	SYNAFIS_ASSERT(temp1.ptr != nullptr);
 	{
@@ -122,7 +131,8 @@ void t::move_init(collector &) {
 	}
 }
 
-void t::destruct(collector &) {
+void t::destruct(collector &)
+{
 	void *addr{nullptr};
 	{
 		vmem temp{vmem::page_size, true};
@@ -132,7 +142,8 @@ void t::destruct(collector &) {
 	SYNAFIS_ASSERT(is_free(addr, vmem::page_size));
 }
 
-void t::null_assign(collector &) {
+void t::null_assign(collector &)
+{
 	vmem temp{vmem::page_size, true};
 	SYNAFIS_ASSERT(temp.ptr != nullptr);
 	SYNAFIS_ASSERT(invariants(temp));
@@ -143,7 +154,8 @@ void t::null_assign(collector &) {
 	SYNAFIS_ASSERT(is_free(addr, vmem::page_size));
 }
 
-void t::move_assign(collector &) {
+void t::move_assign(collector &)
+{
 	{
 		vmem temp1{vmem::page_size, true};
 		vmem temp2{};
@@ -186,14 +198,16 @@ void t::move_assign(collector &) {
 	}
 }
 
-void t::bool_convert(collector &) {
+void t::bool_convert(collector &)
+{
 	vmem temp1{};
 	vmem temp2{vmem::page_size, true};
 	SYNAFIS_ASSERT(!temp1);
 	SYNAFIS_ASSERT(temp2);
 }
 
-void t::bounds(collector &) {
+void t::bounds(collector &)
+{
 	vmem temp1{};
 	vmem temp2{vmem::page_size, true};
 	SYNAFIS_ASSERT(temp1.begin() == nullptr);
@@ -204,7 +218,8 @@ void t::bounds(collector &) {
 	SYNAFIS_ASSERT(temp2.size() == temp2.len);
 }
 
-void t::access(collector &) {
+void t::access(collector &)
+{
 	vmem temp{vmem::page_size, true};
 	SYNAFIS_ASSERT(temp[0] == temp.ptr);
 	SYNAFIS_ASSERT(temp[vmem::page_size / 2] == gc::add_offset(temp.ptr, temp.len / 2));
@@ -215,27 +230,26 @@ void t::access(collector &) {
 	bool threw{false};
 	try {
 		temp.at(vmem::page_size);
-	} catch(std::out_of_range &) {
+	} catch (std::out_of_range &) {
 		threw = true;
 	}
 	if (!threw) {
-		fail_msg("Out of bounds vmem::at should throw std::logic_error.", __LINE__,
-			__FILE__);
+		fail_msg("Out of bounds vmem::at should throw std::logic_error.", __LINE__, __FILE__);
 	}
 	threw = false;
 	temp = nullptr;
 	try {
 		temp.at(0);
-	} catch(std::logic_error &) {
+	} catch (std::logic_error &) {
 		threw = true;
 	}
 	if (!threw) {
-		fail_msg("vmem::at should throw std::logic_error when ptr == nullptr.", __LINE__,
-			__FILE__);
+		fail_msg("vmem::at should throw std::logic_error when ptr == nullptr.", __LINE__, __FILE__);
 	}
 }
 
-void t::protect(collector &) {
+void t::protect(collector &)
+{
 	vmem temp{vmem::page_size * 4, false};
 	SYNAFIS_ASSERT(no_access(temp, 0, vmem::page_size));
 	SYNAFIS_ASSERT(no_access(temp, vmem::page_size, vmem::page_size));
