@@ -46,11 +46,12 @@ static_assert(std::is_same_v<gc::pool::bit_group, std::bitset<bit_group_size>>,
  *	\invariant bitmap_offset % alignof(gc::pool::bit_group) == 0
  */
 inline constexpr auto const bitmap_offset =
-	((sizeof(gc::pool) % alignof(gc::pool::bit_group) == 0) ? sizeof(gc::pool) :
+	((sizeof(gc::pool) % alignof(gc::pool::bit_group) == 0) ?
+			sizeof(gc::pool) :
 			((sizeof(gc::pool) / alignof(gc::pool::bit_group)) + 1) * alignof(gc::pool::bit_group));
 
-static_assert(sizeof(gc::pool) <= bitmap_offset,
-	"bitmap_offset must be larger than the size of a pool.");
+static_assert(
+	sizeof(gc::pool) <= bitmap_offset, "bitmap_offset must be larger than the size of a pool.");
 
 static_assert(bitmap_offset % alignof(gc::pool::bit_group) == 0,
 	"bitmap_offset must meet the alignment requirement of gc::pool::bit::group.");
@@ -65,7 +66,8 @@ inline constexpr auto const bit_group_unit = gc::idaccess::unit_size<gc::pool::b
  *	\param capacity The number of slots managed by the pool.
  *	\returns Returns the number of elements in bitmap and colors.
  */
-inline constexpr std::size_t bitmap_length(std::size_t capacity) noexcept {
+inline constexpr std::size_t bitmap_length(std::size_t capacity) noexcept
+{
 	return (capacity / bit_group_size) + (capacity % bit_group_size == 0 ? 0 : 1);
 }
 
@@ -78,7 +80,8 @@ inline constexpr std::size_t bitmap_length(std::size_t capacity) noexcept {
  *	\pre That case will not be tested.
  *	\note It saves one iteration if y <= x.
  */
-inline constexpr std::size_t gcd(std::size_t x, std::size_t y) noexcept {
+inline constexpr std::size_t gcd(std::size_t x, std::size_t y) noexcept
+{
 	do {
 		std::size_t z{x % y};
 		x = y;
@@ -94,12 +97,13 @@ static_assert(gcd(180, 48) == 12 && gcd(48, 180) == 12,
 
 namespace gc {
 
-pool::pool(vmem && mem, identity const& id, std::size_t cap, std::size_t u, void *start) noexcept :
-		region(std::forward<vmem>(mem)), type(id), capacity(cap), space(cap), unit(u), free(nullptr),
-		slots(start), end(add_offset(start, cap * u)) {
+pool::pool(vmem &&mem, identity const &id, std::size_t cap, std::size_t u, void *start) noexcept :
+	region(std::forward<vmem>(mem)), type(id), capacity(cap), space(cap), unit(u), free(nullptr),
+	slots(start), end(add_offset(start, cap * u))
+{
 	// The bitmap is always located bitmap_offset from the start of the virtual memory.
-	bitmap = reinterpret_cast<bit_group *>(region[bitmap_offset +
-		(config::guard_pages ? vmem::page_size : 0)]);
+	bitmap = reinterpret_cast<bit_group *>(
+		region[bitmap_offset + (config::guard_pages ? vmem::page_size : 0)]);
 	// Set the colors pointer. bitmap and colors should be a single array split into halves.
 	std::size_t const bit_array_half{bitmap_length(cap)};
 	colors = bitmap + bit_array_half;
@@ -135,14 +139,13 @@ pool::pool(vmem && mem, identity const& id, std::size_t cap, std::size_t u, void
 	SYNAFIS_ASSERT(end == addr);
 }
 
-pool::~pool() noexcept {
+pool::~pool() noexcept
+{
 	if (idaccess::has_finalizer(type)) {
 		std::size_t bit{0};
 		bit_group *batch{bitmap};
 		for (void *current = slots; current < end; current = add_offset(current, unit)) {
-			if (batch->test(bit)) {
-				idaccess::finalize(type, current);
-			}
+			if (batch->test(bit)) { idaccess::finalize(type, current); }
 			if (++bit == bit_group_size) {
 				bit = 0;
 				batch++;
@@ -151,7 +154,8 @@ pool::~pool() noexcept {
 	}
 }
 
-std::size_t pool::select_capacity(std::size_t unit) noexcept {
+std::size_t pool::select_capacity(std::size_t unit) noexcept
+{
 	// The unit size of slots must be able to hold a node pointer.
 	SYNAFIS_ASSERT(min_unit <= unit);
 	// Check if the minimum object can fit in the maximum number of pages.
@@ -168,9 +172,7 @@ std::size_t pool::select_capacity(std::size_t unit) noexcept {
 			// See if we can fit more of the ideal capacity in without exceeding max.
 			// Both sides of the division are multiples of vmem::page_size.
 			std::size_t part{(config::max_pool * vmem::page_size) / size};
-			if (2 <= part) {
-				capacity *= part;
-			}
+			if (2 <= part) { capacity *= part; }
 		}
 		SYNAFIS_ASSERT(config::min_pool <= capacity);
 		return capacity;
@@ -185,7 +187,8 @@ std::size_t pool::select_capacity(std::size_t unit) noexcept {
 	}
 }
 
-pool::handle::handle(identity const& id, std::size_t capacity, std::size_t unit) : handle() {
+pool::handle::handle(identity const &id, std::size_t capacity, std::size_t unit) : handle()
+{
 	// The unit size of slots must be able to hold a node pointer.
 	SYNAFIS_ASSERT(pool::min_unit <= unit);
 	std::size_t const guard{(config::guard_pages ? vmem::page_size : 0)};
@@ -193,8 +196,7 @@ pool::handle::handle(identity const& id, std::size_t capacity, std::size_t unit)
 	std::size_t size = capacity * unit;
 	size += vmem::page_size - (size % vmem::page_size);
 	// Calculate the offset to the beginning of the object slots.
-	std::size_t offset{bitmap_offset +
-		((bitmap_length(capacity) * bit_group_unit) + guard) * 2};
+	std::size_t offset{bitmap_offset + ((bitmap_length(capacity) * bit_group_unit) + guard) * 2};
 	// Make offset be at the start of a page.
 	offset += vmem::page_size - (offset % vmem::page_size);
 	vmem mem{offset + size + guard, !config::guard_pages};
@@ -210,7 +212,8 @@ pool::handle::handle(identity const& id, std::size_t capacity, std::size_t unit)
 	}
 }
 
-void pool::deallocate(void *ptr) noexcept {
+void pool::deallocate(void *ptr) noexcept
+{
 	SYNAFIS_ASSERT(slots <= ptr);
 	SYNAFIS_ASSERT(ptr < end);
 	SYNAFIS_ASSERT(sub_addr(ptr, slots) % unit == 0);
@@ -221,7 +224,8 @@ void pool::deallocate(void *ptr) noexcept {
 	space++;
 }
 
-void *pool::allocate() noexcept {
+void *pool::allocate() noexcept
+{
 	if (free) {
 		space--;
 		void *addr{static_cast<void *>(std::exchange(free, free->next))};
@@ -235,7 +239,8 @@ void *pool::allocate() noexcept {
 	}
 }
 
-void pool::mark(void *ptr) noexcept {
+void pool::mark(void *ptr) noexcept
+{
 	SYNAFIS_ASSERT(slots <= ptr);
 	SYNAFIS_ASSERT(ptr < end);
 	std::size_t const offset{sub_addr(ptr, slots) / unit};
@@ -246,7 +251,8 @@ void pool::mark(void *ptr) noexcept {
 	colors[group].set(bit);
 }
 
-void pool::sweep() noexcept {
+void pool::sweep() noexcept
+{
 	bit_group *alloc{bitmap};
 	bit_group *marks{colors};
 	void *current{slots};
@@ -261,9 +267,7 @@ void pool::sweep() noexcept {
 					deallocate(current);
 				}
 				current = add_offset(current, unit);
-				if (end <= current) {
-					break;
-				}
+				if (end <= current) { break; }
 			}
 		} else {
 			// Skip group, all are marked or unallocated.

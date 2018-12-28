@@ -38,7 +38,8 @@ namespace gc {
 /**	\class pool
  *	\brief Type to manage a pool of fixed size memory slots.
  */
-class pool {
+class pool
+{
 	//!	\cond friends
 	friend unit_test::tester<pool>;
 	//!	\endcond
@@ -48,25 +49,26 @@ class pool {
 	 */
 	pool() = delete;
 
-	/**	\fn pool(pool const&)
+	/**	\fn pool(pool const &)
 	 *	\brief Deleted.
 	 */
-	pool(pool const&) = delete;
+	pool(pool const &) = delete;
 
 	/**	\fn pool(pool &&)
 	 *	\brief Deleted.
 	 */
 	pool(pool &&) = delete;
 
-	/**	\fn operator=(pool const&)
+	/**	\fn operator=(pool const &)
 	 *	\brief Deleted.
 	 */
-	pool &operator=(pool const&) = delete;
+	pool &operator=(pool const &) = delete;
 
 	/**	\fn operator=(pool &&)
 	 *	\brief Deleted.
 	 */
 	pool &operator=(pool &&) = delete;
+
 public:
 	/**	\typedef bit_group
 	 *	\brief Type for an element in bitmap state tracking arrays.
@@ -76,9 +78,10 @@ public:
 	/**	\class handle
 	 *	\brief Manages the ownership and lifetime of a pool.
 	 */
-	class handle {
-		// Shares a tester with pool.
+	class handle
+	{
 		//!	\cond friends
+		// Shares a tester with pool.
 		friend unit_test::tester<pool>;
 		//!	\endcond
 	private:
@@ -91,9 +94,8 @@ public:
 		 *	\brief Destroys the owned pool.
 		 *	\pre ptr != nullptr
 		 */
-		void destroy() noexcept {
-			ptr->~pool();
-		}
+		void destroy() noexcept { ptr->~pool(); }
+
 	public:
 		/**	\fn handle() noexcept
 		 *	\brief Initialize with a null pointer.
@@ -105,19 +107,18 @@ public:
 		 */
 		constexpr handle(std::nullptr_t) noexcept : handle() {}
 
-		/**	\fn handle(handle const&)
+		/**	\fn handle(handle const &)
 		 *	\brief Deleted.
 		 */
-		handle(handle const&) = delete;
+		handle(handle const &) = delete;
 
 		/**	\fn handle(handle &&other)
 		 *	\brief Moves the pointer of other to this.
 		 *	\param other The handle to take ownership from.
 		 */
-		handle(handle &&other) noexcept :
-			ptr(std::exchange(other.ptr, nullptr)) {}
+		handle(handle &&other) noexcept : ptr(std::exchange(other.ptr, nullptr)) {}
 
-		/**	\fn handle(identity const& id, std::size_t capacity, std::size_t unit) noexcept
+		/**	\fn handle(identity const &id, std::size_t capacity, std::size_t unit) noexcept
 		 *	\brief Creates a new pool.
 		 *	\param id The type the pool allocates memory for.
 		 *	\param capacity The number of objects in the pool.
@@ -127,21 +128,21 @@ public:
 		 *	\note To deallocate the pool, directly call its destructor.
 		 *	\see gc::pool::select_capacity
 		 */
-		handle(identity const& id, std::size_t capacity, std::size_t unit);
+		handle(identity const &id, std::size_t capacity, std::size_t unit);
 
 		/**	\fn ~handle() noexcept
 		 *	\brief Destroys ptr if it is not null.
 		 */
-		~handle() noexcept {
-			if (ptr) {
-				destroy();
-			}
+		~handle() noexcept
+		{
+			if (ptr) { destroy(); }
 		}
 
 		/**	\fn handle &operator=(std::nullptr_t) noexcept
 		 *	\brief Initialize with a null pointer.
 		 */
-		handle &operator=(std::nullptr_t) noexcept {
+		handle &operator=(std::nullptr_t) noexcept
+		{
 			if (ptr) {
 				destroy();
 				ptr = nullptr;
@@ -149,20 +150,19 @@ public:
 			return *this;
 		}
 
-		/**	\fn operator=(handle const&)
+		/**	\fn operator=(handle const &)
 		 *	\brief Deleted.
 		 */
-		handle &operator=(handle const&) = delete;
+		handle &operator=(handle const &) = delete;
 
 		/**	\fn operator=(handle &&other) noexcept
 		 *	\brief Moves the pointer of other to this.
 		 *	\param other The handle to take ownership from.
 		 */
-		handle &operator=(handle &&other) noexcept {
+		handle &operator=(handle &&other) noexcept
+		{
 			if (*this != other) {
-				if (ptr) {
-					destroy();
-				}
+				if (ptr) { destroy(); }
 				ptr = std::exchange(other.ptr, nullptr);
 			}
 			return *this;
@@ -172,53 +172,41 @@ public:
 		 *	\brief Checks that ptr is null.
 		 *	\returns Returns true if ptr is null.
 		 */
-		constexpr bool operator!() const noexcept {
-			return ptr == nullptr;
-		}
+		constexpr bool operator!() const noexcept { return ptr == nullptr; }
 
 		/**	\fn operator bool() const noexcept
 		 *	\brief Checks that ptr is not null.
 		 *	\returns Returns true if ptr is not null.
 		 */
-		constexpr operator bool() const noexcept {
-			return ptr != nullptr;
-		}
+		constexpr operator bool() const noexcept { return ptr != nullptr; }
 
-		/**	\fn operator==(handle const&other) const noexcept
+		/**	\fn operator==(handle const &other) const noexcept
 		 *	\brief Checks if two handles have the same pool.
 		 *	\param other The other handle to compare with.
 		 *	\returns Returns true if ptr == other.ptr.
 		 *	\note Only returns true if this and other are the same handle or
 		 *	\note both have ptr value of nullptr.
 		 */
-		constexpr bool operator==(handle const&other) const noexcept {
-			return ptr == other.ptr;
-		}
+		constexpr bool operator==(handle const &other) const noexcept { return ptr == other.ptr; }
 
-		/**	\fn operator!=(handle const&other) const noexcept
+		/**	\fn operator!=(handle const &other) const noexcept
 		 *	\brief Checks if two handles are different objects.
 		 *	\param other The other handle to compare with.
 		 *	\returns Returns true if ptr != other.ptr.
 		 */
-		constexpr bool operator!=(handle const&other) const noexcept {
-			return ptr != other.ptr;
-		}
+		constexpr bool operator!=(handle const &other) const noexcept { return ptr != other.ptr; }
 
 		/**	\fn operator==(std::nullptr_t) const noexcept
 		 *	\brief Checks that ptr is null.
 		 *	\returns Returns true if ptr is null.
 		 */
-		constexpr bool operator==(std::nullptr_t) const noexcept {
-			return ptr == nullptr;
-		}
+		constexpr bool operator==(std::nullptr_t) const noexcept { return ptr == nullptr; }
 
 		/**	\fn operator!=(std::nullptr_t) const noexcept
 		 *	\brief Checks that ptr is not null.
 		 *	\returns Returns true if ptr is not null.
 		 */
-		constexpr bool operator!=(std::nullptr_t) const noexcept {
-			return ptr != nullptr;
-		}
+		constexpr bool operator!=(std::nullptr_t) const noexcept { return ptr != nullptr; }
 
 		/**	\fn allocate() noexcept
 		 *	\brief Allocates a free slot.
@@ -226,9 +214,7 @@ public:
 		 *	\pre ptr != nullptr
 		 *	\see pool::allocate
 		 */
-		void *allocate() noexcept {
-			return ptr->allocate();
-		}
+		void *allocate() noexcept { return ptr->allocate(); }
 
 		/**	\fn mark(void *addr) noexcept
 		 *	\brief Marks an object as reachable so it will not be deallocate be sweep.
@@ -237,9 +223,7 @@ public:
 		 *	\pre ptr != nullptr
 		 *	\see pool::mark
 		 */
-		void mark(void *addr) noexcept {
-			ptr->mark(addr);
-		}
+		void mark(void *addr) noexcept { ptr->mark(addr); }
 
 		/**	\fn from(void *addr) const noexcept
 		 *	\brief Checks if a pointer is from the pool.
@@ -248,9 +232,7 @@ public:
 		 *	\pre ptr != nullptr
 		 *	\see pool::from
 		 */
-		bool from(void *addr) const noexcept {
-			return ptr->from(addr);
-		}
+		bool from(void *addr) const noexcept { return ptr->from(addr); }
 
 		/**	\fn sweep() noexcept
 		 *	\brief Deallocates all unmarked objects.
@@ -258,9 +240,7 @@ public:
 		 *	\pre ptr != nullptr
 		 *	\see pool::sweep
 		 */
-		void sweep() noexcept {
-			ptr->sweep();
-		}
+		void sweep() noexcept { ptr->sweep(); }
 
 		/**	\fn used() const noexcept
 		 *	\brief Gets the number of allocated slots.
@@ -268,9 +248,7 @@ public:
 		 *	\pre ptr != nullptr
 		 *	\see pool::used
 		 */
-		std::size_t used() const noexcept {
-			return ptr->used();
-		}
+		std::size_t used() const noexcept { return ptr->used(); }
 
 		/**	\fn available() const noexcept
 		 *	\brief Gets the number of free slots.
@@ -278,9 +256,7 @@ public:
 		 *	\pre ptr != nullptr
 		 *	\see pool::available
 		 */
-		std::size_t available() const noexcept {
-			return ptr->available();
-		}
+		std::size_t available() const noexcept { return ptr->available(); }
 	};
 
 	//!	\cond friends
@@ -298,7 +274,8 @@ private:
 	 *	\details This does not mean it is the most effiecint; rather, it means
 	 *	\details times are reliable.
 	 */
-	struct node {
+	struct node
+	{
 	public:
 		/**	\var next
 		 *	\brief The next free location.
@@ -327,7 +304,7 @@ private:
 	 *	\brief The identity of the type being allocated.
 	 *	\todo Maybe this should just be the finalizer of the type.
 	 */
-	identity const& type;
+	identity const &type;
 
 	/**	\var free
 	 *	\brief The next free object to allocate. Acts as a stack.
@@ -389,7 +366,7 @@ private:
 	 */
 	void deallocate(void *ptr) noexcept;
 
-	/**	\fn pool(vmem && mem, identity const& id, std::size_t cap, std::size_t u, void *start) noexcept
+	/**	\fn pool(vmem &&mem, identity const &id, std::size_t cap, std::size_t u, void *start) noexcept
 	 *	\brief Called by create to initialize a new pool.
 	 *	\param mem The virtual memory the pool is allocated on is to be owned by the pool.
 	 *	\param id The type of object placed in the pool.
@@ -399,15 +376,16 @@ private:
 	 *	\details Sets the bits in bitmap and colors to false.
 	 *	\details Places all slots in the free stack.
 	 */
-	pool(vmem && mem, identity const& id, std::size_t cap, std::size_t u, void *start) noexcept;
+	pool(vmem &&mem, identity const &id, std::size_t cap, std::size_t u, void *start) noexcept;
+
 public:
 	/**	\var min_unit
 	 *	\brief The minimum unit size for pool allocations.
 	 *	\invariant Must be a multiple of alignof(node *).
 	 */
 	static constexpr std::size_t const min_unit{sizeof(node *)};
-	static_assert(min_unit % alignof(node *) == 0,
-		"pool::min_unit must be a multiple of alignof(node *).");
+	static_assert(
+		min_unit % alignof(node *) == 0, "pool::min_unit must be a multiple of alignof(node *).");
 
 	/**	\fn ~pool() noexcept
 	 *	\brief Finalizes all objects and frees region.
@@ -449,9 +427,7 @@ public:
 	 *	\param ptr The object to check.
 	 *	\returns slots <= ptr < end
 	 */
-	bool from(void *ptr) const noexcept {
-		return slots <= ptr && ptr < end;
-	}
+	bool from(void *ptr) const noexcept { return slots <= ptr && ptr < end; }
 
 	/**	\fn sweep() noexcept
 	 *	\brief Deallocates all unmarked objects.
@@ -463,17 +439,13 @@ public:
 	 *	\brief Gets the number of allocated slots.
 	 *	\returns capacity - space
 	 */
-	std::size_t used() const noexcept {
-		return capacity - space;
-	}
+	std::size_t used() const noexcept { return capacity - space; }
 
 	/**	\fn available() const noexcept
 	 *	\brief Gets the number of free slots.
 	 *	\returns space
 	 */
-	std::size_t available() const noexcept {
-		return space;
-	}
+	std::size_t available() const noexcept { return space; }
 };
 
 }
