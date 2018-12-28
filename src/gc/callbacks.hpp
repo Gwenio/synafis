@@ -46,13 +46,13 @@ typedef void (*enumerate_cb)(void *, void *) noexcept;
  *	\brief The callback type for enumerating the pointers to garbage collected objects.
  *	\details The enumerate_cb expects the second parameter as its first.
  */
-typedef void (*traverse_cb)(void const*, void *, enumerate_cb) noexcept;
+typedef void (*traverse_cb)(void const *, void *, enumerate_cb) noexcept;
 
 /**	\typedef remap_cb
  *	\brief The callback type for updating pointers to relocated or merged objects.
  *	\details Provided as a parameter to other callbacks.
  */
-typedef void *(*remap_cb)(void *, void *) noexcept;
+typedef void *(*remap_cb)(void *, void *)noexcept;
 
 /**	\typedef root_cb
  *	\brief The callback type for remapping the pointers in root objects.
@@ -69,7 +69,7 @@ typedef void (*relocate_cb)(void *, void *, void *, remap_cb) noexcept;
 /**	\typedef equality_cb
  *	\brief The callback type for checking if two objects will always be equal.
  */
-typedef bool (*equality_cb)(void const*, void const*) noexcept;
+typedef bool (*equality_cb)(void const *, void const *) noexcept;
 
 }
 

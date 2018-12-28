@@ -35,7 +35,8 @@ namespace gc {
  *	\brief Class to ensure the garbage collector does not run.
  *	\note The constructor and destructor are to be implemented inside the collector.
  */
-class scoped_lock {
+class scoped_lock
+{
 public:
 	/**	\fn scoped_lock()
 	 *	\brief Acquires the lock.

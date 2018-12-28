@@ -39,7 +39,8 @@ namespace gc {
  *	\details For types that are always roots, static members are provides
  *	\details so they can manage themselves.
  */
-class root {
+class root
+{
 	//!	\cond friends
 	friend root;
 	friend unit_test::tester<root>;
@@ -79,7 +80,8 @@ private:
 	 *	\warning Should only be called by the collector.
 	 */
 	template<typename T>
-	void root_impl(void *obj, void *data, remap_cb cb) noexcept {
+	void root_impl(void *obj, void *data, remap_cb cb) noexcept
+	{
 		static_cast<T *>(obj)->remap(data, cb);
 	}
 
@@ -90,7 +92,8 @@ private:
 	 *	\returns Returns a pointer to obj.
 	 */
 	template<typename T>
-	constexpr static void *get_pointer(T &obj) noexcept {
+	constexpr static void *get_pointer(T &obj) noexcept
+	{
 		return static_cast<void *>(const_cast<std::remove_cv_t<T> *>(std::addressof(obj)));
 	}
 
@@ -98,21 +101,24 @@ private:
 	 *	\brief Pointer to the root object.
 	 */
 	void *obj;
+
 public:
 	/**	\fn root()
 	 *	\brief No root is owned.
 	 */
 	constexpr root() noexcept : obj(nullptr) {}
-	/**	\fn root(root const&)
+
+	/**	\fn root(root const &)
 	 *	\brief Deleted.
 	 */
-	root(root const&) = delete;
-	/**	\fn root(root && other)
+	root(root const &) = delete;
+
+	/**	\fn root(root &&other)
 	 *	\brief Moves ownership of the root from other to this.
 	 *	\param other The root to take ownership from.
 	 */
-	root(root && other) noexcept :
-		obj(std::exchange(other.obj, nullptr)) {}
+	root(root &&other) noexcept : obj(std::exchange(other.obj, nullptr)) {}
+
 	/**	\fn root(T &ref)
 	 *	\brief Creates a new root reference owned by this.
 	 *	\tparam T The type of root object.
@@ -121,33 +127,37 @@ public:
 	 *	\pre The the object is not yet registered.
 	 */
 	template<typename T>
-	root(T &ref) : obj(get_pointer(ref)) {
+	root(T &ref) : obj(get_pointer(ref))
+	{
 		register_root(ref);
 	}
+
 	/**	\fn ~root()
 	 *	\brief Unregisters the root object if we have one.
 	 */
-	~root() {
-		if (obj) {
-			unregister_impl(obj);
-		}
+	~root()
+	{
+		if (obj) { unregister_impl(obj); }
 	}
-	/**	\fn root &operator=(root const&)
+
+	/**	\fn root &operator=(root const &)
 	 *	\brief Deleted.
 	 */
-	root &operator=(root const&) = delete;
-	/**	\fn root &operator=(root && other)
+	root &operator=(root const &) = delete;
+
+	/**	\fn root &operator=(root &&other)
 	 *	\brief Moves ownership of the root from other to this.
 	 *	\param other The root to take ownership from.
 	 *	\returns Returns *this.
 	 *	\post 'other' no longer owns a root object.
 	 *	\details Unregisters the previous owned root if there was one.
 	 */
-	root &operator=(root && other) noexcept {
-		if (obj) {
-			unregister_impl(obj);
+	root &operator=(root &&other) noexcept
+	{
+		if (this != std::addressof(other)) {
+			if (obj) { unregister_impl(obj); }
+			obj = std::exchange(other.obj, nullptr);
 		}
-		obj = std::exchange(other.obj, nullptr);
 		return *this;
 	}
 
@@ -161,10 +171,11 @@ public:
 	 *	\details Provides the correct callbacks for type T during registration.
 	 */
 	template<typename T>
-	static void register_(T &obj) {
+	static void register_(T &obj)
+	{
 		static_assert(traits::pointers<T>,
 			"The type of a root object must be specified as gc::traits::pointers<T> == true.")
-		register_impl(get_pointer(obj), traits::traverser<T>, (&root_impl<T>));
+			register_impl(get_pointer(obj), traits::traverser<T>, (&root_impl<T>));
 	}
 
 	/**	\fn unregister(T &obj)
@@ -175,7 +186,8 @@ public:
 	 *	\post The object is no longer registered as a root.
 	 */
 	template<typename T>
-	static void unregister(T &obj) {
+	static void unregister(T &obj)
+	{
 		unregister_impl(get_pointer(obj));
 	}
 };

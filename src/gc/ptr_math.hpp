@@ -40,7 +40,8 @@ namespace gc {
  *	\details using a standard compliant compiler and standard library combo.
  *	\warning Does not checked for overflow.
  */
-inline constexpr void *add_offset(void *addr, std::uintptr_t offset) noexcept {
+inline constexpr void *add_offset(void *addr, std::uintptr_t offset) noexcept
+{
 	return reinterpret_cast<void *>(reinterpret_cast<std::uintptr_t>(addr) + offset);
 }
 
@@ -56,7 +57,8 @@ inline constexpr void *add_offset(void *addr, std::uintptr_t offset) noexcept {
  *	\details using a standard compliant compiler and standard library combo.
  *	\warning Does not checked for overflow.
  */
-inline constexpr void *sub_offset(void *addr, std::uintptr_t offset) noexcept {
+inline constexpr void *sub_offset(void *addr, std::uintptr_t offset) noexcept
+{
 	return reinterpret_cast<void *>(reinterpret_cast<std::uintptr_t>(addr) - offset);
 }
 
@@ -68,15 +70,14 @@ inline constexpr void *sub_offset(void *addr, std::uintptr_t offset) noexcept {
  *	\details The type ptrdiff_t is meant for holding the difference between pointers.
  *	\warning Does not checked for overflow.
  */
-inline constexpr std::ptrdiff_t sub_addr(void *addr, void *sub) noexcept {
+inline constexpr std::ptrdiff_t sub_addr(void *addr, void *sub) noexcept
+{
 	if (sub <= addr) {
 		return static_cast<std::ptrdiff_t>(
-			reinterpret_cast<std::uintptr_t>(addr) -
-				reinterpret_cast<std::uintptr_t>(sub));
+			reinterpret_cast<std::uintptr_t>(addr) - reinterpret_cast<std::uintptr_t>(sub));
 	} else {
 		return -static_cast<std::ptrdiff_t>(
-			reinterpret_cast<std::uintptr_t>(sub) -
-				reinterpret_cast<std::uintptr_t>(addr));
+			reinterpret_cast<std::uintptr_t>(sub) - reinterpret_cast<std::uintptr_t>(addr));
 	}
 }
 
