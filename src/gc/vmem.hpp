@@ -42,7 +42,8 @@ namespace gc {
  *	\todo Investigate supporting huge pages to reduce page map size in the kernel.
  *	\note Execute privalage is considered unneeded at this time.
  */
-class vmem {
+class vmem
+{
 	//!	\cond friends
 	friend unit_test::tester<vmem>;
 	//!	\endcond
@@ -73,6 +74,7 @@ private:
 	 *	\pre 'ptr' must be a block of virtual memory returned by allocate.
 	 */
 	static void deallocate(void *ptr) noexcept;
+
 public:
 	/**	\var page_size
 	 *	\brief The basic unit size of virtual memory blocks.
@@ -89,22 +91,22 @@ public:
 	 *	\param s The size of the block.
 	 *	\param access If true start with read and write access; otherwise, start with no access.
 	 */
-	vmem(std::size_t const s, bool const access) noexcept : vmem() {
+	vmem(std::size_t const s, bool const access) noexcept : vmem()
+	{
 		ptr = allocate(s, access);
-		if (ptr) {
-			len = s;
-		}
+		if (ptr) { len = s; }
 	}
 
-	/**	\fn vmem(vmem const&)
+	/**	\fn vmem(vmem const &)
 	 *	\brief Deleted.
 	 */
-	vmem(vmem const&) = delete;
+	vmem(vmem const &) = delete;
 
-	/**	\fn vmem(vmem && other) noexcept
+	/**	\fn vmem(vmem &&other) noexcept
 	 *	\brief Moves the virtual memory from other to this.
 	 */
-	constexpr vmem(vmem && other) noexcept : vmem() {
+	constexpr vmem(vmem &&other) noexcept : vmem()
+	{
 		if (other.ptr) {
 			ptr = std::exchange(other.ptr, nullptr);
 			len = std::exchange(other.len, 0);
@@ -114,16 +116,16 @@ public:
 	/**	\fn ~vmem() noexcept
 	 *	\brief Deallocates the virtual memory if ptr is not nullptr.
 	 */
-	~vmem() noexcept {
-		if (ptr) {
-			deallocate(ptr);
-		}
+	~vmem() noexcept
+	{
+		if (ptr) { deallocate(ptr); }
 	}
 
-	/**	\fn operator=(nullptr_t const&) noexcept
+	/**	\fn operator=(std::nullptr_t) noexcept
 	 *	\brief Removes the owned virtual memory if this has any.
 	 */
-	constexpr vmem &operator=(nullptr_t const&) noexcept {
+	constexpr vmem &operator=(std::nullptr_t) noexcept
+	{
 		if (ptr) {
 			deallocate(ptr);
 			ptr = nullptr;
@@ -132,21 +134,20 @@ public:
 		return *this;
 	}
 
-	/**	\fn operator=(vmem const&)
+	/**	\fn operator=(vmem const &)
 	 *	\brief Deleted.
 	 */
-	vmem &operator=(vmem const&) = delete;
+	vmem &operator=(vmem const &) = delete;
 
-	/**	\fn operator=(vmem && other) noexcept
+	/**	\fn operator=(vmem &&other) noexcept
 	 *	\brief Moves the virtual memory from other to this.
 	 *	\param other The object to move the virtual memory from.
 	 *	\returns Returns *this.
 	 */
-	constexpr vmem &operator=(vmem && other) noexcept {
+	constexpr vmem &operator=(vmem &&other) noexcept
+	{
 		if (std::addressof(other) != this) {
-			if (ptr) {
-				deallocate(ptr);
-			}
+			if (ptr) { deallocate(ptr); }
 			ptr = std::exchange(other.ptr, nullptr);
 			len = std::exchange(other.len, 0);
 		}
@@ -157,42 +158,32 @@ public:
 	 *	\brief Converts to bool.
 	 *	\returns Returns true if ptr != nullptr.
 	 */
-	constexpr operator bool() const noexcept {
-		return ptr != nullptr;
-	}
+	constexpr operator bool() const noexcept { return ptr != nullptr; }
 
 	/**	\fn operator!() const noexcept
 	 *	\brief Converts to bool.
 	 *	\returns Returns true if ptr == nullptr.
 	 */
-	constexpr bool operator!() const noexcept {
-		return ptr == nullptr;
-	}
+	constexpr bool operator!() const noexcept { return ptr == nullptr; }
 
 	/**	\fn size() const noexcept
 	 *	\brief Gets the size of the owned virtual memory.
 	 *	\returns The size of the virtual memory.
 	 */
-	constexpr std::size_t size() const noexcept {
-		return len;
-	}
+	constexpr std::size_t size() const noexcept { return len; }
 
 	/**	\fn begin() const noexcept
 	 *	\brief Gets the starting address of the block.
 	 *	\returns ptr
 	 */
-	constexpr void *begin() const noexcept {
-		return ptr;
-	}
+	constexpr void *begin() const noexcept { return ptr; }
 
 	/**	\fn end() const noexcept
 	 *	\brief Gets the end address of the block.
 	 *	\returns The address just past the end.
 	 *	\returns Returns nullptr if ptr is nullptr.
 	 */
-	constexpr void *end() const noexcept {
-		return ptr ? add_offset(ptr, len) : nullptr;
-	}
+	constexpr void *end() const noexcept { return ptr ? add_offset(ptr, len) : nullptr; }
 
 	/**	\fn operator[](std::size_t offset) const noexcept
 	 *	\brief Gets the pointer for an offset into the virtual memory.

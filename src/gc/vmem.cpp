@@ -39,7 +39,8 @@ namespace {
  *	\brief Gets the value for vmem::page_size.
  *	\returns Returns the system page size.
  */
-inline std::size_t get_page_size() noexcept {
+inline std::size_t get_page_size() noexcept
+{
 	SYSTEM_INFO info;
 	GetSystemInfo(&info);
 	return info.dwPageSize;
@@ -51,24 +52,28 @@ namespace gc {
 
 std::size_t const vmem::page_size{get_page_size()};
 
-void *vmem::allocate(std::size_t size, bool access) noexcept {
+void *vmem::allocate(std::size_t size, bool access) noexcept
+{
 	SYNAFIS_ASSERT(size > 0);
-	return VirtualAlloc(nullptr, size, MEM_COMMIT | MEM_RESERVE,
-		access ? PAGE_READWRITE : PAGE_NOACCESS);
+	return VirtualAlloc(
+		nullptr, size, MEM_COMMIT | MEM_RESERVE, access ? PAGE_READWRITE : PAGE_NOACCESS);
 }
 
-void vmem::deallocate(void *ptr) noexcept {
+void vmem::deallocate(void *ptr) noexcept
+{
 	SYNAFIS_ASSERT(ptr != nullptr);
 	VirtualFree(ptr, 0, MEM_RELEASE);
 }
 
-void *vmem::operator[](std::size_t offset) const noexcept {
+void *vmem::operator[](std::size_t offset) const noexcept
+{
 	SYNAFIS_ASSERT(ptr != nullptr);
 	SYNAFIS_ASSERT(offset < len);
 	return add_offset(ptr, offset);
 }
 
-void *vmem::at(std::size_t offset) const {
+void *vmem::at(std::size_t offset) const
+{
 	if (ptr) {
 		if (offset < len) {
 			return add_offset(ptr, offset);
@@ -80,7 +85,8 @@ void *vmem::at(std::size_t offset) const {
 	}
 }
 
-bool vmem::forbid(std::size_t offset, std::size_t length) {
+bool vmem::forbid(std::size_t offset, std::size_t length)
+{
 	void *temp{(*this)[offset]};
 	if ((offset + length) > len) {
 		throw std::out_of_range{"Precondition (offset + length > len) violated."};
@@ -89,7 +95,8 @@ bool vmem::forbid(std::size_t offset, std::size_t length) {
 	return VirtualProtect(temp, length, PAGE_NOACCESS, &old);
 }
 
-bool vmem::readonly(std::size_t offset, std::size_t length) {
+bool vmem::readonly(std::size_t offset, std::size_t length)
+{
 	void *temp{(*this)[offset]};
 	if ((offset + length) > len) {
 		throw std::out_of_range{"Precondition (offset + length > len) violated."};
@@ -98,7 +105,8 @@ bool vmem::readonly(std::size_t offset, std::size_t length) {
 	return VirtualProtect(temp, length, PAGE_READONLY, &old);
 }
 
-bool vmem::writable(std::size_t offset, std::size_t length) {
+bool vmem::writable(std::size_t offset, std::size_t length)
+{
 	void *temp{(*this)[offset]};
 	if ((offset + length) > len) {
 		throw std::out_of_range{"Precondition (offset + length > len) violated."};
