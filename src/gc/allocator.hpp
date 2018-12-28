@@ -41,7 +41,8 @@ namespace gc {
 /**	\class allocator
  *	\brief Type to manage pools for a type of object.
  */
-class allocator : public identity::iallocator {
+class allocator : public identity::iallocator
+{
 	//!	\cond friends
 	friend unit_test::tester<allocator>;
 	//!	\endcond
@@ -51,15 +52,16 @@ class allocator : public identity::iallocator {
 	 */
 	allocator() = delete;
 
-	/**	\fn allocator(allocator const&)
+	/**	\fn allocator(allocator const &)
 	 *	\brief Deleted.
 	 */
-	allocator(allocator const&) = delete;
+	allocator(allocator const &) = delete;
 
 	/**	\fn allocator(allocator &&)
 	 *	\brief Deleted.
 	 */
 	allocator(allocator &&) = delete;
+
 private:
 	/**	\typedef handle
 	 *	\brief Shorthand for pool::handle.
@@ -79,7 +81,7 @@ private:
 	/**	\var type
 	 *	\brief The identity of the type the allocator allocates.
 	 */
-	identity const&type;
+	identity const &type;
 
 	/**	\var unit
 	 *	\brief The size of a unit of allocated memory.
@@ -113,8 +115,9 @@ private:
 	 *	\todo There should be an method for shrinking the number of pools.
 	 */
 	handle &grow();
+
 public:
-	/**	\fn allocator(identity const&id, std::size_t u, traits::flag_type f)
+	/**	\fn allocator(identity const &id, std::size_t u, traits::flag_type f)
 	 *	\brief Constructs a new allocator.
 	 *	\param id The identity of the type to allocate for.
 	 *	\param u The size of memory to allocate.
@@ -122,7 +125,7 @@ public:
 	 *	\post The pools list will contain one pool.
 	 *	\throws std::bad_alloc if memory could not be allocated.
 	 */
-	allocator(identity const&id, std::size_t u, traits::flag_type f);
+	allocator(identity const &id, std::size_t u, traits::flag_type f);
 
 	/**	\fn ~allocator() noexcept
 	 *	\brief Destructor.

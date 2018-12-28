@@ -29,37 +29,33 @@ PERFORMANCE OF THIS SOFTWARE.
 
 namespace gc {
 
-allocator::allocator(identity const&id, std::size_t u, traits::flag_type f) :
-	iallocator(), mtx(), pools(), type(id), unit(u),
-	capacity(pool::select_capacity(u)), flags(f) {
+allocator::allocator(identity const &id, std::size_t u, traits::flag_type f) :
+	iallocator(), mtx(), pools(), type(id), unit(u), capacity(pool::select_capacity(u)), flags(f)
+{
 	grow();
 }
 
 allocator::~allocator() noexcept {}
 
-allocator::handle &allocator::grow() {
-	return pools.emplace_front(type, capacity, unit);
-}
+allocator::handle &allocator::grow() { return pools.emplace_front(type, capacity, unit); }
 
-void *allocator::allocate_impl() {
+void *allocator::allocate_impl()
+{
 	std::lock_guard<std::mutex> lock{mtx};
 	for (handle &x : pools) {
-		if (0 < x.available()) {
-			return x.allocate();
-		}
+		if (0 < x.available()) { return x.allocate(); }
 	}
 	return grow().allocate();
 	//! \todo If grow fails, should run GC cycle before giving up.
 }
 
-void *allocator::allocate() {
-	return allocate_impl();
-}
+void *allocator::allocate() { return allocate_impl(); }
 
-void *allocator::allocate(std::nothrow_t) noexcept {
+void *allocator::allocate(std::nothrow_t) noexcept
+{
 	try {
 		return allocate_impl();
-	} catch(std::bad_alloc &) {
+	} catch (std::bad_alloc &) {
 		return nullptr;
 	}
 }
