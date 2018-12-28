@@ -51,7 +51,8 @@ typedef std::bitset<5> flag_type;
  *	\see movable\<T\>
  */
 template<typename T>
-class moveable_type : public std::is_trivially_copyable<T> {};
+class moveable_type : public std::is_trivially_copyable<T>
+{};
 
 /**	\var movable
  *	\brief A boolean value indicating if objects of a type can be moved by the collector.
@@ -81,7 +82,8 @@ inline constexpr bool const movable{moveable_type<std::remove_cv_t<T>>::value};
  *	\see readonly\<T\>
  */
 template<typename T>
-class readonly_type : public std::is_const<T> {};
+class readonly_type : public std::is_const<T>
+{};
 
 /**	\var readonly
  *	\brief A boolean value indicating if objects of a type are immutable.
@@ -108,7 +110,8 @@ inline constexpr bool const readonly{readonly_type<std::remove_volatile_t<T>>::v
  *	\see pointers\<T\>
  */
 template<typename T>
-class pointers_type : public std::integral_constant<bool, false> {};
+class pointers_type : public std::integral_constant<bool, false>
+{};
 
 /**	\var pointers
  *	\brief A boolean value indicating if objects of a type contain pointers to other objects.
@@ -139,7 +142,8 @@ class finalize_type;
  *	\see finalize_type\<T, Enable\>
  */
 template<typename T>
-class finalize_type<T, std::enable_if_t<std::is_trivially_destructible_v<T>>> {
+class finalize_type<T, std::enable_if_t<std::is_trivially_destructible_v<T>>>
+{
 public:
 	/**	\var value
 	 *	\brief There is no finalize callback needed.
@@ -153,18 +157,25 @@ public:
  *	\see finalize_type\<T, Enable\>
  */
 template<typename T>
-class finalize_type<T, std::enable_if_t<(std::is_destructible_v<T> &&
-	!std::is_trivially_destructible_v<T>)>> {
+class finalize_type<T,
+	std::enable_if_t<(std::is_destructible_v<T> && !std::is_trivially_destructible_v<T>)>>
+{
+private:
+	/**
+	 *	\brief The callback.
+	 *	\param obj The object being finalized.
+	 */
+	static void callabck(void *obj) noexcept
+	{
+		SYNAFIS_ASSERT(obj != nullptr);
+		static_cast<T *>(obj)->~T();
+	}
+
 public:
 	/**	\var value
 	 *	\brief The default finalize callback that calls the type's destructor.
 	 */
-	static constexpr finalize_cb const value{
-		[](void *obj) noexcept -> void {
-			SYNAFIS_ASSERT(obj != nullptr);
-			static_cast<T *>(obj)->~T();
-		}
-	};
+	static constexpr finalize_cb const value{callback};
 };
 
 /**	\var finalizer
@@ -195,7 +206,8 @@ class traverse_type;
  *	\see traverse_type\<T, Enable\>
  */
 template<typename T>
-class traverse_type<T, std::enable_if_t<(!pointers<T>)>> {
+class traverse_type<T, std::enable_if_t<(!pointers<T>)>>
+{
 public:
 	/**	\var value
 	 *	\brief There is no traversal callback needed.
@@ -203,25 +215,33 @@ public:
 	static constexpr traverse_cb const value{nullptr};
 };
 
-
 /**
  *	\brief Specialization for types that contain pointers.
  *	\tparam T The type to set the callback for.
  *	\see traverse_type\<T, Enable\>
  */
 template<typename T>
-class traverse_type<T, std::enable_if_t<(pointers<T>)>> {
+class traverse_type<T, std::enable_if_t<(pointers<T>)>>
+{
+private:
+	/**
+	 *	\brief The callback.
+	 *	\param obj The object being traversed.
+	 *	\param data Data to pass to cb.
+	 *	\param cb A callback to report pointers to the collector.
+	 */
+	static void callback(void const *obj, void *data, enumerate_cb cb) noexcept
+	{
+		SYNAFIS_ASSERT(obj != nullptr);
+		SYNAFIS_ASSERT(cb != nullptr);
+		static_cast<T const *>(obj)->traverse(data, cb);
+	}
+
 public:
 	/**	\var value
 	 *	\brief The default traversal callback that calls the type's member traverse.
 	 */
-	static constexpr traverse_cb const value{
-		[](void const* obj, void *data, enumerate_cb cb) noexcept -> void {
-			SYNAFIS_ASSERT(obj != nullptr);
-			SYNAFIS_ASSERT(cb != nullptr);
-			static_cast<T const*>(obj)->traverse(data, cb);
-		}
-	};
+	static constexpr traverse_cb const value{callback};
 };
 
 /**	\var traverser
@@ -260,8 +280,8 @@ void transfer(T &&orig, T &dest) noexcept;
  *	\see transfer\<T, Enable\>()
  */
 template<typename T>
-inline std::enable_if_t<std::is_nothrow_move_assignable_v<T>>
-transfer(T &&orig, T &dest) noexcept {
+inline std::enable_if_t<std::is_nothrow_move_assignable_v<T>> transfer(T &&orig, T &dest) noexcept
+{
 	dest = std::forward<T>(orig);
 }
 
@@ -272,10 +292,12 @@ transfer(T &&orig, T &dest) noexcept {
  *	\param dest The destination location.
  *	\see transfer\<T, Enable\>()
  */
-template<typename T> inline
-std::enable_if_t<!std::is_nothrow_move_assignable_v<T> && std::is_nothrow_copy_assignable_v<T>>
-transfer(T &&orig, T &dest) noexcept {
-	T const& temp{orig};
+template<typename T>
+inline std::enable_if_t<!std::is_nothrow_move_assignable_v<T> &&
+						std::is_nothrow_copy_assignable_v<T>>
+	transfer(T &&orig, T &dest) noexcept
+{
+	T const &temp{orig};
 	dest = temp;
 }
 
@@ -304,8 +326,9 @@ class relocate_type;
  *	\see relocate_type\<T, Enable\>
  */
 template<typename T>
-class relocate_type<T, std::enable_if_t<(!pointers<T> &&
-	(std::is_trivially_copyable_v<T> || !movable<T>))>> {
+class relocate_type<T,
+	std::enable_if_t<(!pointers<T> && (std::is_trivially_copyable_v<T> || !movable<T>))>>
+{
 public:
 	/**	\var value
 	 *	\brief There is no relocation callback available.
@@ -319,21 +342,30 @@ public:
  *	\see relocate_type\<T, Enable\>
  */
 template<typename T>
-class relocate_type<T, std::enable_if_t<(!pointers<T> &&
-	!std::is_trivially_copyable_v<T> && movable<T>)>> {
+class relocate_type<T,
+	std::enable_if_t<(!pointers<T> && !std::is_trivially_copyable_v<T> && movable<T>)>>
+{
+private:
+	/**
+	 *	\brief The callback.
+	 *	\param orig The original address.
+	 *	\param dest The destination address.
+	 *	\param data Data for the callback.
+	 *	\param cb The remap callback from the collector.
+	 */
+	static void callback(void *orig, void *dest, void *data, remap_cb cb) noexcept
+	{
+		SYNAFIS_ASSERT(orig != nullptr);
+		SYNAFIS_ASSERT(dest != nullptr);
+		SYNAFIS_ASSERT(orig != dest);
+		transfer(std::move(*static_cast<T *>(orig)), *static_cast<T *>(dest));
+	}
+
 public:
 	/**	\var value
 	 *	\brief The default relocate callback that calls the transfer\<T\>.
 	 */
-	static constexpr relocate_cb const value{
-		[](void *orig, void *dest, void *, remap_cb) noexcept -> void {
-			SYNAFIS_ASSERT(orig != nullptr);
-			SYNAFIS_ASSERT(dest != nullptr);
-			SYNAFIS_ASSERT(orig != dest);
-			transfer(std::move(*static_cast<T *>(orig)),
-				*static_cast<T *>(dest));
-		}
-	};
+	static constexpr relocate_cb const value{callback};
 };
 
 /**
@@ -342,20 +374,30 @@ public:
  *	\see relocate_type\<T, Enable\>
  */
 template<typename T>
-class relocate_type<T, std::enable_if_t<(pointers<T> && !movable<T>)>> {
+class relocate_type<T, std::enable_if_t<(pointers<T> && !movable<T>)>>
+{
+private:
+	/**
+	 *	\brief The callback.
+	 *	\param orig The original address.
+	 *	\param dest The destination address.
+	 *	\param data Data for the callback.
+	 *	\param cb The remap callback from the collector.
+	 */
+	static void callback(void *orig, void *dest, void *data, remap_cb cb) noexcept
+	{
+		SYNAFIS_ASSERT(dest != nullptr);
+		SYNAFIS_ASSERT(cb != nullptr);
+		SYNAFIS_ASSERT(orig == dest);
+		static_cast<T *>(dest)->remap(data, cb);
+	}
+
 public:
 	/**	\var value
 	 *	\brief The default traversal callback that calls the type's member remap.
 	 *	\details This version does not move the object.
 	 */
-	static constexpr relocate_cb const value{
-		[](void *orig, void *dest, void *data, enumerate_cb cb) noexcept -> void {
-			SYNAFIS_ASSERT(dest != nullptr);
-			SYNAFIS_ASSERT(cb != nullptr);
-			SYNAFIS_ASSERT(orig == dest);
-			static_cast<T *>(dest)->remap(data, cb);
-		}
-	};
+	static constexpr relocate_cb const value{callback};
 };
 
 /**
@@ -364,25 +406,33 @@ public:
  *	\see relocate_type\<T, Enable\>
  */
 template<typename T>
-class relocate_type<T, std::enable_if_t<(pointers<T> && movable<T>)>> {
+class relocate_type<T, std::enable_if_t<(pointers<T> && movable<T>)>>
+{
+private:
+	/**
+	 *	\brief The callback.
+	 *	\param orig The original address.
+	 *	\param dest The destination address.
+	 *	\param data Data for the callback.
+	 *	\param cb The remap callback from the collector.
+	 */
+	static void callback(void *orig, void *dest, void *data, remap_cb cb) noexcept
+	{
+		SYNAFIS_ASSERT(orig != nullptr);
+		SYNAFIS_ASSERT(dest != nullptr);
+		SYNAFIS_ASSERT(cb != nullptr);
+		T &ref{*static_cast<T *>(dest)};
+		if (orig != dest) { transfer(std::move(*static_cast<T *>(orig)), ref); }
+		static_cast<T *>(dest)->remap(data, cb);
+	}
+
 public:
 	/**	\var value
 	 *	\brief The default traversal callback that calls the type's member remap.
 	 *	\details This version moves the object to a new address with move assignment
 	 *	\details if the collector provides a new address.
 	 */
-	static constexpr relocate_cb const value{
-		[](void *orig, void *dest, void *data, remap_cb cb) noexcept -> void {
-			SYNAFIS_ASSERT(orig != nullptr);
-			SYNAFIS_ASSERT(dest != nullptr);
-			SYNAFIS_ASSERT(cb != nullptr);
-			T &ref{*static_cast<T *>(dest)};
-			if (orig != dest) {
-				transfer(std::move(*static_cast<T *>(orig)), ref);
-			}
-			static_cast<T *>(dest)->remap(data, cb);
-		}
-	};
+	static constexpr relocate_cb const value{callback};
 };
 
 /**	\var relocator
@@ -406,7 +456,8 @@ inline constexpr relocate_cb const relocator{relocate_type<std::remove_cv_t<T>>:
  *	\see equality_type\<T\>
  */
 template<typename T>
-bool compare(T const& lhs, T const& rhs) noexcept {
+bool compare(T const &lhs, T const &rhs) noexcept
+{
 	return lhs == rhs;
 }
 
@@ -435,7 +486,8 @@ class equality_type;
  *	\see equality_type\<T, Enable\>
  */
 template<typename T>
-class equality_type<T, std::enable_if_t<(!readonly<T>)>> {
+class equality_type<T, std::enable_if_t<(!readonly<T>)>>
+{
 public:
 	/**	\var value
 	 *	\brief There is no equality callback available.
@@ -449,20 +501,29 @@ public:
  *	\see equality_type\<T, Enable\>
  */
 template<typename T>
-class equality_type<T, std::enable_if_t<(readonly<T>)>> {
+class equality_type<T, std::enable_if_t<(readonly<T>)>>
+{
+private:
+	/**
+	 *	\brief The callback.
+	 *	\param lhs The left hand side of the comparison.
+	 *	\param rhs The right hand side of the comparison.
+	 *	\returns Returns lhs == rhs.
+	 */
+	static bool callback(void const *lhs, void const *rhs) noexcept
+	{
+		SYNAFIS_ASSERT(lhs != rhs);
+		SYNAFIS_ASSERT(lhs != nullptr);
+		SYNAFIS_ASSERT(rhs != nullptr);
+		return compare(
+			*static_cast<std::add_const_t<T> *>(lhs), *static_cast<std::add_const_t<T> *>(rhs));
+	};
+
 public:
 	/**	\var value
 	 *	\brief The default equality callback that calls the compare\<T\>.
 	 */
-	static constexpr equality_cb const value{
-		[](void const* lhs, void const* rhs) noexcept -> bool {
-			SYNAFIS_ASSERT(lhs != rhs);
-			SYNAFIS_ASSERT(lhs != nullptr);
-			SYNAFIS_ASSERT(rhs != nullptr);
-			return compare(*static_cast<std::add_const_t<T> *>(lhs),
-				*static_cast<std::add_const_t<T> *>(rhs));
-		}
-	};
+	static constexpr equality_cb const value{callback};
 };
 
 /**	\var equalizer
@@ -493,13 +554,13 @@ inline constexpr equality_cb const equalizer{equality_type<std::remove_volatile_
  *	\see flag_type
  */
 template<typename T>
-constexpr inline flag_type get_flags() noexcept {
+constexpr inline flag_type get_flags() noexcept
+{
 	return flag_type{(movable<T> ? 0x1 : 0) | (finalizer<T> != nullptr ? 0x2 : 0) |
-		(pointers<T> ? 0x4 : 0) | (relocator<T> != nullptr ? 0x8 : 0) | (readonly<T> ? 0x10 : 0)};
+					 (pointers<T> ? 0x4 : 0) | (relocator<T> != nullptr ? 0x8 : 0) |
+					 (readonly<T> ? 0x10 : 0)};
 }
-
 }
-
 }
 
 #endif
