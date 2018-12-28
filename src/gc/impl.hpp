@@ -35,32 +35,36 @@ namespace gc {
  *	\brief The main class implementing the garbage collector.
  *	\todo This is a stub waiting to be implemented.
  */
-class collector {
+class collector
+{
 	//!	\cond friends
 	friend unit_test::tester<collector>;
 	//!	\endcond
 
-	/**	\fn collector(collector const&)
+	/**	\fn collector(collector const &)
 	 *	\brief Deleted.
 	 */
-	collector(collector const&) = delete;
+	collector(collector const &) = delete;
 
 	/**	\fn collector(collector &&)
 	 *	\brief Deleted.
 	 */
 	collector(collector &&) = delete;
+
 public:
 	/**	\class region
 	 *	\brief Represents regions of memory that may be allocated.
 	 *	\details Used for bookkeeping that needs to know where an object was allocated from.
 	 */
-	class region {
+	class region
+	{
 		//!	\cond friends
 		friend unit_test::tester<collector>;
 		//!	\endcond
 	private:
 	public:
 	};
+
 private:
 	/**	\fn collector() noexcept
 	 *	\brief Sets most of the collector.
@@ -105,6 +109,7 @@ private:
 	 *	\see base_ptr(void *ptr) noexcept
 	 */
 	void *base_ptr_impl(void *ptr) noexcept;
+
 public:
 	/**	\fn ~collector() noexcept
 	 *	\brief Destructor.
@@ -114,59 +119,50 @@ public:
 	/**	\fn init()
 	 *	\brief Finishes setting up the collector.
 	 */
-	static void init() {
-		singleton.init_impl();
-	}
+	static void init() { singleton.init_impl(); }
 
 	/**	\fn lock()
 	 *	\brief Locks against collection.
 	 *	\details Called by the program when entering a section in which the collector must not run.
 	 *	\todo In particular this call starts the thread that preforms collection.
 	 */
-	static void lock() {
-		singleton.lock_impl();
-	}
+	static void lock() { singleton.lock_impl(); }
 
 	/**	\fn unlock()
 	 *	\brief Allows collection again.
 	 *	\details Called by the program when leaving a section in which the collector must not run.
 	 *	\note If the collector needs to run, this call will block until after it runs.
 	 */
-	static void unlock() {
-		singleton.unlock_impl();
-	}
+	static void unlock() { singleton.unlock_impl(); }
 
 	/**	\fn get_soft_ptr(void *ptr)
 	 *	\brief Gets the soft pointer associated with an object.
 	 *	\param ptr A pointer to the object to get the soft pointer data for.
 	 *	\returns Returns a pointer to the soft pointer data.
-	 *	\throws Throws std::bad_alloc if a soft_ptr::data needed to be allocated but memory was lacking.
+	 *	\throws Throws std::bad_alloc if a soft_ptr::data needed to be allocated but memory
+	 *	\throws was lacking.
 	 *	\details Gets the existing data if there is one or creates it if there is not.
 	 */
-	static soft_ptr::data *get_soft_ptr(void *ptr) {
-		return singleton.get_soft_ptr_impl(ptr);
-	}
+	static soft_ptr::data *get_soft_ptr(void *ptr) { return singleton.get_soft_ptr_impl(ptr); }
 
 	/**	\fn free_soft_ptr(soft_ptr::data *ptr)
 	 *	\brief Frees the soft pointer data.
 	 *	\param ptr The data to deallocate.
-	 *	\pre The object the soft pointer refers to must no longer exist or a replacement has been set in next.
+	 *	\pre The object the soft pointer refers to must no longer exist or a replacement has
+	 *	\pre been set in next.
 	 *	\pre Also the reference count must be zero.
 	 *	\post The data object is no longer valid.
 	 *	\details Deallocates the memory if needed.
 	 */
-	static void free_soft_ptr(soft_ptr::data *ptr) {
-		singleton.free_soft_ptr_impl(ptr);
-	}
+	static void free_soft_ptr(soft_ptr::data *ptr) { singleton.free_soft_ptr_impl(ptr); }
 
 	/**	\fn base_ptr(void *ptr) noexcept
 	 *	\brief Gets the originally allocated address.
 	 *	\param ptr The pointer to get a base address for.
-	 *	\returns Returns the address originally allocated for the object ptr points to a location within.
+	 *	\returns Returns the address originally allocated for the object ptr points to a
+	 *	\returns location within.
 	 */
-	static void *base_ptr(void *ptr) noexcept {
-		return singleton.base_ptr_impl(ptr);
-	}
+	static void *base_ptr(void *ptr) noexcept { return singleton.base_ptr_impl(ptr); }
 };
 
 }

@@ -31,15 +31,11 @@ void collector::lock_impl() {}
 
 void collector::unlock_impl() {}
 
-soft_ptr::data *collector::get_soft_ptr_impl(void *ptr) {
-	return nullptr;
-}
+soft_ptr::data *collector::get_soft_ptr_impl(void *ptr) { return nullptr; }
 
 void collector::free_soft_ptr_impl(soft_ptr::data *ptr) {}
 
-void *collector::base_ptr_impl(void *ptr) noexcept {
-	return ptr;
-}
+void *collector::base_ptr_impl(void *ptr) noexcept { return ptr; }
 
 collector collector::singleton{};
 
