@@ -47,7 +47,8 @@ namespace gc {
  *	\note a type can have additional identities for the presence of
  *	\note const and/or volatile as qualifiers.
  */
-class identity {
+class identity
+{
 	//!	\cond friends
 	friend unit_test::tester<identity>;
 	//!	\endcond
@@ -67,21 +68,24 @@ public:
 	/**	\class iallocator
 	 *	\brief Defines the interface for underlying allocators.
 	 */
-	class iallocator {
-		/**	\fn iallocator(iallocator const&)
+	class iallocator
+	{
+		/**	\fn iallocator(iallocator const &)
 		 *	\brief Deleted.
 		 */
-		iallocator(iallocator const&) = delete;
+		iallocator(iallocator const &) = delete;
 
 		/**	\fn iallocator(iallocator &&)
 		 *	\brief Deleted.
 		 */
 		iallocator(iallocator &&) = delete;
+
 	protected:
 		/**	\fn iallocator() noexcept
 		 *	\brief Default.
 		 */
 		constexpr iallocator() noexcept = default;
+
 	public:
 		/**	\fn ~iallocator()
 		 *	\brief Default.
@@ -101,6 +105,7 @@ public:
 		 */
 		virtual void *allocate(std::nothrow_t) noexcept = 0;
 	};
+
 private:
 	/**	\var alloc
 	 *	\brief Data provided for passing to the allocate callback (acb).
@@ -135,12 +140,13 @@ private:
 	 *	\details The return value is to be at least sizeof(T) and a multiple of alignof(T).
 	 */
 	template<typename T>
-	static constexpr std::size_t unit_size() noexcept {
+	static constexpr std::size_t unit_size() noexcept
+	{
 		return (sizeof(T) % alignof(T) == 0) ? sizeof(T) :
-			((sizeof(T) / alignof(T)) + 1) * alignof(T);
+											   ((sizeof(T) / alignof(T)) + 1) * alignof(T);
 	}
 
-	/**	\fn select_alloc(identity const&id, std::size_t unit, traits::flag_type flags)
+	/**	\fn select_alloc(identity const &id, std::size_t unit, traits::flag_type flags)
 	 *	\brief Gets the allocation callback and the allocator data.
 	 *	\param id The identity of the type to get an allocator for.
 	 *	\param unit The return value of unit_size for the type to select an allocator for.
@@ -150,8 +156,8 @@ private:
 	 *	\pre Is to only be called once per identity object.
 	 *	\see traits::get_flags()
 	 */
-	std::unique_ptr<iallocator>
-	select_alloc(identity const&id, std::size_t unit, traits::flag_type flags);
+	std::unique_ptr<iallocator> select_alloc(
+		identity const &id, std::size_t unit, traits::flag_type flags);
 
 	/**	\fn fetch_impl(void *obj) noexcept
 	 *	\brief Gets the identity of an object.
@@ -160,7 +166,7 @@ private:
 	 *	\returns the object was not allocated by the collector.
 	 *	\pre obj != nullptr
 	 */
-	static identity const* fetch_impl(void *obj) noexcept;
+	static identity const *fetch_impl(void *obj) noexcept;
 
 	/**	\fn identity(finalize_cb f, traverse_cb t, relocate_cb r, equality_cb e) noexcept
 	 *	\brief Sets up the parts that can be done as a constexpr.
@@ -170,7 +176,8 @@ private:
 	 *	\param e The equality check callback.
 	 */
 	constexpr identity(finalize_cb f, traverse_cb t, relocate_cb r, equality_cb e) noexcept :
-		alloc(nullptr), fcb(f), tcb(t), rcb(r), ecb(e) {}
+		alloc(nullptr), fcb(f), tcb(t), rcb(r), ecb(e)
+	{}
 
 	/**	\fn finalize(void *obj) const noexcept
 	 *	\brief Calls the finalizer callback if it is present.
@@ -180,14 +187,15 @@ private:
 	 *	\details Private so it is not accessible to the program.
 	 *	\details The collector should access this function via detail::idaccess.
 	 */
-	void finalize(void *obj) const noexcept {
+	void finalize(void *obj) const noexcept
+	{
 		if (fcb) {
 			SYNAFIS_ASSERT(obj != nullptr);
 			(*fcb)(obj);
 		}
 	}
 
-	/**	\fn traverse(void const* obj, void *data, enumerate_cb cb) const noexcept
+	/**	\fn traverse(void const *obj, void *data, enumerate_cb cb) const noexcept
 	 *	\brief Calls the traversal callback if it is present.
 	 *	\param obj The address of the object to traverse.
 	 *	\param data Optional data for the callback, may be nullptr.
@@ -199,7 +207,8 @@ private:
 	 *	\details The collector should access this function via detail::idaccess.
 	 */
 
-	void traverse(void const* obj, void *data, enumerate_cb cb) const noexcept {
+	void traverse(void const *obj, void *data, enumerate_cb cb) const noexcept
+	{
 		if (tcb) {
 			SYNAFIS_ASSERT(obj != nullptr);
 			SYNAFIS_ASSERT(cb != nullptr);
@@ -220,13 +229,15 @@ private:
 	 *	\details Private so it is not accessible to the program.
 	 *	\details The collector should access this function via detail::idaccess.
 	 */
-	void relocate(void *orig, void *dest, void *data, remap_cb cb) const noexcept {
+	void relocate(void *orig, void *dest, void *data, remap_cb cb) const noexcept
+	{
 		if (rcb) {
 			SYNAFIS_ASSERT(dest != nullptr);
 			SYNAFIS_ASSERT(cb != nullptr);
 			(*rcb)(orig, dest, data, cb);
 		}
 	}
+
 public:
 	/**	\fn identity(T *)
 	 *	\brief Constructs the identity for a type.
@@ -239,14 +250,16 @@ public:
 	 *	\details assertion are enabled.
 	 */
 	template<typename T>
-	identity(T *) : identity(traits::finalizer<T>, traits::traverser<T>,
-		traits::relocator<T>, traits::equalizer<T>) {
-			alloc = select_alloc(*this, unit_size<T>(), traits::get_flags<T>());
-			SYNAFIS_ASSERT(alloc != nullptr);
-			SYNAFIS_ASSERT(!traits::pointers<T> || (tcb && rcb));
-			SYNAFIS_ASSERT(std::is_trivially_destructible_v<T> || fcb != nullptr);
-			SYNAFIS_ASSERT(!traits::movable<T> || std::is_trivially_copyable_v<T> || rcb != nullptr);
-		}
+	identity(T *) :
+		identity(
+			traits::finalizer<T>, traits::traverser<T>, traits::relocator<T>, traits::equalizer<T>)
+	{
+		alloc = select_alloc(*this, unit_size<T>(), traits::get_flags<T>());
+		SYNAFIS_ASSERT(alloc != nullptr);
+		SYNAFIS_ASSERT(!traits::pointers<T> || (tcb && rcb));
+		SYNAFIS_ASSERT(std::is_trivially_destructible_v<T> || fcb != nullptr);
+		SYNAFIS_ASSERT(!traits::movable<T> || std::is_trivially_copyable_v<T> || rcb != nullptr);
+	}
 
 	/**	\fn ~identity()
 	 *	\brief Cleans up the allocator if needed.
@@ -260,9 +273,7 @@ public:
 	 *	\pre The collector lock must be held by the calling thread.
 	 *	\throws std::bad_alloc if memory could not be allocated.
 	 */
-	void *allocate() const {
-		return alloc->allocate();
-	}
+	void *allocate() const { return alloc->allocate(); }
 
 	/**	\fn allocate(std::nothrow_t) const noexcept
 	 *	\brief Allocates an object of the type the identity represents.
@@ -271,11 +282,9 @@ public:
 	 *	\returns the collector could not free enough memory at this time.
 	 *	\pre The collector lock must be held by the calling thread.
 	 */
-	void *allocate(std::nothrow_t) const noexcept {
-		return alloc->allocate(std::nothrow);
-	}
+	void *allocate(std::nothrow_t) const noexcept { return alloc->allocate(std::nothrow); }
 
-	/**	\fn equal(void const* lhs, void const* rhs) const noexcept
+	/**	\fn equal(void const *lhs, void const *rhs) const noexcept
 	 *	\brief Checks that two objects will always be equal.
 	 *	\param lhs The first object.
 	 *	\param rhs The second object.
@@ -284,7 +293,8 @@ public:
 	 *	\details Public so that the program can use it to make sure objects
 	 *	\details that should be considered as the same object will be treated as such.
 	 */
-	bool equal(void const* lhs, void const* rhs) const noexcept {
+	bool equal(void const *lhs, void const *rhs) const noexcept
+	{
 		SYNAFIS_ASSERT(lhs != rhs);
 		if (ecb) {
 			SYNAFIS_ASSERT(lhs != nullptr);
@@ -306,9 +316,11 @@ public:
 	 *	\pre obj points to an area of memory allocated the the collector.
 	 */
 	template<typename T>
-	static identity const& fetch(T *obj) {
+	static identity const &fetch(T *obj)
+	{
 		SYNAFIS_ASSERT(obj != nullptr);
-		identity const* temp{fetch_impl(static_cast<void *>(const_cast<std::remove_cv_t<T> *>(obj)))};
+		identity const *temp{
+			fetch_impl(static_cast<void *>(const_cast<std::remove_cv_t<T> *>(obj)))};
 		if (temp) {
 			return *temp;
 		} else {
@@ -325,7 +337,8 @@ public:
 	 *	\pre obj != nullptr
 	 */
 	template<typename T>
-	static identity const* fetch(T *obj, std::nothrow_t) noexcept {
+	static identity const *fetch(T *obj, std::nothrow_t) noexcept
+	{
 		SYNAFIS_ASSERT(obj != nullptr);
 		return fetch_impl(static_cast<void *>(const_cast<std::remove_cv_t<T> *>(obj)));
 	}
@@ -340,7 +353,7 @@ public:
  *	\todo Work out the best way for providing the identities for types.
  */
 template<typename T>
-identity const& get_id() noexcept;
+identity const &get_id() noexcept;
 
 }
 
