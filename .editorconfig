@@ -12,6 +12,24 @@ charset = utf-8
 indent_style = space
 indent_size = 2
 
+[.jsbeautifyrc]
+charset = utf-8
+indent_style = tab
+indent_size = 4
+end_of_line = lf
+
+[**.json]
+charset = utf-8
+indent_style = tab
+indent_size = 4
+end_of_line = lf
+
+[**.js]
+charset = utf-8
+indent_style = tab
+indent_size = 4
+end_of_line = lf
+
 [**.txt]
 charset = utf-8
 
@@ -27,16 +45,6 @@ end_of_line = lf
 [**.rb]
 indent_style = space
 indent_size = 2
-charset = utf-8
-
-[**.json]
-indent_style = tab
-indent_size = 4
-charset = utf-8
-
-[**.js]
-indent_style = tab
-indent_size = 4
 charset = utf-8
 
 [**.hpp]
