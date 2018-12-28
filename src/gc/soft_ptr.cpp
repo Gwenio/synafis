@@ -22,31 +22,28 @@ PERFORMANCE OF THIS SOFTWARE.
 
 namespace gc {
 
-soft_ptr::soft_ptr(soft_ptr const& other) : soft_ptr() {
-	if (other) {
-		ptr = copy(other.ptr);
-	}
+soft_ptr::soft_ptr(soft_ptr const &other) : soft_ptr()
+{
+	if (other) { ptr = copy(other.ptr); }
 }
 
-soft_ptr::soft_ptr(soft_ptr && other) : soft_ptr() {
-	if (other) {
-		ptr = update(std::exchange(other.ptr, nullptr));
-	}
+soft_ptr::soft_ptr(soft_ptr &&other) : soft_ptr()
+{
+	if (other) { ptr = update(std::exchange(other.ptr, nullptr)); }
 }
 
-soft_ptr::soft_ptr(hard_ptr const&other) : soft_ptr() {
-	if (other) {
-		ptr = get_soft(other);
-	}
+soft_ptr::soft_ptr(hard_ptr const &other) : soft_ptr()
+{
+	if (other) { ptr = get_soft(other); }
 }
 
-soft_ptr::~soft_ptr() {
-	if (ptr) {
-		free(ptr);
-	}
+soft_ptr::~soft_ptr()
+{
+	if (ptr) { free(ptr); }
 }
 
-soft_ptr &soft_ptr::operator=(std::nullptr_t) noexcept {
+soft_ptr &soft_ptr::operator=(std::nullptr_t) noexcept
+{
 	if (ptr) {
 		free(ptr);
 		ptr = nullptr;
@@ -54,14 +51,13 @@ soft_ptr &soft_ptr::operator=(std::nullptr_t) noexcept {
 	return *this;
 }
 
-soft_ptr &soft_ptr::operator=(soft_ptr const& other) noexcept {
+soft_ptr &soft_ptr::operator=(soft_ptr const &other) noexcept
+{
 	if (this == std::addressof(other)) {
 		refresh();
 		return *this;
 	} else if (other) {
-		if (ptr) {
-			free(ptr);
-		}
+		if (ptr) { free(ptr); }
 		ptr = copy(other.ptr);
 		return *this;
 	} else {
@@ -69,14 +65,13 @@ soft_ptr &soft_ptr::operator=(soft_ptr const& other) noexcept {
 	}
 }
 
-soft_ptr &soft_ptr::operator=(soft_ptr && other) noexcept {
+soft_ptr &soft_ptr::operator=(soft_ptr &&other) noexcept
+{
 	if (this == std::addressof(other)) {
 		refresh();
 		return *this;
 	} else if (other) {
-		if (ptr) {
-			free(ptr);
-		}
+		if (ptr) { free(ptr); }
 		ptr = update(std::exchange(other.ptr, nullptr));
 		return *this;
 	} else {
@@ -84,11 +79,10 @@ soft_ptr &soft_ptr::operator=(soft_ptr && other) noexcept {
 	}
 }
 
-soft_ptr &soft_ptr::operator=(hard_ptr const& other) noexcept {
+soft_ptr &soft_ptr::operator=(hard_ptr const &other) noexcept
+{
 	if (other) {
-		if (ptr) {
-			free(ptr);
-		}
+		if (ptr) { free(ptr); }
 		ptr = get_soft(other);
 		return *this;
 	} else {
@@ -96,10 +90,9 @@ soft_ptr &soft_ptr::operator=(hard_ptr const& other) noexcept {
 	}
 }
 
-void soft_ptr::refresh() noexcept {
-	if (ptr) {
-		ptr = update(ptr);
-	}
+void soft_ptr::refresh() noexcept
+{
+	if (ptr) { ptr = update(ptr); }
 }
 
 }

@@ -36,7 +36,8 @@ class hard_ptr;
 /**	\class soft_ptr
  *	\brief Type for managing soft or weak pointers.
  */
-class soft_ptr {
+class soft_ptr
+{
 	//!	\cond friends
 	friend soft_ptr;
 	friend hard_ptr;
@@ -47,18 +48,19 @@ public:
 	 *	\brief Opaque type for soft pointer data.
 	 */
 	class data;
+
 private:
 	/**	\var ptr
 	 *	\brief Pointer to the data for the soft_ptr.
 	 */
 	data *ptr;
 
-	/**	\fn get_soft(hard_ptr const&other)
+	/**	\fn get_soft(hard_ptr const &other)
 	 *	\brief Gets the soft pointer data for a hard pointer.
 	 *	\param other The hard_ptr to get the data for.
 	 *	\returns Returns the associated data.
 	 */
-	static data *get_soft(hard_ptr const&other);
+	static data *get_soft(hard_ptr const &other);
 
 	/**	\fn copy(data *other) noexcept
 	 *	\brief Increase the refernce count on the data and returns it.
@@ -90,6 +92,7 @@ private:
 	 *	\details then we deallocate the data.
 	 */
 	static void free(data *other) noexcept;
+
 public:
 	/**	\fn soft_ptr()
 	 *	\brief Initialize with a null pointer.
@@ -101,26 +104,26 @@ public:
 	 */
 	constexpr soft_ptr(std::nullptr_t) noexcept : soft_ptr() {}
 
-	/**	\fn soft_ptr(soft_ptr const& other)
+	/**	\fn soft_ptr(soft_ptr const &other)
 	 *	\brief Initialize a copy of another soft_ptr.
 	 *	\param other The soft_ptr to copy.
 	 *	\see copy
 	 */
-	soft_ptr(soft_ptr const& other);
+	soft_ptr(soft_ptr const &other);
 
-	/**	\fn soft_ptr(soft_ptr && other)
+	/**	\fn soft_ptr(soft_ptr &&other)
 	 *	\brief Initialize by moving another soft_ptr's content to this one.
 	 *	\param other The soft_ptr to move to this.
 	 *	\post other.data == nullptr
 	 */
-	soft_ptr(soft_ptr && other);
+	soft_ptr(soft_ptr &&other);
 
-	/**	\fn soft_ptr(hard_ptr const& other)
+	/**	\fn soft_ptr(hard_ptr const &other)
 	 *	\brief Initialize by getting the soft_ptr for a hard_ptr.
 	 *	\param other The hard_ptr to get a soft_ptr for.
 	 *	\see get_hard
 	 */
-	soft_ptr(hard_ptr const& other);
+	soft_ptr(hard_ptr const &other);
 
 	/**	\fn ~soft_ptr()
 	 *	\brief If holding a soft reference pointer, free it.
@@ -135,7 +138,7 @@ public:
 	 */
 	soft_ptr &operator=(std::nullptr_t) noexcept;
 
-	/**	\fn operator=(soft_ptr const& other) noexcept
+	/**	\fn operator=(soft_ptr const &other) noexcept
 	 *	\brief Copy the data from another soft_ptr.
 	 *	\param other The soft_ptr to copy.
 	 *	\returns *this
@@ -143,9 +146,9 @@ public:
 	 *	\see refresh
 	 *	\see copy
 	 */
-	soft_ptr &operator=(soft_ptr const& other) noexcept;
+	soft_ptr &operator=(soft_ptr const &other) noexcept;
 
-	/**	\fn operator=(soft_ptr && other) noexcept
+	/**	\fn operator=(soft_ptr &&other) noexcept
 	 *	\brief Move the data from another soft_ptr.
 	 *	\param other The soft_ptr to move the data from.
 	 *	\returns *this
@@ -153,37 +156,33 @@ public:
 	 *	\see refresh
 	 *	\see update
 	 */
-	soft_ptr &operator=(soft_ptr && other) noexcept;
+	soft_ptr &operator=(soft_ptr &&other) noexcept;
 
-	/**	\fn soft_ptr &operator=(hard_ptr const& other) noexcept
+	/**	\fn soft_ptr &operator=(hard_ptr const &other) noexcept
 	 *	\brief Set this to the soft_ptr of other.
 	 *	\param other The hard_ptr to get a soft_ptr for.
 	 *	\details We avoid getting a soft_ptr if other is null and set this to nullptr instead.
 	 *	\see get_soft
 	 */
-	soft_ptr &operator=(hard_ptr const& other) noexcept;
+	soft_ptr &operator=(hard_ptr const &other) noexcept;
 
 	/**	\fn operator bool() const noexcept
 	 *	\brief Converts to bool.
 	 *	\returns Returns true if ptr != nullptr.
 	 */
-	constexpr operator bool() const noexcept {
-		return ptr != nullptr;
-	}
+	constexpr operator bool() const noexcept { return ptr != nullptr; }
 
 	/**	\fn operator!() const noexcept
 	 *	\brief Converts to bool.
 	 *	\returns Returns true if ptr == nullptr.
 	 */
-	constexpr bool operator!() const noexcept {
-		return ptr == nullptr;
-	}
+	constexpr bool operator!() const noexcept { return ptr == nullptr; }
 
-	/**	\fn operator==(soft_ptr const& other) const noexcept
+	/**	\fn operator==(soft_ptr const &other) const noexcept
 	 *	\brief Compares soft pointers for traits::compare.
 	 *	\returns Returns true if the objects referred to will always be equal.
 	 */
-	bool operator==(soft_ptr const& other) const noexcept;
+	bool operator==(soft_ptr const &other) const noexcept;
 
 	/**	\fn refresh() noexcept
 	 *	\brief Updates ptr with update().
