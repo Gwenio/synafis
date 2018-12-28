@@ -1,0 +1,33 @@
+{
+	"configurations": [
+	{
+		"name": "Win64",
+		"compilerPath": "\"C:\\Program Files (x86)\\Microsoft Visual Studio\\2017\\Community\\VC\\Tools\\MSVC\\14.14.26428\\bin\\Hostx64\\x64\\cl.exe\" /analyze",
+		"includePath": [
+			"C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.17763.0\\ucrt",
+			"C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.17763.0\\um",
+			"C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.17763.0\\shared",
+			"C:\\Program Files (x86)\\Microsoft Visual Studio\\2017\\Community\\VC\\Tools\\MSVC\\14.14.26428\\include"
+		],
+		"defines": [
+			"NDEBUG",
+			"UNICODE",
+			"_AMD64_",
+			"_M_AMD64",
+			"WIN32_LEAN_AND_MEAN"
+		],
+		"intelliSenseMode": "msvc-x64",
+		"browse":
+		{
+			"path": [
+				"C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.17763.0\\ucrt",
+				"C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.17763.0\\um",
+				"C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.17763.0\\shared",
+				"C:\\Program Files (x86)\\Microsoft Visual Studio\\2017\\Community\\VC\\Tools\\MSVC\\14.14.26428\\include"
+			]
+		},
+		"cStandard": "c11",
+		"cppStandard": "c++17"
+	}],
+	"version": 4
+}

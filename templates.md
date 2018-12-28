@@ -32,3 +32,36 @@ This is an example for using the Visual Studio 2017 C++ compiler.
 
 The default values for msvc_version and winsdk_version may need to be changed to match the
 directories on your system.
+
+## VSCode
+
+The files in the vscode subdirectory are for the Visual Studio Code text editor.
+
+To use, copy the files into a folder called '.vscode' in the root of the project.
+
+### VSCode Tasks
+
+The file tasks.json defines commands to be run from 'Run Task' in the Terminal drop down menu.
+
+The command setting for each task will need to be changed to point to the appropriate executable
+if it is not located on your PATH environment variable.
+
+For the ninja tasks, you may want to adjust the number of jobs run in parallel by changing the
+number following "-j".
+
+### VSCode Launch
+
+The file launch.json defines commands to be run from the Debugging menu.
+
+The "type" setting may need to be changed if not compiling with MSVC as a different debugger
+may be needed.
+
+### VSCode C/C++ Properties
+
+The file c_cpp_properties.json defines a example configurations for the C/C++ extension.
+
+Currently just defines the configuration for MSVC targeting a release build.
+
+Program and include paths may need to be updated to match your system.
+
+The defines list will need to be changed to simulate different build setups.

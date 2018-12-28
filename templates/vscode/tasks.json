@@ -1,0 +1,46 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+	{
+		"label": "Tester - Release",
+		"type": "shell",
+		"command": "ninja",
+		"presentation":
+		{
+			"reveal": "always",
+			"panel": "new"
+		},
+		"args": [
+			"-j 6", "tester_release"
+		],
+		"problemMatcher": []
+	},
+	{
+		"label": "Tester - Debug",
+		"type": "shell",
+		"command": "ninja",
+		"presentation":
+		{
+			"reveal": "always",
+			"panel": "new"
+		},
+		"args": [
+			"-j 6", "tester_debug"
+		],
+		"problemMatcher": []
+	},
+	{
+		"label": "Doxygen",
+		"type": "process",
+		"command": "doxywizard",
+		"presentation":
+		{
+			"reveal": "never",
+			"panel": "new"
+		},
+		"args": [
+			"${workspaceFolder}\\Doxyfile"
+		],
+		"problemMatcher": []
+	}]
+}
