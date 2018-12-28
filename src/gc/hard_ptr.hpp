@@ -38,7 +38,8 @@ class soft_ptr;
  *	\invariant If ptr == nullptr then type must also be nullptr.
  *	\invariant If ptr != nullptr then type must not be nullptr.
  */
-class hard_ptr {
+class hard_ptr
+{
 	//!	\cond friends
 	friend soft_ptr;
 	friend hard_ptr;
@@ -54,14 +55,14 @@ private:
 	 *	\note The identity of an object can be found even if not stored.
 	 *	\note This is just to save the look up.
 	 */
-	identity const* type;
+	identity const *type;
 
-	/**	\fn get_hard(soft_ptr const&other)
+	/**	\fn get_hard(soft_ptr const &other)
 	 *	\brief Gets the hard pointer from a soft pointer.
 	 *	\param other The soft_ptr to get the hard pointer for.
 	 *	\returns Returns a tuple containing the values for ptr and type.
 	 */
-	static std::tuple<void *, identity const*> get_hard(soft_ptr const&other);
+	static std::tuple<void *, identity const *> get_hard(soft_ptr const &other);
 
 	/**	\fn base_ptr(void *source) noexcept
 	 *	\brief Gets the base address of the object pointed to by source.
@@ -79,7 +80,8 @@ private:
 	 *	\returns source cast to void*.
 	 */
 	template<typename T>
-	constexpr static void *mptr(T *source) noexcept {
+	constexpr static void *mptr(T *source) noexcept
+	{
 		return static_cast<void *>(const_cast<std::remove_cv_t<T> *>(source));
 	}
 
@@ -87,12 +89,15 @@ private:
 	 *	\brief Casts a pointer to a const void pointer.
 	 *	\tparam T The type to cast from.
 	 *	\param source The pointer to cast.
-	 *	\returns source cast to void const*.
+	 *	\returns source cast to void const *.
 	 */
 	template<typename T>
-	constexpr static void const* cptr(T *source) noexcept {
-		return static_cast<void const*>(const_cast<std::add_const_t<std::remove_cv_t<T>> *>(source));
+	constexpr static void const *cptr(T *source) noexcept
+	{
+		return static_cast<void const *>(
+			const_cast<std::add_const_t<std::remove_cv_t<T>> *>(source));
 	}
+
 public:
 	/**	\fn hard_ptr() noexcept
 	 *	\brief Initialize with a null pointer and no type.
@@ -112,8 +117,8 @@ public:
 	 *	\post ptr != nullptr && type != nullptr
 	 */
 	template<typename T>
-	hard_ptr(T *obj) : ptr(base_ptr(mptr(obj))),
-		type(std::addressof(identity::fetch(obj))) {
+	hard_ptr(T *obj) : ptr(base_ptr(mptr(obj))), type(std::addressof(identity::fetch(obj)))
+	{
 		SYNAFIS_ASSERT(ptr != nullptr && type != nullptr);
 	}
 
@@ -123,7 +128,8 @@ public:
 	 *	\param obj The object to try making a hard_ptr for.
 	 */
 	template<typename T>
-	hard_ptr(T *obj, std::nothrow_t) noexcept : hard_ptr() {
+	hard_ptr(T *obj, std::nothrow_t) noexcept : hard_ptr()
+	{
 		ptr = base_ptr(mptr(obj));
 		if (ptr) {
 			type = identity::fetch(ptr, std::nothrow);
@@ -131,29 +137,28 @@ public:
 		}
 	}
 
-	/**	\fn hard_ptr(hard_ptr const& other) noexcept
+	/**	\fn hard_ptr(hard_ptr const &other) noexcept
 	 *	\brief Copies other.
 	 *	\param other The hard_ptr to copy.
 	 *	\post other == *this
 	 */
-	constexpr hard_ptr(hard_ptr const& other) noexcept :
-		ptr(other.ptr), type(other.type) {}
+	constexpr hard_ptr(hard_ptr const &other) noexcept : ptr(other.ptr), type(other.type) {}
 
 	/**	\fn hard_ptr(hard_ptr && other) noexcept
 	 *	\brief Moves the content of other to this.
 	 *	\param other The hard_ptr to move.
 	 *	\post other == nullptr
 	 */
-	hard_ptr(hard_ptr && other) noexcept :
-		ptr(std::exchange(other.ptr, nullptr)),
-		type(std::exchange(other.type, nullptr)) {}
+	hard_ptr(hard_ptr &&other) noexcept :
+		ptr(std::exchange(other.ptr, nullptr)), type(std::exchange(other.type, nullptr))
+	{}
 
-	/**	\fn hard_ptr(soft_ptr const& other)
+	/**	\fn hard_ptr(soft_ptr const &other)
 	 *	\brief Retrieves a hard_ptr from other.
 	 *	\param other The soft_ptr to get a hard_ptr from.
 	 *	\see get_hard
 	 */
-	hard_ptr(soft_ptr const& other);
+	hard_ptr(soft_ptr const &other);
 
 	/**	\fn hard_ptr(Args &&... args)
 	 *	\brief Creates a new hard_ptr containing a newly constructed object.
@@ -165,7 +170,8 @@ public:
 	 *	\details If successful, constructs the object with placement new.
 	 */
 	template<typename T, typename... Args>
-	hard_ptr(Args &&... args) : hard_ptr() {
+	hard_ptr(Args &&... args) : hard_ptr()
+	{
 		construct(std::forward<Args>(args)...);
 		SYNAFIS_ASSERT(ptr == nullptr || type != nullptr);
 	}
@@ -179,7 +185,8 @@ public:
 	 *	\brief Initialize with a null pointer and no type.
 	 *	\returns *this
 	 */
-	constexpr hard_ptr &operator=(std::nullptr_t) noexcept {
+	constexpr hard_ptr &operator=(std::nullptr_t) noexcept
+	{
 		if (ptr) {
 			ptr = nullptr;
 			type = nullptr;
@@ -187,21 +194,21 @@ public:
 		return *this;
 	}
 
-	/**	\fn operator=(soft_ptr const& other)
+	/**	\fn operator=(soft_ptr const &other)
 	 *	\brief Retrieves a hard_ptr from other.
 	 *	\param other The soft_ptr to get a hard_ptr from.
 	 *	\returns *this
 	 *	\see get_hard
 	 */
-	hard_ptr &operator=(soft_ptr const& other);
+	hard_ptr &operator=(soft_ptr const &other);
 
-	/**	\fn operator=(hard_ptr const& other) noexcept
+	/**	\fn operator=(hard_ptr const &other) noexcept
 	 *	\brief Copies other.
 	 *	\param other The hard_ptr to copy.
 	 *	\returns *this
 	 *	\post other == *this
 	 */
-	hard_ptr &operator=(hard_ptr const& other) noexcept;
+	hard_ptr &operator=(hard_ptr const &other) noexcept;
 
 	/**	\fn operator=(hard_ptr && other) noexcept
 	 *	\brief Moves the content of other to this.
@@ -209,7 +216,7 @@ public:
 	 *	\returns *this
 	 *	\post other == nullptr
 	 */
-	hard_ptr &operator=(hard_ptr && other) noexcept;
+	hard_ptr &operator=(hard_ptr &&other) noexcept;
 
 	/**	\fn operator=(T *obj) noexcept
 	 *	\brief *this = hard_ptr<T>{obj, std::nothrow}
@@ -218,7 +225,8 @@ public:
 	 *	\returns *this
 	 */
 	template<typename T>
-	hard_ptr &operator=(T *obj) noexcept {
+	hard_ptr &operator=(T *obj) noexcept
+	{
 		if (obj) {
 			ptr = base_ptr(mptr(obj));
 			type = ptr ? identity::fetch(ptr, std::nothrow) : nullptr;
@@ -232,17 +240,15 @@ public:
 	 *	\brief Checks if ptr == nullptr.
 	 *	\returns Returns true if ptr == nullptr.
 	 */
-	constexpr bool operator==(std::nullptr_t) const noexcept {
-		return ptr == nullptr;
-	}
+	constexpr bool operator==(std::nullptr_t) const noexcept { return ptr == nullptr; }
 
-	/**	\fn operator==(hard_ptr const& other) const noexcept
+	/**	\fn operator==(hard_ptr const &other) const noexcept
 	 *	\brief Checks if two hard_ptrs point to the same object.
 	 *	\param other The hard_ptr to compare with.
 	 *	\returns True if the hard_ptrs point to the same object.
 	 *	\note "Same" can mean type->equal(ptr, other.ptr) == true.
 	 */
-	bool operator==(hard_ptr const& other) const noexcept;
+	bool operator==(hard_ptr const &other) const noexcept;
 
 	/**	\fn operator==(T *other) const noexcept
 	 *	\brief Checks if other points to the same object as ptr.
@@ -252,7 +258,8 @@ public:
 	 *	\note "Same" can mean type->equal(ptr, other) == true.
 	 */
 	template<typename T>
-	bool operator==(T *other) const noexcept {
+	bool operator==(T *other) const noexcept
+	{
 		return *this == hard_ptr{other, std::nothrow};
 	}
 
@@ -260,9 +267,7 @@ public:
 	 *	\brief Checks if ptr != nullptr.
 	 *	\returns Returns true if ptr != nullptr.
 	 */
-	constexpr bool operator!=(std::nullptr_t) const noexcept {
-		return ptr != nullptr;
-	}
+	constexpr bool operator!=(std::nullptr_t) const noexcept { return ptr != nullptr; }
 
 	/**	\fn operator!=(T *other) const noexcept
 	 *	\brief Checks if other does not point to the same object as ptr.
@@ -272,33 +277,30 @@ public:
 	 *	\note "Same" can mean type->equal(ptr, other) == true.
 	 */
 	template<typename T>
-	bool operator!=(T *other) const noexcept {
+	bool operator!=(T *other) const noexcept
+	{
 		return *this != hard_ptr{other, std::nothrow};
 	}
 
-	/**	\fn operator!=(hard_ptr const& other) const noexcept
+	/**	\fn operator!=(hard_ptr const &other) const noexcept
 	 *	\brief Checks if two hard_ptrs do not point to the same object.
 	 *	\param other The hard_ptr to compare with.
 	 *	\returns True if the hard_ptrs do not point to the same object.
 	 *	\note "Same" can mean type->equal(ptr, other.ptr) == true.
 	 */
-	bool operator!=(hard_ptr const& other) const noexcept;
+	bool operator!=(hard_ptr const &other) const noexcept;
 
 	/**	\fn operator bool() const noexcept
 	 *	\brief Converts to bool.
 	 *	\returns Returns true if ptr != nullptr.
 	 */
-	constexpr operator bool() const noexcept {
-		return ptr != nullptr;
-	}
+	constexpr operator bool() const noexcept { return ptr != nullptr; }
 
 	/**	\fn operator!() const noexcept
 	 *	\brief Converts to bool.
 	 *	\returns Returns true if ptr == nullptr.
 	 */
-	constexpr bool operator!() const noexcept {
-		return ptr == nullptr;
-	}
+	constexpr bool operator!() const noexcept { return ptr == nullptr; }
 
 	/**	\fn is_typeof() const noexcept
 	 *	\brief Checks if the pointer points to an object of type T.
@@ -306,8 +308,9 @@ public:
 	 *	\returns Returns true if ptr points to an object of type T.
 	 */
 	template<typename T>
-	bool is_typeof() const noexcept {
-		return  type == std::addressof(get_id<T>());
+	bool is_typeof() const noexcept
+	{
+		return type == std::addressof(get_id<T>());
 	}
 
 	/**	\fn get() const
@@ -317,7 +320,8 @@ public:
 	 *	\throws Throws std::runtime_error if the type does not match.
 	 */
 	template<typename T>
-	T *get() const {
+	T *get() const
+	{
 		if (typeof<T>()) {
 			return const_cast<T *>(static_cast<std::remove_cv_t<T> *>(ptr));
 		} else {
@@ -331,7 +335,8 @@ public:
 	 *	\returns Returns ptr cast to type T if type matches; otherwise, nullptr is returned.
 	 */
 	template<typename T>
-	T *get(std::nothrow_t) const noexcept {
+	T *get(std::nothrow_t) const noexcept
+	{
 		if (typeof<T>()) {
 			return const_cast<T *>(static_cast<std::remove_cv_t<T> *>(ptr));
 		} else {
@@ -343,9 +348,7 @@ public:
 	 *	\brief Gets the identity of the object ptr point to.
 	 *	\returns type
 	 */
-	constexpr identity const*get_ident(std::nothrow_t) const noexcept {
-		return type;
-	}
+	constexpr identity const *get_ident(std::nothrow_t) const noexcept { return type; }
 
 	/**	\fn get_ident() const
 	 *	\brief Gets the identity of the object ptr point to.
@@ -353,7 +356,7 @@ public:
 	 *	\throws Throws std::logic_error if type == nullptr.
 	 *	\pre type != nullptr
 	 */
-	identity const&get_ident() const;
+	identity const &get_ident() const;
 
 	/**	\fn construct(Args &&... args)
 	 *	\brief Allocates and constructs a new object.
@@ -365,9 +368,10 @@ public:
 	 *	\details If successful, constructs the object with placement new.
 	 */
 	template<typename T, typename... Args>
-	void construct(Args &&... args) {
+	void construct(Args &&... args)
+	{
 		using mtype = typename std::remove_cv_t<T>;
-		identity const&id{get_id<T>()};
+		identity const &id{get_id<T>()};
 		mtype *temp{static_cast<mtype *>(id.allocate())};
 		if (temp) {
 			new (temp) T(std::forward<Args>(args)...);
@@ -383,10 +387,9 @@ public:
 	 *	\param arg Optional argument to forward to cb.
 	 *	\param cb The callback to enumerate pointers.
 	 */
-	void traverse(void *arg, enumerate_cb cb) const noexcept {
-		if (ptr) {
-			(*cb)(arg, ptr);
-		}
+	void traverse(void *arg, enumerate_cb cb) const noexcept
+	{
+		if (ptr) { (*cb)(arg, ptr); }
 	}
 
 	/**	\fn remap(void *arg, remap_cb cb) noexcept
@@ -394,10 +397,9 @@ public:
 	 *	\param arg Optional argument to forward to cb.
 	 *	\param cb The callback to remap pointers.
 	 */
-	void remap(void *arg, remap_cb cb) noexcept {
-		if (ptr) {
-			ptr = (*cb)(arg, ptr);
-		}
+	void remap(void *arg, remap_cb cb) noexcept
+	{
+		if (ptr) { ptr = (*cb)(arg, ptr); }
 	}
 };
 
@@ -407,8 +409,8 @@ namespace traits {
  *	\brief Specialized to indicate that hard_ptr contains a pointer.
  */
 template<>
-class pointers_type<hard_ptr> :
-	public std::integral_constant<bool, true> {};
+class pointers_type<hard_ptr> : public std::integral_constant<bool, true>
+{};
 
 }
 

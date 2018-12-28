@@ -32,6 +32,7 @@ BraceWrapping:
   BeforeElse: false
   IndentBraces: false
   SplitEmptyFunction: false
+  SplitEmptyRecord: false
   SplitEmptyNamespace: true
 BreakBeforeTernaryOperators: false
 BreakConstructorInitializers: AfterColon

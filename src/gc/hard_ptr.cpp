@@ -21,14 +21,16 @@ PERFORMANCE OF THIS SOFTWARE.
 
 namespace gc {
 
-hard_ptr::hard_ptr(soft_ptr const& other) : hard_ptr() {
+hard_ptr::hard_ptr(soft_ptr const &other) : hard_ptr()
+{
 	if (other) {
 		std::tie(ptr, type) = get_hard(other);
 		SYNAFIS_ASSERT(ptr == nullptr || type != nullptr);
 	}
 }
 
-hard_ptr &hard_ptr::operator=(soft_ptr const& other) {
+hard_ptr &hard_ptr::operator=(soft_ptr const &other)
+{
 	if (other) {
 		std::tie(ptr, type) = get_hard(other);
 		return *this;
@@ -37,7 +39,8 @@ hard_ptr &hard_ptr::operator=(soft_ptr const& other) {
 	}
 }
 
-hard_ptr &hard_ptr::operator=(hard_ptr const& other) noexcept {
+hard_ptr &hard_ptr::operator=(hard_ptr const &other) noexcept
+{
 	if (this != std::addressof(other)) {
 		ptr = other.ptr;
 		type = other.type;
@@ -45,7 +48,8 @@ hard_ptr &hard_ptr::operator=(hard_ptr const& other) noexcept {
 	return *this;
 }
 
-hard_ptr &hard_ptr::operator=(hard_ptr && other) noexcept {
+hard_ptr &hard_ptr::operator=(hard_ptr &&other) noexcept
+{
 	if (this != std::addressof(other)) {
 		ptr = std::exchange(other.ptr, nullptr);
 		type = std::exchange(other.type, nullptr);
@@ -53,18 +57,20 @@ hard_ptr &hard_ptr::operator=(hard_ptr && other) noexcept {
 	return *this;
 }
 
-bool hard_ptr::operator==(hard_ptr const& other) const noexcept {
-	return ptr == other.ptr || (type == other.type &&
-		type != nullptr && type->equal(cptr(ptr), cptr(other.ptr)));
+bool hard_ptr::operator==(hard_ptr const &other) const noexcept
+{
+	return ptr == other.ptr ||
+		   (type == other.type && type != nullptr && type->equal(cptr(ptr), cptr(other.ptr)));
 }
 
-bool hard_ptr::operator!=(hard_ptr const& other) const noexcept {
+bool hard_ptr::operator!=(hard_ptr const &other) const noexcept
+{
 	// If ptr != other.ptr && type != other.type, then type != nullptr
-	return ptr != other.ptr && (type != other.type ||
-		type->equal(cptr(ptr), cptr(other.ptr)));
+	return ptr != other.ptr && (type != other.type || type->equal(cptr(ptr), cptr(other.ptr)));
 }
 
-identity const&hard_ptr::get_ident() const {
+identity const &hard_ptr::get_ident() const
+{
 	if (type) {
 		return *type;
 	} else {
