@@ -35,7 +35,8 @@ namespace unit_test {
  *	\brief The result values of test cases.
  *	\note Also used to indicate the expected result.
  */
-enum status {
+enum status
+{
 	/**	\var pass
 	 *	\brief The test passed.
 	 */

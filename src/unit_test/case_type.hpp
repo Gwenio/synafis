@@ -48,17 +48,20 @@ namespace unit_test {
 /**	\class case_type
  *	\brief Represents a test case.
  */
-class case_type {
+class case_type
+{
 public:
 	/**	\class context
 	 *	\brief Saves the current test status when running another.
 	 */
-	class context {
+	class context
+	{
 	private:
 		/**	\var saved
 		 *	\brief The saved status.
 		 */
 		status saved;
+
 	public:
 		/**	\fn context() noexcept
 		 *	\brief Puts the previous status in saved and sets status to pass.
@@ -108,6 +111,7 @@ public:
 	 *	\note If the value is skip, the test will be skipped.
 	 */
 	status const expected;
+
 private:
 	/**	\var next
 	 *	\brief The next test case.
@@ -133,7 +137,9 @@ private:
 	 *	\param cb The function to preform the test.
 	 */
 	constexpr case_type(std::string_view n, status ex, test_cb cb) noexcept :
-		name(n), expected(ex), next(nullptr), result(std::nullopt), test(cb) {}
+		name(n), expected(ex), next(nullptr), result(std::nullopt), test(cb)
+	{}
+
 public:
 	/**	\fn case_type(std::string_view n, suite &parent, status ex, test_cb cb) noexcept
 	 *	\brief Preforms the constexpr portion of initializing a test case.
@@ -148,11 +154,10 @@ public:
 	 *	\note Test cases will be run in the opposite order they are added to a suite. (LIFO)
 	 */
 	case_type(std::string_view n, suite &parent, status ex, test_cb cb) noexcept :
-			case_type(n, ex, cb) {
+		case_type(n, ex, cb)
+	{
 		next = std::exchange(parent.cases, this);
-		if (expected == skip || !test) {
-			result = skip;
-		}
+		if (expected == skip || !test) { result = skip; }
 	}
 
 	/**	\fn ~case_type() noexcept
@@ -173,13 +178,14 @@ public:
 	 *	\details only tests from the same suite or from children
 	 *	\details of that suite should have their results checked.
 	 */
-	status operator()(collector &out) noexcept {
+	status operator()(collector &out) noexcept
+	{
 		if (!result) {
 			context ctx{};
 			out.begin(name, expected);
 			try {
 				(*test)(out);
-			} catch(...) {
+			} catch (...) {
 				fail_msg("The test case exited with an unexpected exception.", __LINE__, __FILE__);
 			}
 			status temp{context::get()};
@@ -199,8 +205,9 @@ public:
 	 *	\details Used by suite::run to iterate the test cases of a suite.
 	 */
 	template<typename Func>
-	static void each(case_type *current, Func &func) {
-		while(current) {
+	static void each(case_type *current, Func &func)
+	{
+		while (current) {
 			func(*current);
 			current = current->next;
 		}

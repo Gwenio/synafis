@@ -36,12 +36,14 @@ namespace unit_test {
 /**	\class collector
  *	\brief The interface for collecting test results.
  */
-class collector {
+class collector
+{
 protected:
 	/**	\fn collector() noexcept
 	 *	\brief Default.
 	 */
 	collector() noexcept = default;
+
 public:
 	/**	\fn ~collector() noexcept
 	 *	\brief Default.

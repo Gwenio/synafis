@@ -34,8 +34,12 @@ class case_type;
 /**	\class suite
  *	\brief Used to manage test cases.
  */
-class suite {
+class suite
+{
+	//!	\cond friends
 	friend case_type;
+	//!	\endcond
+
 private:
 	/**	\var name
 	 *	\brief The name of the suite.
@@ -56,6 +60,7 @@ private:
 	 *	\brief A pointer to the first test case or nullptr if there is not one.
 	 */
 	case_type *cases;
+
 public:
 	/**	\fn suite(std::string_view n) noexcept
 	 *	\brief Initializes a suite in a constexpr manner.
@@ -63,8 +68,9 @@ public:
 	 *	\pre 'n' should be initialized with a string literal so that it is not deallocated.
 	 *	\details Has no parent suite.
 	 */
-	constexpr suite(std::string_view n) noexcept : name(n),
-		next(nullptr), children(nullptr), cases(nullptr) {}
+	constexpr suite(std::string_view n) noexcept :
+		name(n), next(nullptr), children(nullptr), cases(nullptr)
+	{}
 
 	/**	\fn suite(std::string_view n, suite &parent) noexcept
 	 *	\brief Initializes a child suite.
@@ -75,7 +81,8 @@ public:
 	 *	\warning that the constexpr initialization is preformed for all suites before the part
 	 *	\warning that is not constexpr.
 	 */
-	suite(std::string_view n, suite &parent) noexcept : suite(n) {
+	suite(std::string_view n, suite &parent) noexcept : suite(n)
+	{
 		next = std::exchange(parent.children, this);
 	}
 
