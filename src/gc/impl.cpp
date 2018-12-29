@@ -19,6 +19,8 @@ PERFORMANCE OF THIS SOFTWARE.
 
 #include "impl.hpp"
 
+#include "soft_ptr_data.hpp"
+
 namespace gc {
 
 collector::collector() noexcept : mtx(), readers(), writer(), flag(true), count(0) {}
