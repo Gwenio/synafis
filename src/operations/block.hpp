@@ -80,7 +80,7 @@ void block::step<operation::env_assign<ignore>>(state_type &) {}
  *	\param state The state of execution.
  *	\pre The accumulator must contain an environment.
  */
-template<>
+extern template
 void block::step<operation::env_swap>(state_type &state);
 
 /**
@@ -182,40 +182,27 @@ inline block block::finish(state_type &state) {
  *	\tparam Args Types to check for a peephole optimization.
  *	\param state The state of execution.
  *	\returns Returns the next block to execute.
- *	\details Only enabled with config::peephole is true.
- *	\details
- *	\details If peephole\<Args...\>::%head == std::tuple\<Args...\> then
- *	\details operation::peep_finish\<std::tuple\<Args...\>\>(state) is called.
- *	\details Otherwise, we call operation::peep_step and the return depends
- *	\details on peephole\<Args...\>::%value.
- *	\details
- *	\details If peephole\<Args...\>::%value is true then block::impl is returned.
- *	\details Otherwise, block::finish is used.
+ *	\details Uses operation::peep_finish() if enabled.
  */
-template<typename... Args> inline
-std::enable_if_t<(config::peephole &&
-	std::is_same_v<operation::peephole<Args...>::head, std::tuple<Args...>>),
-	block>
-block::impl<std::tuple<Args...>>(state_type &state) {
+template<typename... Args> inline block
+block::impl<std::tuple<Args...>,
+	operation::enable_peep_finish<Args...>>(state_type &state) {
 	return operation::peep_finish<std::tuple<Args...>>(state);
 }
 
-template<typename... Args> inline
-std::enable_if_t<(config::peephole &&
-	!std::is_same_v<operation::peephole<Args...>::head, std::tuple<Args...>> &&
-	operation::peephole<Args...>::value), block>
-block::impl<std::tuple<Args...>>(state_type &state) {
+
+/**
+ *	\brief Injects peephole optimizations.
+ *	\tparam Args Types to check for a peephole optimization.
+ *	\param state The state of execution.
+ *	\returns Returns the next block to execute.
+ *	\details Uses operation::peep_step() if enabled.
+ */
+template<typename... Args> inline block
+block::impl<std::tuple<Args...>,
+	operation::enable_peep_step<Args...>>(state_type &state) {
 	operation::peep_step<typename operation::peephole<Args...>::head>(state);
 	return impl<typename operation::peephole<Args...>::tail>(state);
-}
-
-template<typename... Args> inline
-std::enable_if_t<(config::peephole &&
-	!std::is_same_v<operation::peephole<Args...>::head, std::tuple<Args...>> &&
-	!operation::peephole<Args...>::value), block>
-block::impl<std::tuple<Args...>>(state_type &state) {
-	step<typename operation::peephole<Args...>::head>(state);
-	return finish<typename operation::peephole<Args...>::tail>(state);
 }
 
 /**
@@ -226,13 +213,11 @@ block::impl<std::tuple<Args...>>(state_type &state) {
  *	\returns Returns the next block to execute.
  *	\details Executes step\<Head\>(state) and then returns impl\<Tail...\>(state).
  */
-template<typename Head, typename... Tail> inline
-std::enable_if_t<(2 <= sizeof...(Tail) &&
-	std::is_same_v<operation::peephole<Head, Tail...>::tail, std::tuple<Head, Tail...>>),
-	block>
-block::impl<std::tuple<Head, Tail...>>(state_type &state) {
+template<typename Head, typename T0, typename... Tail> inline block
+block::impl<std::tuple<Head, T0, Tail...>,
+	std::enable_if_t<operation::no_peep<Head, T0, Tail...>>>(state_type &state) {
 	step<Head>(state);
-	return impl<std::tuple<Tail...>>(state);
+	return impl<std::tuple<T0, Tail...>>(state);
 }
 
 /**
@@ -243,10 +228,9 @@ block::impl<std::tuple<Head, Tail...>>(state_type &state) {
  *	\returns Returns the next block to execute.
  *	\details The last step is preformed with finish\<Tail\> rather than block::impl.
  */
-template<typename Head, typename Tail> inline
-std::enable_if_t<(std::is_same_v<operation::peephole<Head, Tail...>::tail,
-	std::tuple<Head, Tail...>>), block>
-block::impl<std::tuple<Head, Tail>>(state_type &state) {
+template<typename Head, typename Tail> inline block
+block::impl<std::tuple<Head, Tail>,
+	std::enable_if_t<operation::no_peep<Head, Tail>>>(state_type &state) {
 	step<Head>(state);
 	return finish<Tail>(state);
 }

@@ -50,6 +50,7 @@ private:
 	/**	\fn impl(state_type &state)
 	 *	\brief The implementation for a block's code.
 	 *	\tparam T A tuple of types controlling operations preformed on state.
+	 *	\tparam Enable Used to enable specializations with std::enable_if_t.
 	 *	\param state The state of execution.
 	 *	\returns Returns the next block to execute.
 	 *	\note Specialize the template to create optimizations for code patterns.
@@ -57,7 +58,7 @@ private:
 	 *	\see operations/block.hpp for the definition.
 	 *	\see config::optimize
 	 */
-	template<typename T>
+	template<typename T, typename Enable = void>
 	static block impl(state_type &state);
 
 	/**	\fn step(state_type &state)
