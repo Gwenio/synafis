@@ -27,6 +27,7 @@ PERFORMANCE OF THIS SOFTWARE.
 
 #include <condition_variable>
 #include <mutex>
+#include <thread>
 
 /**	\file src/gc/impl.hpp
  *	\brief Defines the garbage collector implementation.
@@ -95,10 +96,15 @@ private:
 	bool flag;
 
 	/**	\var count
-	 *	\brief The mutex for the collector lock.
-	 *	\note std::shared_mutex is not used as it cannot be counted on to be writer favored.
+	 *	\brief The number of active readers.
+	 *	\details Collection must wait for this number to be zero.
 	 */
 	std::size_t count;
+
+	/**	\var worker
+	 *	\brief The worker thread of the collector.
+	 */
+	std::thread worker;
 
 	/**	\fn collector() noexcept
 	 *	\brief Prepares most of the collector.

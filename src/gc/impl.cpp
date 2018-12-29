@@ -23,7 +23,7 @@ PERFORMANCE OF THIS SOFTWARE.
 
 namespace gc {
 
-collector::collector() noexcept : mtx(), readers(), writer(), flag(true), count(0) {}
+collector::collector() noexcept : mtx(), readers(), writer(), flag(true), count(0), worker() {}
 
 collector::~collector() noexcept {}
 
