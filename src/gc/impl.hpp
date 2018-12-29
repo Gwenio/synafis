@@ -25,15 +25,19 @@ PERFORMANCE OF THIS SOFTWARE.
 #include "../gc.hpp"
 #endif
 
+#include <condition_variable>
+#include <mutex>
+
 /**	\file src/gc/impl.hpp
  *	\brief Defines the garbage collector implementation.
  */
 
 namespace gc {
 
+class collector;
+
 /**	\class collector
  *	\brief The main class implementing the garbage collector.
- *	\todo This is a stub waiting to be implemented.
  */
 class collector
 {
@@ -66,9 +70,38 @@ public:
 	};
 
 private:
+	/**	\var mtx
+	 *	\brief The mutex for the collector lock.
+	 *	\note std::shared_mutex is not used as it cannot be counted on to be writer favored.
+	 */
+	std::mutex mtx;
+
+	/**	\var readers
+	 *	\brief The condition variable for lock() requests to wait with.
+	 *	\details When flag is false lock() will wait with readers until flag is true.
+	 */
+	std::condition_variable readers;
+
+	/**	\var writer
+	 *	\brief The condition variable for the collector thread to wait on.
+	 */
+	std::condition_variable writer;
+
+	/**	\var flag
+	 *	\brief Indicates if the collector is waiting to run a mark and sweep cycle.
+	 *	\details When true lock() will not wait for a mark and sweep cycle.
+	 *	\details Set to false when a cycle is pending.
+	 */
+	bool flag;
+
+	/**	\var count
+	 *	\brief The mutex for the collector lock.
+	 *	\note std::shared_mutex is not used as it cannot be counted on to be writer favored.
+	 */
+	std::size_t count;
+
 	/**	\fn collector() noexcept
-	 *	\brief Sets most of the collector.
-	 *	\note Needs to be independent of the order global objects are constructed in.
+	 *	\brief Prepares most of the collector.
 	 */
 	collector() noexcept;
 

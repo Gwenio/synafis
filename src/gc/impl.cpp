@@ -21,15 +21,28 @@ PERFORMANCE OF THIS SOFTWARE.
 
 namespace gc {
 
-collector::collector() noexcept {}
+collector::collector() noexcept : mtx(), readers(), writer(), flag(true), count(0) {}
 
 collector::~collector() noexcept {}
 
 void collector::init_impl() {}
 
-void collector::lock_impl() {}
+void collector::lock_impl()
+{
+	std::unique_lock<std::mutex> l{mtx};
+	readers.wait(l, [this]() -> bool { return this->flag; });
+	count++;
+}
 
-void collector::unlock_impl() {}
+void collector::unlock_impl()
+{
+	std::unique_lock<std::mutex> l{mtx};
+	count--;
+	if (!flag && count == 0) {
+		l.unlock();
+		writer.notify_one();
+	}
+}
 
 soft_ptr::data *collector::get_soft_ptr_impl(void *ptr) { return nullptr; }
 
