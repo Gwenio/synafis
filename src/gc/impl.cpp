@@ -44,6 +44,18 @@ void collector::unlock_impl()
 	}
 }
 
+void collector::wait_impl()
+{
+	std::unique_lock<std::mutex> l{mtx};
+	flag = false;
+	count--;
+	l.unlock();
+	writer.notify_one();
+	l.lock();
+	readers.wait(l, [this]() -> bool { return this->flag; });
+	count++;
+}
+
 soft_ptr::data *collector::get_soft_ptr_impl(void *ptr) { return nullptr; }
 
 void collector::free_soft_ptr_impl(soft_ptr::data *ptr) {}

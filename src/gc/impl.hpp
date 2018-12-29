@@ -125,6 +125,11 @@ private:
 	 */
 	void unlock_impl();
 
+	/**	\fn wait_impl()
+	 *	\see wait()
+	 */
+	void wait_impl();
+
 	/**	\fn get_soft_ptr_impl(void *ptr)
 	 *	\param ptr A pointer to the object to get the soft pointer data for.
 	 *	\see get_soft_ptr(void *ptr)
@@ -151,22 +156,29 @@ public:
 
 	/**	\fn init()
 	 *	\brief Finishes setting up the collector.
+	 *	\todo In particular this call starts the thread that preforms collection.
 	 */
 	static void init() { singleton.init_impl(); }
 
 	/**	\fn lock()
 	 *	\brief Locks against collection.
 	 *	\details Called by the program when entering a section in which the collector must not run.
-	 *	\todo In particular this call starts the thread that preforms collection.
+	 *	\note If the collector needs to run, this call will block until after it runs.
 	 */
 	static void lock() { singleton.lock_impl(); }
 
 	/**	\fn unlock()
 	 *	\brief Allows collection again.
 	 *	\details Called by the program when leaving a section in which the collector must not run.
-	 *	\note If the collector needs to run, this call will block until after it runs.
 	 */
 	static void unlock() { singleton.unlock_impl(); }
+
+	/**	\fn wait()
+	 *	\brief Called when insufficent memory was available.
+	 *	\details Signals that a collection cycle is needed.
+	 *	\details Does not return until a cycle has run.
+	 */
+	static void wait() { singleton.wait_impl(); }
 
 	/**	\fn get_soft_ptr(void *ptr)
 	 *	\brief Gets the soft pointer associated with an object.
