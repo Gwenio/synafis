@@ -45,8 +45,11 @@ void *allocator::allocate_impl()
 	for (handle &x : pools) {
 		if (0 < x.available()) { return x.allocate(); }
 	}
-	return grow().allocate();
-	//! \todo If grow fails, should run GC cycle before giving up.
+	try {								// grow() will throw std::bad_alloc if a pool could not
+		return grow().allocate();		// be created or pools could not allocate a new list item.
+	} catch (std::bad_alloc const &) {} // On throw, the function will continue.
+	collector::wait();					// Wait on collection cycle.
+	return grow().allocate();			// Try again to allocate.
 }
 
 void *allocator::allocate() { return allocate_impl(); }
