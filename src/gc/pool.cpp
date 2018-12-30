@@ -98,8 +98,8 @@ static_assert(gcd(180, 48) == 12 && gcd(48, 180) == 12,
 namespace gc {
 
 pool::pool(vmem &&mem, identity const &id, std::size_t cap, std::size_t u, void *start) noexcept :
-	region(std::forward<vmem>(mem)), type(id), capacity(cap), space(cap), unit(u), free(nullptr),
-	slots(start), end(add_offset(start, cap * u))
+	isource(), region(std::forward<vmem>(mem)), type(id), capacity(cap), space(cap), unit(u),
+	free(nullptr), slots(start), end(add_offset(start, cap * u))
 {
 	// The bitmap is always located bitmap_offset from the start of the virtual memory.
 	bitmap = reinterpret_cast<bit_group *>(
@@ -236,6 +236,17 @@ void *pool::allocate() noexcept
 		return addr;
 	} else {
 		return nullptr;
+	}
+}
+
+void *pool::base_of(void *ptr) const noexcept
+{
+	SYNAFIS_ASSERT(from(ptr));
+	auto const x = sub_addr(ptr, slots);
+	if (0 < x) {
+		return sub_offset(ptr, x % unit);
+	} else {
+		return ptr; // In the case x == slots, this is correct.
 	}
 }
 

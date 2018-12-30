@@ -29,6 +29,10 @@ PERFORMANCE OF THIS SOFTWARE.
 #include "vmem.hpp"
 #endif
 
+#ifndef SYNAFIS_GC_SOURCE_HPP
+#include "source.hpp"
+#endif
+
 /**	\file src/gc/pool.hpp
  *	\brief Defines the type for managing a memory pool.
  */
@@ -38,7 +42,7 @@ namespace gc {
 /**	\class pool
  *	\brief Type to manage a pool of fixed size memory slots.
  */
-class pool
+class pool : public isource
 {
 	//!	\cond friends
 	friend unit_test::tester<pool>;
@@ -391,7 +395,7 @@ public:
 	 *	\brief Finalizes all objects and frees region.
 	 *	\note Pools are to have their destructor called directly.
 	 */
-	~pool() noexcept;
+	virtual ~pool() noexcept;
 
 	/**	\fn select_capacity(std::size_t unit) noexcept
 	 *	\brief Determines a good capacity for a pool with a given allocation unit.
@@ -414,26 +418,40 @@ public:
 	 */
 	void *allocate() noexcept;
 
-	/**	\fn mark(void *ptr) noexcept
+	/**	\fn location() const noexcept override final
+	 *	\brief Gets an address to compare sources for sorting.
+	 *	\returns An address used to compare sources for sorting.
+	 */
+	virtual void *location() const noexcept override final { return slots; }
+
+	/**	\fn from(void *ptr) const noexcept override final
+	 *	\brief Checks if a pointer is from the pool.
+	 *	\param ptr The object to check.
+	 *	\returns slots <= ptr < end
+	 */
+	virtual bool from(void *ptr) const noexcept override final { return slots <= ptr && ptr < end; }
+
+	/**	\fn base_of(void *ptr) const noexcept override final
+	 *	\brief Gets the starting address of object ptr is within.
+	 *	\param ptr The pointer to find the starting address of.
+	 *	\returns The originally allocated address containing ptr.
+	 *	\pre from(ptr) == true
+	 */
+	virtual void *base_of(void *ptr) const noexcept override final;
+
+	/**	\fn mark(void *ptr) noexcept override final
 	 *	\brief Marks an object as reachable so it will not be deallocate be sweep.
 	 *	\param ptr The object to mark as reachable.
 	 *	\pre slots <= ptr < end
 	 *	\details Sets the appropriate bit in the colors array.
 	 */
-	void mark(void *ptr) noexcept;
+	virtual void mark(void *ptr) noexcept override final;
 
-	/**	\fn from(void *ptr) const noexcept
-	 *	\brief Checks if a pointer is from the pool.
-	 *	\param ptr The object to check.
-	 *	\returns slots <= ptr < end
-	 */
-	bool from(void *ptr) const noexcept { return slots <= ptr && ptr < end; }
-
-	/**	\fn sweep() noexcept
+	/**	\fn sweep() noexcept override final
 	 *	\brief Deallocates all unmarked objects.
 	 *	\details Sets the appropriate bit in the colors array.
 	 */
-	void sweep() noexcept;
+	virtual void sweep() noexcept override final;
 
 	/**	\fn used() const noexcept
 	 *	\brief Gets the number of allocated slots.
