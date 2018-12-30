@@ -25,6 +25,7 @@ PERFORMANCE OF THIS SOFTWARE.
 #include "../gc.hpp"
 #endif
 
+#include <atomic>
 #include <condition_variable>
 #include <mutex>
 #include <thread>
@@ -70,6 +71,11 @@ public:
 	public:
 	};
 
+	/**	\typedef duration
+	 *	\brief The type used to describe the length of a time period.
+	 */
+	using duration = std::chrono::steady_clock::duration;
+
 private:
 	/**	\var mtx
 	 *	\brief The mutex for the collector lock.
@@ -105,6 +111,16 @@ private:
 	 *	\brief The worker thread of the collector.
 	 */
 	std::thread worker;
+
+	/**	\var alive
+	 *	\brief Used to signal the worker to shutdown.
+	 */
+	std::atomic_flag alive;
+
+	/**	\var period
+	 *	\brief The time between unforced collection cycles.
+	 */
+	duration period;
 
 	/**	\fn collector() noexcept
 	 *	\brief Prepares most of the collector.
@@ -153,6 +169,21 @@ private:
 	 *	\see base_ptr(void *ptr) noexcept
 	 */
 	void *base_ptr_impl(void *ptr) noexcept;
+
+	/**	\fn set_period_impl(duration value) noexcept
+	 *	\brief Sets period.
+	 *	\param value The new value for period.
+	 */
+	void set_period_impl(duration value) noexcept
+	{
+		std::lock_guard<std::mutex> l{mtx};
+		period = value;
+	}
+
+	/**	\fn work() noexcept
+	 *	\brief Defines the job of worker.
+	 */
+	void work() noexcept;
 
 public:
 	/**	\fn ~collector() noexcept
@@ -214,6 +245,12 @@ public:
 	 *	\returns location within.
 	 */
 	static void *base_ptr(void *ptr) noexcept { return singleton.base_ptr_impl(ptr); }
+
+	/**	\fn set_period(duration value) noexcept
+	 *	\brief Sets the period for singleton.
+	 *	\param value The new value for period.
+	 */
+	static void set_period(duration value) noexcept { singleton.set_period_impl(value); }
 };
 
 }

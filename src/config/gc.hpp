@@ -58,6 +58,15 @@ PERFORMANCE OF THIS SOFTWARE.
 #define SYNAFIS_CONFIG_MAX_POOL (sizeof(std::size_t) * 8)
 #endif
 
+/**	\def SYNAFIS_CONFIG_GC_PERIOD
+ *	\brief The value for config::gc_period.
+ *	\note Define this value in the compiler commandline.
+ *	\see config::gc_period
+ */
+#ifndef SYNAFIS_CONFIG_GC_PERIOD
+#define SYNAFIS_CONFIG_GC_PERIOD 1000
+#endif
+
 namespace config {
 
 /**	\var guard_pages
@@ -89,11 +98,18 @@ inline constexpr std::size_t const min_pool = SYNAFIS_CONFIG_MIN_POOL;
  */
 inline constexpr std::size_t const max_pool = SYNAFIS_CONFIG_MAX_POOL;
 
+/**	\var gc_period
+ *	\brief The default time to wait between unforced GC cycles.
+ *	\details The value is the number of miliseconds between cycles.
+ */
+inline constexpr std::size_t const gc_period = SYNAFIS_CONFIG_GC_PERIOD;
+
 }
 
 //	Remove preprocessor definitions that are no longer needed.
 #undef SYNAFIS_CONFIG_GUARD_PAGES
 #undef SYNAFIS_CONFIG_MIN_POOL
 #undef SYNAFIS_CONFIG_MAX_POOL
+#undef SYNAFIS_CONFIG_GC_PERIOD
 
 #endif

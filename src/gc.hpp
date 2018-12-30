@@ -34,6 +34,7 @@ PERFORMANCE OF THIS SOFTWARE.
 #include <bitset>
 #include <new>
 #include <stdexcept>
+#include <chrono>
 
 #include "unit_test.hpp"
 

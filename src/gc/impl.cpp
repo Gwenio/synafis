@@ -23,11 +23,25 @@ PERFORMANCE OF THIS SOFTWARE.
 
 namespace gc {
 
-collector::collector() noexcept : mtx(), readers(), writer(), flag(true), count(0), worker() {}
+collector::collector() noexcept :
+	mtx(), readers(), writer(), flag(false), count(0), worker(), alive(),
+	period(std::chrono::milliseconds{config::gc_period})
+{
+	alive.test_and_set();
+}
 
-collector::~collector() noexcept {}
+collector::~collector() noexcept
+{
+	alive.clear();
+	worker.join();
+}
 
-void collector::init_impl() {}
+void collector::init_impl()
+{
+	std::lock_guard<std::mutex> l{mtx};
+	worker = std::thread{[this]() -> void { this->work(); }};
+	flag = true;
+}
 
 void collector::lock_impl()
 {
@@ -63,6 +77,16 @@ soft_ptr::data *collector::get_soft_ptr_impl(void *ptr) { return nullptr; }
 void collector::free_soft_ptr_impl(soft_ptr::data *ptr) {}
 
 void *collector::base_ptr_impl(void *ptr) noexcept { return ptr; }
+
+void collector::work() noexcept
+{
+	std::unique_lock<std::mutex> l{mtx};
+	do {
+		if (!writer.wait_for(l, period, [this]() -> bool { return !flag; })) { flag = true; }
+		writer.wait(l, [this]() -> bool { return 0 < count; });
+		//!	\todo Preform mark and sweep cycle.
+	} while (alive.test_and_set());
+}
 
 collector collector::singleton{};
 

@@ -41,6 +41,13 @@ namespace gc {
  */
 void initialize();
 
+/**	\fn set_period(std::chrono::steady_clock::duration value) noexcept
+ *	\brief Sets the time period between unforced GC cycles.
+ *	\param value The new period.
+ *	\note The default value for the period is set by config::gc_period.
+ */
+void set_period(std::chrono::steady_clock::duration value) noexcept;
+
 }
 
 #endif

@@ -89,7 +89,7 @@ soft_ptr::data *soft_ptr::update(soft_ptr::data *old) noexcept
 void soft_ptr::free(soft_ptr::data *other) noexcept
 {
 	std::size_t temp{other->count.fetch_sub(1, std::memory_order_seq_cst)};
-	if ((!(other->ptr) || other->next) && temp == 1) {	// temp == 1 means it is now zero
+	if ((!(other->ptr) || other->next) && temp == 1) { // temp == 1 means it is now zero
 		collector::free_soft_ptr(other);
 	}
 }
@@ -121,5 +121,10 @@ void root::unregister_impl(void *obj)
 }
 
 void initialize() { collector::init(); }
+
+void set_period(std::chrono::steady_clock::duration value) noexcept
+{
+	collector::set_period(value);
+}
 
 }
