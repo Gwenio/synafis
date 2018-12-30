@@ -25,10 +25,16 @@ PERFORMANCE OF THIS SOFTWARE.
 #include "../gc.hpp"
 #endif
 
+#ifndef SYNAFIS_GC_SOURCE_HPP
+#include "source.hpp"
+#endif
+
+#include <algorithm>
 #include <atomic>
 #include <condition_variable>
 #include <mutex>
 #include <thread>
+#include <vector>
 
 /**	\file src/gc/impl.hpp
  *	\brief Defines the garbage collector implementation.
@@ -58,23 +64,15 @@ class collector
 	collector(collector &&) = delete;
 
 public:
-	/**	\class region
-	 *	\brief Represents regions of memory that may be allocated.
-	 *	\details Used for bookkeeping that needs to know where an object was allocated from.
-	 */
-	class region
-	{
-		//!	\cond friends
-		friend unit_test::tester<collector>;
-		//!	\endcond
-	private:
-	public:
-	};
-
 	/**	\typedef duration
 	 *	\brief The type used to describe the length of a time period.
 	 */
 	using duration = std::chrono::steady_clock::duration;
+
+	/**	\typedef source
+	 *	\brief The type stored in sources.
+	 */
+	using source = isource *;
 
 private:
 	/**	\var mtx
@@ -121,6 +119,12 @@ private:
 	 *	\brief The time between unforced collection cycles.
 	 */
 	duration period;
+
+	/**	\var sources
+	 *	\brief Bookkeeping for sources of allocation.
+	 *	\note Should be kept sorted by location in memory.
+	 */
+	std::vector<source> sources;
 
 	/**	\fn collector() noexcept
 	 *	\brief Prepares most of the collector.
@@ -179,6 +183,12 @@ private:
 		std::lock_guard<std::mutex> l{mtx};
 		period = value;
 	}
+
+	/**	\fn insert_source_impl(isource &src) noexcept
+	 *	\brief Adds a source to the collector to track.
+	 *	\param src The source to track.
+	 */
+	void insert_source_impl(isource &src) noexcept;
 
 	/**	\fn work() noexcept
 	 *	\brief Defines the job of worker.
@@ -261,6 +271,12 @@ public:
 	 *	\param value The new value for period.
 	 */
 	static void set_period(duration value) noexcept { singleton.set_period_impl(value); }
+
+	/**	\fn insert_source(isource &src) noexcept
+	 *	\brief Adds a source to the collector to track.
+	 *	\param src The source to track.
+	 */
+	static void insert_source(isource &src) noexcept { singleton.insert_source_impl(src); }
 };
 
 }

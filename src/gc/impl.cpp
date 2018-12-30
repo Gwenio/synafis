@@ -25,7 +25,7 @@ namespace gc {
 
 collector::collector() noexcept :
 	mtx(), readers(), writer(), flag(false), count(0), worker(), alive(),
-	period(std::chrono::milliseconds{config::gc_period})
+	period(std::chrono::milliseconds{config::gc_period}), sources()
 {
 	alive.test_and_set();
 }
@@ -78,6 +78,20 @@ void collector::free_soft_ptr_impl(soft_ptr::data *ptr) {}
 
 void *collector::base_ptr_impl(void *ptr) noexcept { return ptr; }
 
+void collector::insert_source_impl(isource &src) noexcept
+{
+	std::lock_guard<std::mutex> l{mtx};
+	auto const it = std::lower_bound(
+		sources.cbegin(), sources.cend(), src, [&src](auto const &cur, isource const &s) -> bool {
+			return s.location() < cur->location();
+		});
+	SYNAFIS_ASSERT(std::none_of(sources.cbegin(), it,
+		[&src](auto cur) -> bool { return src.location() == cur->location(); }));
+	SYNAFIS_ASSERT(std::all_of(
+		it, sources.cend(), [&src](auto cur) -> bool { return src.location() < cur->location(); }));
+	sources.insert(it, std::addressof(src));
+}
+
 void collector::work() noexcept
 {
 	std::unique_lock<std::mutex> l{mtx, std::defer_lock};
@@ -95,7 +109,12 @@ void collector::work() noexcept
 
 void collector::mark() noexcept {}
 
-void collector::sweep() noexcept {}
+void collector::sweep() noexcept
+{
+	for (auto cur : sources) {
+		cur->sweep();
+	}
+}
 
 collector collector::singleton{};
 
