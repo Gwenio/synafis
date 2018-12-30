@@ -185,6 +185,16 @@ private:
 	 */
 	void work() noexcept;
 
+	/**	\fn mark() noexcept
+	 *	\brief Preforms the marking phase of a collection cycle.
+	 */
+	void mark() noexcept;
+
+	/**	\fn sweep() noexcept
+	 *	\brief Preforms the sweep phase of a collection cycle.
+	 */
+	void sweep() noexcept;
+
 public:
 	/**	\fn ~collector() noexcept
 	 *	\brief Destructor.

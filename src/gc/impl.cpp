@@ -80,13 +80,22 @@ void *collector::base_ptr_impl(void *ptr) noexcept { return ptr; }
 
 void collector::work() noexcept
 {
-	std::unique_lock<std::mutex> l{mtx};
+	std::unique_lock<std::mutex> l{mtx, std::defer_lock};
 	do {
-		if (!writer.wait_for(l, period, [this]() -> bool { return !flag; })) { flag = true; }
+		l.lock();
+		if (!writer.wait_for(l, period, [this]() -> bool { return !flag; })) { flag = false; }
 		writer.wait(l, [this]() -> bool { return 0 < count; });
-		//!	\todo Preform mark and sweep cycle.
+		mark();
+		sweep();
+		flag = true;
+		l.unlock();
+		readers.notify_all();
 	} while (alive.test_and_set());
 }
+
+void collector::mark() noexcept {}
+
+void collector::sweep() noexcept {}
 
 collector collector::singleton{};
 
