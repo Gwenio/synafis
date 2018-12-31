@@ -183,11 +183,27 @@ private:
 	 */
 	void free_soft_ptr_impl(soft_ptr::data *ptr);
 
-	/**	\fn base_ptr_impl(void *ptr) const noexcept
+	/**	\fn find_source(void *ptr) const noexcept
+	 *	\brief Gets the source of a pointer.
 	 *	\param ptr The pointer to get a base address for.
+	 *	\returns Returns the source of ptr or nullptr if none.
+	 *	\pre The caller must own the lock on mtx.
+	 */
+	isource *find_source(void *ptr) const noexcept;
+
+	/**	\fn base_ptr_impl(void *ptr) const noexcept
+	 *	\param ptr The pointer to get the base address for.
+	 *	\returns Returns the base pointer for ptr.
 	 *	\see base_ptr(void *ptr) noexcept
 	 */
 	void *base_ptr_impl(void *ptr) const noexcept;
+
+	/**	\fn get_type_impl(void *ptr) const noexcept
+	 *	\param ptr The pointer to the type for.
+	 *	\returns Returns the identity for ptr.
+	 *	\see get_type(void *ptr) noexcept
+	 */
+	identity const *get_type_impl(void *ptr) const noexcept;
 
 	/**	\fn set_period_impl(duration value) noexcept
 	 *	\brief Sets period.
@@ -275,11 +291,18 @@ public:
 
 	/**	\fn base_ptr(void *ptr) noexcept
 	 *	\brief Gets the originally allocated address.
-	 *	\param ptr The pointer to get a base address for.
+	 *	\param ptr The pointer to get the base address for.
 	 *	\returns Returns the address originally allocated for the object ptr points to a
-	 *	\returns location within.
+	 *	\returns location within. Or nullptr if not allocated by a registered source.
 	 */
 	static void *base_ptr(void *ptr) noexcept { return singleton.base_ptr_impl(ptr); }
+
+	/**	\fn get_type(void *ptr) noexcept
+	 *	\brief Gets the originally allocated address.
+	 *	\param ptr The pointer to get the identity for.
+	 *	\returns Returns the identity of an object or nullptr if not from a registered source.
+	 */
+	static identity const *get_type(void *ptr) noexcept { return singleton.get_type_impl(ptr); }
 
 	/**	\fn set_period(duration value) noexcept
 	 *	\brief Sets the period for singleton.

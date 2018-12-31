@@ -432,12 +432,21 @@ public:
 	virtual bool from(void *ptr) const noexcept override final { return slots <= ptr && ptr < end; }
 
 	/**	\fn base_of(void *ptr) const noexcept override final
-	 *	\brief Gets the starting address of object ptr is within.
+	 *	\brief Gets the starting address of the object ptr is within.
 	 *	\param ptr The pointer to find the starting address of.
 	 *	\returns The originally allocated address containing ptr.
 	 *	\pre from(ptr) == true
 	 */
 	virtual void *base_of(void *ptr) const noexcept override final;
+
+	/**	\fn type_of(void *) const noexcept override final
+	 *	\brief Gets the identity of the objects in the pool.
+	 *	\returns type.
+	 */
+	virtual identity const *type_of(void *) const noexcept override final
+	{
+		return std::addressof(type);
+	}
 
 	/**	\fn mark(void *ptr) noexcept override final
 	 *	\brief Marks an object as reachable so it will not be deallocate be sweep.

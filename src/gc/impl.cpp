@@ -75,9 +75,8 @@ soft_ptr::data *collector::get_soft_ptr_impl(void *ptr) { return nullptr; }
 
 void collector::free_soft_ptr_impl(soft_ptr::data *ptr) {}
 
-void *collector::base_ptr_impl(void *ptr) const noexcept
+isource *collector::find_source(void *ptr) const noexcept
 {
-	std::lock_guard<std::mutex> l{mtx};
 	auto const upper = std::upper_bound(sources.cbegin(), sources.cend(), ptr,
 		[](void *p, auto const &cur) -> bool { return p < cur->location(); });
 	if (upper == sources.cbegin()) {
@@ -85,11 +84,25 @@ void *collector::base_ptr_impl(void *ptr) const noexcept
 	} else {
 		source const it{*(upper - 1)};
 		if (it->from(ptr)) {
-			return it->base_of(ptr);
+			return it;
 		} else {
 			return nullptr;
 		}
 	}
+}
+
+void *collector::base_ptr_impl(void *ptr) const noexcept
+{
+	std::lock_guard<std::mutex> l{mtx};
+	source const from{find_source(ptr)};
+	return from ? from->base_of(ptr) : nullptr;
+}
+
+identity const *collector::get_type_impl(void *ptr) const noexcept
+{
+	std::lock_guard<std::mutex> l{mtx};
+	source const from{find_source(ptr)};
+	return from ? from->type_of(ptr) : nullptr;
 }
 
 void collector::insert_source_impl(isource &src) noexcept

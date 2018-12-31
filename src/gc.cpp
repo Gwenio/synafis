@@ -37,7 +37,7 @@ std::unique_ptr<identity::iallocator> identity::select_alloc(
 	return std::unique_ptr<iallocator>(dynamic_cast<iallocator *>(new allocator(id, unit, flags)));
 }
 
-identity const *identity::fetch_impl(void *obj) noexcept { return nullptr; }
+identity const *identity::fetch_impl(void *obj) noexcept { return collector::get_type(obj); }
 
 /**	\var lock_count
  *	\brief Count how many times a thread has acquired the collector's lock.

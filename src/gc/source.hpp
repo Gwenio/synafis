@@ -55,11 +55,20 @@ public:
 	virtual bool from(void *ptr) const noexcept = 0;
 
 	/**	\fn base_of(void *ptr) const noexcept
-	 *	\brief Gets the starting address of object ptr is within.
+	 *	\brief Gets the starting address of the object ptr is within.
 	 *	\param ptr The pointer to find the starting address of.
 	 *	\returns The originally allocated address containing ptr.
+	 *	\pre from(ptr) == true
 	 */
 	virtual void *base_of(void *ptr) const noexcept = 0;
+
+	/**	\fn type_of(void *ptr) const noexcept
+	 *	\brief Gets the identity of ptr.
+	 *	\param ptr The pointer to find the type of.
+	 *	\returns The identity of ptr.
+	 *	\pre from(ptr) == true
+	 */
+	virtual identity const *type_of(void *ptr) const noexcept = 0;
 
 	/**	\fn mark(void *ptr) noexcept
 	 *	\brief Marks an object as reachable so it will not be deallocate be sweep.
