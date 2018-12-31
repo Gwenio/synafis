@@ -76,20 +76,31 @@ soft_ptr::data *collector::get_soft_ptr_impl(void *ptr) { return nullptr; }
 
 void collector::free_soft_ptr_impl(soft_ptr::data *ptr) {}
 
-void *collector::base_ptr_impl(void *ptr) noexcept { return ptr; }
+void *collector::base_ptr_impl(void *ptr) noexcept
+{
+	std::lock_guard<std::mutex> l{mtx};
+	auto const upper = std::upper_bound(sources.cbegin(), sources.cend(), ptr,
+		[](auto const &cur, void *p) -> bool { return p < cur->location(); });
+	if (upper == sources.cbegin()) {
+		return nullptr;
+	} else {
+		source const it{*(upper - 1)};
+		if (it->from(ptr)) {
+			return it->base_of(ptr);
+		} else {
+			return nullptr;
+		}
+	}
+}
 
 void collector::insert_source_impl(isource &src) noexcept
 {
 	std::lock_guard<std::mutex> l{mtx};
-	auto const it = std::lower_bound(
-		sources.cbegin(), sources.cend(), src, [&src](auto const &cur, isource const &s) -> bool {
-			return s.location() < cur->location();
-		});
-	SYNAFIS_ASSERT(std::none_of(sources.cbegin(), it,
-		[&src](auto cur) -> bool { return src.location() == cur->location(); }));
-	SYNAFIS_ASSERT(std::all_of(
-		it, sources.cend(), [&src](auto cur) -> bool { return src.location() < cur->location(); }));
+	auto const it = std::upper_bound(sources.cbegin(), sources.cend(), src.location(),
+		[](auto const &cur, void *addr) -> bool { return addr < cur->location(); });
 	sources.insert(it, std::addressof(src));
+	SYNAFIS_ASSERT(std::is_sorted(sources.cbegin(), sources.cend(),
+		[](auto const &x, auto const &y) -> bool { return x->location() < y->location(); }));
 }
 
 void collector::work() noexcept
