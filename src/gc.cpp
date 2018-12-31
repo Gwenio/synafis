@@ -104,7 +104,10 @@ std::tuple<void *, identity const *> hard_ptr::get_hard(soft_ptr const &other)
 	}
 }
 
-void *hard_ptr::base_ptr(void *source) noexcept { return collector::base_ptr(source); }
+void *hard_ptr::base_ptr(void *source) noexcept
+{
+	return source ? collector::base_ptr(source) : static_cast<void *>(nullptr);
+}
 
 void root::register_impl(void *obj, traverse_cb tcb, root_cb rcb)
 {
