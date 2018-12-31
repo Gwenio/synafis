@@ -75,6 +75,13 @@ soft_ptr::data *collector::get_soft_ptr_impl(void *ptr) { return nullptr; }
 
 void collector::free_soft_ptr_impl(soft_ptr::data *ptr) {}
 
+void collector::register_root_impl(void *obj, traverse_cb tcb, root_cb rcb)
+{
+	std::unique_lock<std::mutex> l{mtx};
+}
+
+void collector::unregister_root_impl(void *obj) noexcept { std::lock_guard<std::mutex> l{mtx}; }
+
 isource *collector::find_source(void *ptr) const noexcept
 {
 	auto const upper = std::upper_bound(sources.cbegin(), sources.cend(), ptr,

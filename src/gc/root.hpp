@@ -61,7 +61,7 @@ private:
 	 */
 	static void register_impl(void *obj, traverse_cb tcb, root_cb rcb);
 
-	/**	\fn unregister_impl(void *obj)
+	/**	\fn unregister_impl(void *obj) noexcept
 	 *	\brief Unregisters a root object.
 	 *	\param obj The object to unregister.
 	 *	\pre obj != nullptr
@@ -69,7 +69,7 @@ private:
 	 *	\post The object is no longer registered as a root.
 	 *	\details Implemented in the collector.
 	 */
-	static void unregister_impl(void *obj);
+	static void unregister_impl(void *obj) noexcept;
 
 	/**	\fn root_impl(void *obj, void *data, remap_cb cb) noexcept
 	 *	\brief Implementation for root_cb to update pointers in root objects.

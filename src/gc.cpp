@@ -117,7 +117,7 @@ void root::register_impl(void *obj, traverse_cb tcb, root_cb rcb)
 	;
 }
 
-void root::unregister_impl(void *obj)
+void root::unregister_impl(void *obj) noexcept
 {
 	SYNAFIS_ASSERT(obj != nullptr);
 	;

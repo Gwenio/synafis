@@ -195,6 +195,20 @@ private:
 	 */
 	void free_soft_ptr_impl(soft_ptr::data *ptr);
 
+	/**	\fn register_root_impl(void *obj, traverse_cb tcb, root_cb rcb)
+	 *	\param obj A pointer to the root object being registered.
+	 *	\param tcb The callback for traversing pointers in the object.
+	 *	\param rcb The callback for updating pointers in the object.
+	 *	\see register_root(void *obj, traverse_cb tcb, root_cb rcb)
+	 */
+	void register_root_impl(void *obj, traverse_cb tcb, root_cb rcb);
+
+	/**	\fn unregister_root_impl(void *obj) noexcept
+	 *	\param obj A pointer to the root object to unregister.
+	 *	\see unregister_root(void *obj) noexcept
+	 */
+	void unregister_root_impl(void *obj) noexcept;
+
 	/**	\fn find_source(void *ptr) const noexcept
 	 *	\brief Gets the source of a pointer.
 	 *	\param ptr The pointer to get a base address for.
@@ -319,6 +333,23 @@ public:
 	 *	\returns Returns the identity of an object or nullptr if not from a registered source.
 	 */
 	static identity const *get_type(void *ptr) noexcept { return singleton.get_type_impl(ptr); }
+
+	/**	\fn register_root(void *obj, traverse_cb tcb, root_cb rcb)
+	 *	\brief Registers a root object with the collector.
+	 *	\param obj A pointer to the root object being registered.
+	 *	\param tcb The callback for traversing pointers in the object.
+	 *	\param rcb The callback for updating pointers in the object.
+	 */
+	static void register_root(void *obj, traverse_cb tcb, root_cb rcb)
+	{
+		return singleton.register_root_impl(obj, tcb, rcb);
+	}
+
+	/**	\fn unregister_root(void *obj) noexcept
+	 *	\brief Unregisters a root object.
+	 *	\param obj A pointer to the root object to unregister.
+	 */
+	static void unregister_root(void *obj) noexcept { singleton.unregister_root_impl(obj); }
 
 	/**	\fn set_period(duration value) noexcept
 	 *	\brief Sets the period for singleton.
