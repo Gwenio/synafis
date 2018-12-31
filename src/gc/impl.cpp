@@ -60,9 +60,8 @@ void collector::unlock_impl()
 	}
 }
 
-void collector::wait_impl()
+void collector::wait_impl(std::unique_lock<std::mutex> &l)
 {
-	std::unique_lock<std::mutex> l{mtx};
 	flag = false;
 	count--;
 	l.unlock();
@@ -76,11 +75,11 @@ soft_ptr::data *collector::get_soft_ptr_impl(void *ptr) { return nullptr; }
 
 void collector::free_soft_ptr_impl(soft_ptr::data *ptr) {}
 
-void *collector::base_ptr_impl(void *ptr) noexcept
+void *collector::base_ptr_impl(void *ptr) const noexcept
 {
 	std::lock_guard<std::mutex> l{mtx};
 	auto const upper = std::upper_bound(sources.cbegin(), sources.cend(), ptr,
-		[](auto const &cur, void *p) -> bool { return p < cur->location(); });
+		[](void *p, auto const &cur) -> bool { return p < cur->location(); });
 	if (upper == sources.cbegin()) {
 		return nullptr;
 	} else {
@@ -95,10 +94,15 @@ void *collector::base_ptr_impl(void *ptr) noexcept
 
 void collector::insert_source_impl(isource &src) noexcept
 {
-	std::lock_guard<std::mutex> l{mtx};
+	std::unique_lock<std::mutex> l{mtx};
 	auto const it = std::upper_bound(sources.cbegin(), sources.cend(), src.location(),
-		[](auto const &cur, void *addr) -> bool { return addr < cur->location(); });
-	sources.insert(it, std::addressof(src));
+		[](void *addr, auto const &cur) -> bool { return addr < cur->location(); });
+	try {
+		sources.insert(it, std::addressof(src));
+	} catch (std::bad_alloc const &) {
+		wait_impl(l);							 // Wait on GC cycle for more memory.
+		sources.insert(it, std::addressof(src)); // Try again, crash if it fails.
+	}
 	SYNAFIS_ASSERT(std::is_sorted(sources.cbegin(), sources.cend(),
 		[](auto const &x, auto const &y) -> bool { return x->location() < y->location(); }));
 }

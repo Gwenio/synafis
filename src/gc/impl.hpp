@@ -81,7 +81,7 @@ private:
 	 *	\todo This mutex is used for all synchronization for now. Later investigate if some
 	 *	\todo parts of the interface could use a separate one.
 	 */
-	std::mutex mtx;
+	mutable std::mutex mtx;
 
 	/**	\var readers
 	 *	\brief The condition variable for lock() requests to wait with.
@@ -156,7 +156,20 @@ private:
 	/**	\fn wait_impl()
 	 *	\see wait()
 	 */
-	void wait_impl();
+	void wait_impl()
+	{
+		std::unique_lock<std::mutex> l{mtx};
+		wait_impl(l);
+	}
+
+	/**	\fn wait_impl(std::unique_lock<std::mutex> &l)
+	 *	\brief Version of wait_impl() for internal use.
+	 *	\param l The the lock.
+	 *	\pre The lock l must own the lock on mtx.
+	 *	\pre The lock l will own the lock on mtx.
+	 *	\see wait()
+	 */
+	void wait_impl(std::unique_lock<std::mutex> &l);
 
 	/**	\fn get_soft_ptr_impl(void *ptr)
 	 *	\param ptr A pointer to the object to get the soft pointer data for.
@@ -170,11 +183,11 @@ private:
 	 */
 	void free_soft_ptr_impl(soft_ptr::data *ptr);
 
-	/**	\fn base_ptr_impl(void *ptr) noexcept
+	/**	\fn base_ptr_impl(void *ptr) const noexcept
 	 *	\param ptr The pointer to get a base address for.
 	 *	\see base_ptr(void *ptr) noexcept
 	 */
-	void *base_ptr_impl(void *ptr) noexcept;
+	void *base_ptr_impl(void *ptr) const noexcept;
 
 	/**	\fn set_period_impl(duration value) noexcept
 	 *	\brief Sets period.
