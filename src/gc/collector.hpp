@@ -48,6 +48,12 @@ void initialize();
  */
 void set_period(std::chrono::steady_clock::duration value) noexcept;
 
+/**	\fn collect() noexcept
+ *	\brief Causes the collector to run a collection cycle as soon as possible.
+ *	\pre initialize() has been called.
+ */
+void collect() noexcept;
+
 }
 
 #endif

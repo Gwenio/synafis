@@ -171,6 +171,18 @@ private:
 	 */
 	void wait_impl(std::unique_lock<std::mutex> &l);
 
+	/**	\fn collect_impl() noexcept
+	 *	\see collect()
+	 */
+	void collect_impl() noexcept
+	{
+		{
+			std::lock_guard<std::mutex> l{mtx};
+			flag = false;
+		}
+		writer.notify_one();
+	}
+
 	/**	\fn get_soft_ptr_impl(void *ptr)
 	 *	\param ptr A pointer to the object to get the soft pointer data for.
 	 *	\see get_soft_ptr(void *ptr)
@@ -244,7 +256,6 @@ public:
 
 	/**	\fn init()
 	 *	\brief Finishes setting up the collector.
-	 *	\todo In particular this call starts the thread that preforms collection.
 	 */
 	static void init() { singleton.init_impl(); }
 
@@ -267,6 +278,11 @@ public:
 	 *	\details Does not return until a cycle has run.
 	 */
 	static void wait() { singleton.wait_impl(); }
+
+	/**	\fn collect() noexcept
+	 *	\brief Causes a collection cycle to run as soon as possible.
+	 */
+	static void collect() noexcept { singleton.collect_impl(); }
 
 	/**	\fn get_soft_ptr(void *ptr)
 	 *	\brief Gets the soft pointer associated with an object.

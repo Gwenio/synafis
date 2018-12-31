@@ -125,6 +125,8 @@ void root::unregister_impl(void *obj)
 
 void initialize() { collector::init(); }
 
+void collect() noexcept { collector::collect(); }
+
 void set_period(std::chrono::steady_clock::duration value) noexcept
 {
 	collector::set_period(value);
