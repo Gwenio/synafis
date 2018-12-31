@@ -78,6 +78,8 @@ private:
 	/**	\var mtx
 	 *	\brief The mutex for the collector lock.
 	 *	\note std::shared_mutex is not used as it cannot be counted on to be writer favored.
+	 *	\todo This mutex is used for all synchronization for now. Later investigate if some
+	 *	\todo parts of the interface could use a separate one.
 	 */
 	std::mutex mtx;
 
