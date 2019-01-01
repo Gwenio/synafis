@@ -75,12 +75,48 @@ soft_ptr::data *collector::get_soft_ptr_impl(void *ptr) { return nullptr; }
 
 void collector::free_soft_ptr_impl(soft_ptr::data *ptr) {}
 
+template<typename T>
+void collector::register_root_helper(
+	std::vector<T> &vec, T const root, std::unique_lock<std::mutex> &l)
+{
+	auto const it = std::upper_bound(vec.cbegin(), vec.cend(), root.obj,
+		[](void *addr, auto const &cur) -> bool { return addr < cur.obj; });
+	try {
+		vec.insert(it, root);
+		SYNAFIS_ASSERT(std::is_sorted(vec.cbegin(), vec.cend(),
+			[](auto const &x, auto const &y) -> bool { return x.obj < y.obj; }));
+		return;
+	} catch (std::bad_alloc const &) {}
+	wait_impl(l);
+	vec.insert(it, root);
+	SYNAFIS_ASSERT(std::is_sorted(vec.cbegin(), vec.cend(),
+		[](auto const &x, auto const &y) -> bool { return x.obj < y.obj; }));
+}
+
 void collector::register_root_impl(void *obj, traverse_cb tcb, root_cb rcb)
 {
 	std::unique_lock<std::mutex> l{mtx};
+	source const src{find_source(obj)};
+	if (src) {
+		register_root_helper(managed, mroot{obj, src}, l);
+	} else {
+		register_root_helper(unmanaged, uroot{obj, tcb, rcb}, l);
+	}
 }
 
-void collector::unregister_root_impl(void *obj) noexcept { std::lock_guard<std::mutex> l{mtx}; }
+void collector::unregister_root_impl(void *obj) noexcept
+{
+	std::lock_guard<std::mutex> l{mtx};
+	auto const m = std::lower_bound(managed.cbegin(), managed.cend(), obj,
+		[](void *addr, auto const &cur) -> bool { return addr <= cur.obj; });
+	if (m == managed.cend() || m->obj != obj) {
+		auto const u = std::lower_bound(unmanaged.cbegin(), unmanaged.cend(), obj,
+			[](void *addr, auto const &cur) -> bool { return addr <= cur.obj; });
+		if (u != unmanaged.cend() && u->obj == obj) { unmanaged.erase(u); }
+	} else {
+		managed.erase(m);
+	}
+}
 
 isource *collector::find_source(void *ptr) const noexcept
 {

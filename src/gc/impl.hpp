@@ -74,6 +74,45 @@ public:
 	 */
 	using source = isource *;
 
+	/**	\struct mroot
+	 *	\brief The type to store roots to managed objects.
+	 *	\see managed
+	 */
+	struct mroot
+	{
+		/**	\var obj
+		 *	\brief A pointer to the root object.
+		 */
+		void *obj;
+
+		/**	\var src
+		 *	\brief The source of the root object.
+		 */
+		source src;
+	};
+
+	/**	\struct uroot
+	 *	\brief The type to store roots to unmanaged objects.
+	 *	\see unmanaged
+	 */
+	struct uroot
+	{
+		/**	\var obj
+		 *	\brief A pointer to the root object.
+		 */
+		void *obj;
+
+		/**	\var tcb
+		 *	\brief The callback for traversing pointers in the object.
+		 */
+		traverse_cb tcb;
+
+		/**	\var rcb
+		 *	\brief The callback for updating pointers in the object.
+		 */
+		root_cb rcb;
+	};
+
 private:
 	/**	\var mtx
 	 *	\brief The mutex for the collector lock.
@@ -128,6 +167,18 @@ private:
 	 */
 	std::vector<source> sources;
 
+	/**	\var managed
+	 *	\brief Tracks root objects with lifetimes managed by the collector.
+	 *	\note Should be kept sorted by address of the object.
+	 */
+	std::vector<mroot> managed;
+
+	/**	\var unmanaged
+	 *	\brief Tracks root objects with lifetimes not managed by the collector.
+	 *	\note Should be kept sorted by address of the object.
+	 */
+	std::vector<uroot> unmanaged;
+
 	/**	\fn collector() noexcept
 	 *	\brief Prepares most of the collector.
 	 */
@@ -166,7 +217,7 @@ private:
 	 *	\brief Version of wait_impl() for internal use.
 	 *	\param l The the lock.
 	 *	\pre The lock l must own the lock on mtx.
-	 *	\pre The lock l will own the lock on mtx.
+	 *	\post The lock l will own the lock on mtx.
 	 *	\see wait()
 	 */
 	void wait_impl(std::unique_lock<std::mutex> &l);
@@ -194,6 +245,16 @@ private:
 	 *	\see free_soft_ptr(soft_ptr::data *ptr)
 	 */
 	void free_soft_ptr_impl(soft_ptr::data *ptr);
+
+	/**	\fn register_root_impl(std::vector<T> &vec, T const root, std::unique_lock<std::mutex> &l)
+	 *	\param vec The vector to insert the root into.
+	 *	\param root The root object record to insert.
+	 *	\param l The the lock.
+	 *	\pre The lock l must own the lock on mtx.
+	 *	\post The lock l will own the lock on mtx.
+	 */
+	template<typename T>
+	void register_root_helper(std::vector<T> &vec, T const root, std::unique_lock<std::mutex> &l);
 
 	/**	\fn register_root_impl(void *obj, traverse_cb tcb, root_cb rcb)
 	 *	\param obj A pointer to the root object being registered.
