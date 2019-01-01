@@ -108,10 +108,10 @@ void collector::unregister_root_impl(void *obj) noexcept
 {
 	std::lock_guard<std::mutex> l{mtx};
 	auto const m = std::lower_bound(managed.cbegin(), managed.cend(), obj,
-		[](void *addr, auto const &cur) -> bool { return addr <= cur.obj; });
+		[](auto const &cur, void *addr) -> bool { return addr <= cur.obj; });
 	if (m == managed.cend() || m->obj != obj) {
 		auto const u = std::lower_bound(unmanaged.cbegin(), unmanaged.cend(), obj,
-			[](void *addr, auto const &cur) -> bool { return addr <= cur.obj; });
+			[](auto const &cur, void *addr) -> bool { return addr <= cur.obj; });
 		if (u != unmanaged.cend() && u->obj == obj) { unmanaged.erase(u); }
 	} else {
 		managed.erase(m);
