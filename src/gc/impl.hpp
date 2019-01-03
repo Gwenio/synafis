@@ -42,8 +42,6 @@ PERFORMANCE OF THIS SOFTWARE.
 
 namespace gc {
 
-class collector;
-
 /**	\class collector
  *	\brief The main class implementing the garbage collector.
  */
