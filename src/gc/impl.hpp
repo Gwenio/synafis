@@ -64,6 +64,36 @@ class collector
 	collector(collector &&) = delete;
 
 public:
+	/**	\class iallocator
+	 *	\brief Extends the interface for allocators for internal use.
+	 */
+	class iallocator : public identity::iallocator
+	{
+	protected:
+		/**	\fn iallocator() noexcept
+		 *	\brief Default.
+		 */
+		constexpr iallocator() noexcept = default;
+
+	public:
+		/**	\fn ~iallocator()
+		 *	\brief Default.
+		 */
+		virtual ~iallocator() noexcept = default;
+
+		/**	\fn shrink(std::size_t goal) noexcept
+		 *	\brief Causes the allocator to try and free unneeded memory.
+		 *	\param goal A hint about how much memory to try and free.
+		 *	\returns Returns the units of memory freed.
+		 *	\details The measures of memory are not exact, just hints. The hints are a count of
+		 *	\details units that is approximately (vmem::page_size * config::max_pool).
+		 *	\details Will be called with a goal of zero to notify that it is a good time to shrink
+		 *	\details if the allocator has lots of free space.
+		 *	\note Allocators need to keep some free space available for allocation.
+		 */
+		virtual std::size_t shrink(std::size_t goal) noexcept = 0;
+	};
+
 	/**	\typedef duration
 	 *	\brief The type used to describe the length of a time period.
 	 */
@@ -156,6 +186,12 @@ private:
 	 */
 	std::atomic_flag alive;
 
+	/**	\var requests
+	 *	\brief The number of failures to allocate memory since a collection cycle.
+	 *	\note Incremented when wait_impl() is called.
+	 */
+	std::size_t requests;
+
 	/**	\var period
 	 *	\brief The time between unforced collection cycles.
 	 */
@@ -163,19 +199,25 @@ private:
 
 	/**	\var sources
 	 *	\brief Bookkeeping for sources of allocation.
-	 *	\note Should be kept sorted by location in memory.
+	 *	\invariant Should be kept sorted by location in memory.
 	 */
 	std::vector<source> sources;
 
+	/**	\var allocators
+	 *	\brief Tracks allocators for shrink request.
+	 *	\invariant Should be kept sorted by location in memory.
+	 */
+	std::vector<iallocator *> allocators;
+
 	/**	\var managed
 	 *	\brief Tracks root objects with lifetimes managed by the collector.
-	 *	\note Should be kept sorted by address of the object.
+	 *	\invariant Should be kept sorted by address of the object.
 	 */
 	std::vector<mroot> managed;
 
 	/**	\var unmanaged
 	 *	\brief Tracks root objects with lifetimes not managed by the collector.
-	 *	\note Should be kept sorted by address of the object.
+	 *	\invariant Should be kept sorted by address of the object.
 	 */
 	std::vector<uroot> unmanaged;
 
@@ -246,15 +288,18 @@ private:
 	 */
 	void free_soft_ptr_impl(soft_ptr::data *ptr);
 
-	/**	\fn register_root_impl(std::vector<T> &vec, T const root, std::unique_lock<std::mutex> &l)
+	/**	\fn insert_helper(std::vector<T1> &vec, T2 const &find, T1 const add, F &func, std::unique_lock<std::mutex> &l)
 	 *	\param vec The vector to insert the root into.
-	 *	\param root The root object record to insert.
+	 *	\param find The object to search for the insert location.
+	 *	\param add The object record to insert.
+	 *	\param func A function to check find < element from vec.
 	 *	\param l The the lock.
 	 *	\pre The lock l must own the lock on mtx.
 	 *	\post The lock l will own the lock on mtx.
 	 */
-	template<typename T>
-	void register_root_helper(std::vector<T> &vec, T const root, std::unique_lock<std::mutex> &l);
+	template<typename T1, typename T2, typename F>
+	void insert_helper(std::vector<T1> &vec, T2 const &find, T1 const add, F &func,
+		std::unique_lock<std::mutex> &l);
 
 	/**	\fn register_root_impl(void *obj, traverse_cb tcb, root_cb rcb)
 	 *	\param obj A pointer to the root object being registered.
@@ -308,6 +353,24 @@ private:
 	 */
 	void insert_source_impl(isource &src) noexcept;
 
+	/**	\fn erase_source_impl(isource &src) noexcept
+	 *	\brief Stops tracking a source.
+	 *	\param src The source to stop tracking.
+	 */
+	void erase_source_impl(isource &src) noexcept;
+
+	/**	\fn insert_alloc_impl(iallocator &alloc) noexcept
+	 *	\brief Tracks an allocator.
+	 *	\param alloc The source to track.
+	 */
+	void insert_alloc_impl(iallocator &alloc) noexcept;
+
+	/**	\fn erase_alloc_impl(iallocator &alloc) noexcept
+	 *	\brief Stops tracking an allocator.
+	 *	\param alloc The allocator to stop tracking.
+	 */
+	void erase_alloc_impl(iallocator &alloc) noexcept;
+
 	/**	\fn work() noexcept
 	 *	\brief Defines the job of worker.
 	 */
@@ -322,6 +385,11 @@ private:
 	 *	\brief Preforms the sweep phase of a collection cycle.
 	 */
 	void sweep() noexcept;
+
+	/**	\fn shrink() noexcept
+	 *	\brief Notifies allocators to release memory.
+	 */
+	void shrink() noexcept;
 
 public:
 	/**	\fn ~collector() noexcept
@@ -423,6 +491,25 @@ public:
 	 *	\param src The source to track.
 	 */
 	static void insert_source(isource &src) noexcept { singleton.insert_source_impl(src); }
+
+	/**	\fn erase_source(isource &src) noexcept
+	 *	\brief Stops tracking a source.
+	 *	\param src The source to stop tracking.
+	 *	\pre Only call in response to a shrink request.
+	 */
+	static void erase_source(isource &src) noexcept { singleton.erase_source_impl(src); }
+
+	/**	\fn insert_alloc(iallocator &alloc) noexcept
+	 *	\brief Tracks an allocator.
+	 *	\param alloc The source to track.
+	 */
+	static void insert_alloc(iallocator &alloc) noexcept { singleton.insert_alloc_impl(alloc); }
+
+	/**	\fn erase_alloc(iallocator &alloc) noexcept
+	 *	\brief Stops tracking an allocator.
+	 *	\param alloc The allocator to stop tracking.
+	 */
+	static void erase_alloc(iallocator &alloc) noexcept { singleton.erase_alloc_impl(alloc); }
 };
 
 }
