@@ -29,11 +29,15 @@ PERFORMANCE OF THIS SOFTWARE.
 #include "pool.hpp"
 #endif
 
+#ifndef SYNAFIS_GC_IMPL_HPP
+#include "impl.hpp"
+#endif
+
 /**	\file src/gc/allocator.hpp
  *	\brief Defines the type that manages the pools for a type of object.
  */
 
-#include <forward_list>
+#include <list>
 #include <mutex>
 
 namespace gc {
@@ -41,7 +45,7 @@ namespace gc {
 /**	\class allocator
  *	\brief Type to manage pools for a type of object.
  */
-class allocator : public identity::iallocator
+class allocator : public collector::iallocator
 {
 	//!	\cond friends
 	friend unit_test::tester<allocator>;
@@ -76,7 +80,7 @@ private:
 	/**	\var pools
 	 *	\brief A list of pools managed by the allocator.
 	 */
-	std::forward_list<handle> pools;
+	std::list<handle> pools;
 
 	/**	\var type
 	 *	\brief The identity of the type the allocator allocates.
@@ -144,6 +148,18 @@ public:
 	 *	\returns Returns a pointer to the allocated memory or nullptr on failure.
 	 */
 	virtual void *allocate(std::nothrow_t) noexcept override final;
+
+	/**	\fn shrink(std::size_t goal) noexcept override final
+	 *	\brief Causes the allocator to try and free unneeded memory.
+	 *	\param goal A hint about how much memory to try and free.
+	 *	\returns Returns the units of memory freed.
+	 *	\details The measures of memory are not exact, just hints. Assume a pool is one unit.
+	 *	\details Regardless of the goal, free pools such that free space only exceeds the used
+	 *	\details space by one pool's capacity after rounding down to the nearest multiple of
+	 *	\details capacity.
+	 *	\note Will keep at least on pool's capacity of free space regardless of goal.
+	 */
+	virtual std::size_t shrink(std::size_t goal) noexcept override final;
 };
 
 }
