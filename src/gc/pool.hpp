@@ -377,7 +377,7 @@ private:
 
 	/**	\var end
 	 *	\brief The end of the address range to allocate objects from.
-	 *	\invariant Equal to slots + (unit * <number of slots in the pool>).
+	 *	\invariant Equal to slots + (unit * \<number of slots in the pool\>).
 	 */
 	void *const end;
 

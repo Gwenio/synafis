@@ -75,6 +75,8 @@ private:
 	 *	\brief Implementation for root_cb to update pointers in root objects.
 	 *	\tparam T The type of root object.
 	 *	\param obj The object having its pointers updated.
+	 *	\param data Additional argument to pass to cb.
+	 *	\param cb The remap callback for type T.
 	 *	\pre obj != nullptr && cb != nullptr
 	 *	\details Wraps remap<T>, providing the correct parameters for registering.
 	 *	\warning Should only be called by the collector.
@@ -85,7 +87,7 @@ private:
 		static_cast<T *>(obj)->remap(data, cb);
 	}
 
-	/**	\fn get_pointer(T &ref) noexcept
+	/**	\fn get_pointer(T &obj) noexcept
 	 *	\brief Gets the pointer to an object.
 	 *	\tparam T The type of root object.
 	 *	\param obj The object to get a pointer to.
