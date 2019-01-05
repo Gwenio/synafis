@@ -184,6 +184,20 @@ public:
 		 */
 		constexpr operator bool() const noexcept { return ptr != nullptr; }
 
+		/**	\fn operator*() noexcept
+		 *	\brief Gets a reference to the owned pool.
+		 *	\returns *ptr
+		 *	\pre ptr != nullptr
+		 */
+		constexpr pool &operator*() noexcept { return *ptr; }
+
+		/**	\fn operator*() const noexcept
+		 *	\brief Gets a reference to the owned pool.
+		 *	\returns *ptr
+		 *	\pre ptr != nullptr
+		 */
+		constexpr pool const &operator*() const noexcept { return *ptr; }
+
 		/**	\fn operator==(handle const &other) const noexcept
 		 *	\brief Checks if two handles have the same pool.
 		 *	\param other The other handle to compare with.
@@ -261,6 +275,20 @@ public:
 		 *	\see pool::available
 		 */
 		std::size_t available() const noexcept { return ptr->available(); }
+
+		/**	\fn empty() const noexcept
+		 *	\brief Checks if the pool is empty.
+		 *	\returns ptr->empty()
+		 *	\see pool::empty
+		 */
+		bool empty() const noexcept { return ptr->empty(); }
+
+		/**	\fn full() const noexcept
+		 *	\brief Checks if the pool is full.
+		 *	\returns ptr->full()
+		 *	\see pool::full
+		 */
+		bool full() const noexcept { return ptr->full(); }
 	};
 
 	//!	\cond friends
@@ -473,6 +501,18 @@ public:
 	 *	\returns space
 	 */
 	std::size_t available() const noexcept { return space; }
+
+	/**	\fn empty() const noexcept
+	 *	\brief Checks if the pool is empty.
+	 *	\returns capacity == space
+	 */
+	bool empty() const noexcept { return capacity == space; }
+
+	/**	\fn full() const noexcept
+	 *	\brief Checks if the pool is full.
+	 *	\returns space == 0
+	 */
+	bool full() const noexcept { return space == 0; }
 };
 
 }
