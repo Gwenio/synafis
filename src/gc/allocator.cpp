@@ -32,12 +32,18 @@ namespace gc {
 allocator::allocator(identity const &id, std::size_t u, traits::flag_type f) :
 	iallocator(), mtx(), pools(), type(id), unit(u), capacity(pool::select_capacity(u)), flags(f)
 {
+	collector::insert_alloc(*this);
 	grow();
 }
 
-allocator::~allocator() noexcept {}
+allocator::~allocator() noexcept { collector::erase_alloc(*this); }
 
-allocator::handle &allocator::grow() { return pools.emplace_front(type, capacity, unit); }
+allocator::handle &allocator::grow()
+{
+	handle &p = pools.emplace_front(type, capacity, unit);
+	collector::insert_source(*p);
+	return p;
+}
 
 void *allocator::allocate_impl()
 {
@@ -61,8 +67,41 @@ void *allocator::allocate(std::nothrow_t) noexcept
 {
 	try {
 		return allocate_impl();
-	} catch (std::bad_alloc &) {
+	} catch (std::bad_alloc const &) {
 		return nullptr;
+	}
+}
+
+std::size_t allocator::shrink(std::size_t goal) noexcept
+{
+	std::size_t available{0};
+	std::size_t empty{0};
+	for (auto const &x : pools) {
+		if (x.empty()) {
+			empty++;
+		} else {
+			available += x.available();
+		}
+	}
+	std::size_t const half{(pools.size() - (available / capacity)) / 2};
+	goal = std::max(goal, half < empty ? empty - half : 0);
+	if (empty == 0 || goal == 0) {
+		return 0;
+	} else {
+		empty = std::min(goal, available <= capacity ? empty - 1 : empty);
+		std::size_t freed{empty};
+		auto pos = pools.cbegin();
+		while (0 < empty) {
+			SYNAFIS_ASSERT(pos != pools.cend());
+			handle const &x = *pos;
+			auto const cur = pos++;
+			if (x.empty()) {
+				collector::erase_source(*x);
+				pools.erase(cur);
+				empty--;
+			}
+		}
+		return freed;
 	}
 }
 
