@@ -162,7 +162,7 @@ void collector::insert_source_impl(isource &src) noexcept
 void collector::erase_source_impl(isource const &src) noexcept
 {
 	auto const it = std::lower_bound(sources.cbegin(), sources.cend(), std::addressof(src),
-		[](source cur, source addr) -> bool { return addr <= cur; });
+		[](source cur, isource const *addr) -> bool { return addr <= cur; });
 	if (it != sources.cend()) { sources.erase(it); }
 }
 
@@ -180,7 +180,7 @@ void collector::erase_alloc_impl(iallocator const &alloc) noexcept
 {
 	std::lock_guard<std::mutex> l{mtx};
 	auto const it = std::lower_bound(allocators.cbegin(), allocators.cend(), std::addressof(alloc),
-		[](iallocator *cur, iallocator *addr) -> bool { return addr <= cur; });
+		[](iallocator *cur, iallocator const *addr) -> bool { return addr <= cur; });
 	if (it != allocators.cend()) { allocators.erase(it); }
 }
 
