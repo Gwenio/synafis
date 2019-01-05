@@ -351,11 +351,11 @@ private:
 	 */
 	void insert_source_impl(isource &src) noexcept;
 
-	/**	\fn erase_source_impl(isource &src) noexcept
+	/**	\fn erase_source_impl(isource const &src) noexcept
 	 *	\brief Stops tracking a source.
 	 *	\param src The source to stop tracking.
 	 */
-	void erase_source_impl(isource &src) noexcept;
+	void erase_source_impl(isource const &src) noexcept;
 
 	/**	\fn insert_alloc_impl(iallocator &alloc) noexcept
 	 *	\brief Tracks an allocator.
@@ -363,11 +363,11 @@ private:
 	 */
 	void insert_alloc_impl(iallocator &alloc) noexcept;
 
-	/**	\fn erase_alloc_impl(iallocator &alloc) noexcept
+	/**	\fn erase_alloc_impl(iallocator const &alloc) noexcept
 	 *	\brief Stops tracking an allocator.
 	 *	\param alloc The allocator to stop tracking.
 	 */
-	void erase_alloc_impl(iallocator &alloc) noexcept;
+	void erase_alloc_impl(iallocator const &alloc) noexcept;
 
 	/**	\fn work() noexcept
 	 *	\brief Defines the job of worker.
@@ -490,12 +490,12 @@ public:
 	 */
 	static void insert_source(isource &src) noexcept { singleton.insert_source_impl(src); }
 
-	/**	\fn erase_source(isource &src) noexcept
+	/**	\fn erase_source(isource const &src) noexcept
 	 *	\brief Stops tracking a source.
 	 *	\param src The source to stop tracking.
 	 *	\pre Only call in response to a shrink request.
 	 */
-	static void erase_source(isource &src) noexcept { singleton.erase_source_impl(src); }
+	static void erase_source(isource const &src) noexcept { singleton.erase_source_impl(src); }
 
 	/**	\fn insert_alloc(iallocator &alloc) noexcept
 	 *	\brief Tracks an allocator.
@@ -503,11 +503,11 @@ public:
 	 */
 	static void insert_alloc(iallocator &alloc) noexcept { singleton.insert_alloc_impl(alloc); }
 
-	/**	\fn erase_alloc(iallocator &alloc) noexcept
+	/**	\fn erase_alloc(iallocator const &alloc) noexcept
 	 *	\brief Stops tracking an allocator.
 	 *	\param alloc The allocator to stop tracking.
 	 */
-	static void erase_alloc(iallocator &alloc) noexcept { singleton.erase_alloc_impl(alloc); }
+	static void erase_alloc(iallocator const &alloc) noexcept { singleton.erase_alloc_impl(alloc); }
 };
 
 }

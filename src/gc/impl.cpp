@@ -159,7 +159,7 @@ void collector::insert_source_impl(isource &src) noexcept
 		[](auto const &x, auto const &y) -> bool { return x->location() < y->location(); }));
 }
 
-void collector::erase_source_impl(isource &src) noexcept
+void collector::erase_source_impl(isource const &src) noexcept
 {
 	auto const it = std::lower_bound(sources.cbegin(), sources.cend(), std::addressof(src),
 		[](source cur, source addr) -> bool { return addr <= cur; });
@@ -176,7 +176,7 @@ void collector::insert_alloc_impl(iallocator &alloc) noexcept
 		[](auto const &x, auto const &y) -> bool { return x < y; }));
 }
 
-void collector::erase_alloc_impl(iallocator &alloc) noexcept
+void collector::erase_alloc_impl(iallocator const &alloc) noexcept
 {
 	std::lock_guard<std::mutex> l{mtx};
 	auto const it = std::lower_bound(allocators.cbegin(), allocators.cend(), std::addressof(alloc),
