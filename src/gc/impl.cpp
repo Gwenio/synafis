@@ -178,10 +178,15 @@ void collector::insert_alloc_impl(iallocator &alloc) noexcept
 
 void collector::erase_alloc_impl(iallocator const &alloc) noexcept
 {
-	std::lock_guard<std::mutex> l{mtx};
-	auto const it = std::lower_bound(allocators.cbegin(), allocators.cend(), std::addressof(alloc),
-		[](iallocator *cur, iallocator const *addr) -> bool { return addr <= cur; });
-	if (it != allocators.cend()) { allocators.erase(it); }
+	if (alive.test_and_set()) {
+		std::lock_guard<std::mutex> l{mtx};
+		auto const it =
+			std::lower_bound(allocators.cbegin(), allocators.cend(), std::addressof(alloc),
+				[](iallocator *cur, iallocator const *addr) -> bool { return addr <= cur; });
+		if (it != allocators.cend()) { allocators.erase(it); }
+	} else {
+		alive.clear();
+	}
 }
 
 void collector::work() noexcept
