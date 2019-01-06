@@ -25,7 +25,7 @@ namespace gc {
 
 collector::collector() noexcept :
 	mtx(), readers(), writer(), flag(false), count(0), worker(), alive(), requests(0),
-	period(std::chrono::milliseconds{config::gc_period}), sources()
+	period(std::chrono::milliseconds{config::gc_period}), sources(), traversable()
 {
 	alive.test_and_set();
 }
@@ -157,13 +157,27 @@ void collector::insert_source_impl(isource &src) noexcept
 		[](void *addr, auto const &cur) -> bool { return addr < cur->location(); }, l);
 	SYNAFIS_ASSERT(std::is_sorted(sources.cbegin(), sources.cend(),
 		[](auto const &x, auto const &y) -> bool { return x->location() < y->location(); }));
+	if (src.traversable()) {
+		insert_helper(traversable, src.location(), std::addressof(src),
+			[](void *addr, auto const &cur) -> bool { return addr < cur->location(); }, l);
+		SYNAFIS_ASSERT(std::is_sorted(traversable.cbegin(), traversable.cend(),
+			[](auto const &x, auto const &y) -> bool { return x->location() < y->location(); }));
+	}
 }
 
 void collector::erase_source_impl(isource const &src) noexcept
 {
-	auto const it = std::lower_bound(sources.cbegin(), sources.cend(), std::addressof(src),
+	auto it = std::lower_bound(sources.cbegin(), sources.cend(), std::addressof(src),
 		[](source cur, isource const *addr) -> bool { return addr <= cur; });
-	if (it != sources.cend()) { sources.erase(it); }
+	if (it != sources.cend()) {
+		sources.erase(it);
+		if (src.traversable()) {
+			it = std::lower_bound(traversable.cbegin(), traversable.cend(), std::addressof(src),
+				[](source cur, isource const *addr) -> bool { return addr <= cur; });
+			SYNAFIS_ASSERT(it != traversable.cend());
+			traversable.erase(it);
+		}
+	}
 }
 
 void collector::insert_alloc_impl(iallocator &alloc) noexcept

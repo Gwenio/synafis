@@ -201,6 +201,12 @@ private:
 	 */
 	std::vector<source> sources;
 
+	/**	\var traversable
+	 *	\brief The traversable sources.
+	 *	\invariant Should be kept sorted by location in memory.
+	 */
+	std::vector<source> traversable;
+
 	/**	\var allocators
 	 *	\brief Tracks allocators for shrink request.
 	 *	\invariant Should be kept sorted by location in memory.

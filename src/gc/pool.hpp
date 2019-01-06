@@ -484,6 +484,12 @@ public:
 	 */
 	virtual void *location() const noexcept override final { return slots; }
 
+	/**	\fn traversable() const noexcept override final
+	 *	\brief Checks if the pool may contain traversable objects.
+	 *	\returns sentinel != nullptr
+	 */
+	virtual bool traversable() const noexcept override final { return sentinel != nullptr; }
+
 	/**	\fn from(void *ptr) const noexcept override final
 	 *	\brief Checks if a pointer is from the pool.
 	 *	\param ptr The object to check.
