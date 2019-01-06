@@ -61,6 +61,11 @@ static_assert(bitmap_offset % alignof(gc::pool::bit_group) == 0,
  */
 inline constexpr auto const bit_group_unit = gc::idaccess::unit_size<gc::pool::bit_group>();
 
+/**	\var gray_unit
+ *	\brief The unit size of a pointer to a void pointer used for the gray stack.
+ */
+inline constexpr auto const gray_unit = gc::idaccess::unit_size<void **>();
+
 /**	\fn bitmap_length(std::size_t capacity) noexcept
  *	\brief The number of elements in the arrays for bitmap and colors.
  *	\param capacity The number of slots managed by the pool.
@@ -97,9 +102,11 @@ static_assert(gcd(180, 48) == 12 && gcd(48, 180) == 12,
 
 namespace gc {
 
-pool::pool(vmem &&mem, identity const &id, std::size_t cap, std::size_t u, void *start) noexcept :
-	isource(), region(std::forward<vmem>(mem)), type(id), capacity(cap), space(cap), unit(u),
-	free(nullptr), slots(start), end(add_offset(start, cap * u))
+pool::pool(vmem &&mem, identity const &id, std::size_t cap, std::size_t u, void **g,
+	void *start) noexcept :
+	isource(),
+	region(std::forward<vmem>(mem)), type(id), capacity(cap), space(cap), unit(u), free(nullptr),
+	sentinel(g), gray(g), slots(start), end(add_offset(start, cap * u))
 {
 	// The bitmap is always located bitmap_offset from the start of the virtual memory.
 	bitmap = reinterpret_cast<bit_group *>(
@@ -195,10 +202,20 @@ pool::handle::handle(identity const &id, std::size_t capacity, std::size_t unit)
 	//	Calculate size rounded up to the nearest multiple of vmem::page_size.
 	std::size_t size = capacity * unit;
 	size += vmem::page_size - (size % vmem::page_size);
-	// Calculate the offset to the beginning of the object slots.
-	std::size_t offset{bitmap_offset + ((bitmap_length(capacity) * bit_group_unit) + guard) * 2};
+	// Calculate the offset to the end of bit groups.
+	std::size_t offset{guard + bitmap_offset + (bitmap_length(capacity) * bit_group_unit * 2)};
+	// Calculate gray stack beginning and end if needed.
+	void **gray{nullptr};
+	if (idaccess::has_traverser(id)) {
+		// Calculate needed alignment adjustment if needed.
+		std::size_t const gray_rem{offset % alignof(void **)};
+		if (0 < gray_rem) { offset += alignof(void **) - gray_rem; }
+		gray = reinterpret_cast<void **>(offset);
+		// Calculate end of gray stack.
+		offset += gray_unit * capacity;
+	}
 	// Make offset be at the start of a page.
-	offset += vmem::page_size - (offset % vmem::page_size);
+	offset += guard + vmem::page_size - (offset % vmem::page_size);
 	vmem mem{offset + size + guard, !config::guard_pages};
 	if (mem) {
 		// Set up accessible areas if guard pages are used.
@@ -206,7 +223,7 @@ pool::handle::handle(identity const &id, std::size_t capacity, std::size_t unit)
 			mem.writable(vmem::page_size, offset - (vmem::page_size * 2));
 			mem.writable(offset, size);
 		}
-		ptr = new (mem[guard]) pool(std::move(mem), id, capacity, unit, mem[offset]);
+		ptr = new (mem[guard]) pool(std::move(mem), id, capacity, unit, gray, mem[offset]);
 	} else {
 		throw std::bad_alloc{};
 	}
@@ -259,7 +276,27 @@ void pool::mark(void *ptr) noexcept
 	std::size_t const group{offset / bit_group_size};
 	// Assert that the slot is allocated.
 	SYNAFIS_ASSERT(bitmap[group].test(bit));
-	colors[group].set(bit);
+	auto &ref = colors[group];
+	if (gray && !ref[bit]) {
+		SYNAFIS_ASSERT(sub_addr(gray, const_cast<void **>(sentinel)) < capacity);
+		*gray = ptr;
+		gray++;
+	}
+	ref.set(bit);
+}
+
+bool pool::traverse(void *data, enumerate_cb cb) noexcept
+{
+	if (has_pending()) {
+		do {
+			gray--;
+			void *obj{*gray};
+			idaccess::traverse(type, obj, data, cb);
+		} while (has_pending());
+		return true;
+	} else {
+		return false;
+	}
 }
 
 void pool::sweep() noexcept

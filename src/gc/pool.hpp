@@ -276,9 +276,18 @@ public:
 		 */
 		std::size_t available() const noexcept { return ptr->available(); }
 
+		/**	\fn pending() const noexcept
+		 *	\brief Gets the number of objects pending traversal.
+		 *	\returns ptr->pending()
+		 *	\pre ptr != nullptr
+		 *	\see pool::pending
+		 */
+		std::size_t pending() const noexcept { return ptr->pending(); }
+
 		/**	\fn empty() const noexcept
 		 *	\brief Checks if the pool is empty.
 		 *	\returns ptr->empty()
+		 *	\pre ptr != nullptr
 		 *	\see pool::empty
 		 */
 		bool empty() const noexcept { return ptr->empty(); }
@@ -286,9 +295,18 @@ public:
 		/**	\fn full() const noexcept
 		 *	\brief Checks if the pool is full.
 		 *	\returns ptr->full()
+		 *	\pre ptr != nullptr
 		 *	\see pool::full
 		 */
 		bool full() const noexcept { return ptr->full(); }
+
+		/**	\fn has_pending() const noexcept
+		 *	\brief Checks if the pool has objects pending traversal.
+		 *	\returns ptr->has_pending()
+		 *	\pre ptr != nullptr
+		 *	\see pool::has_pending
+		 */
+		bool has_pending() const noexcept { return ptr->has_pending(); }
 	};
 
 	//!	\cond friends
@@ -370,6 +388,16 @@ private:
 	 */
 	bit_group *colors;
 
+	/**	\var sentinel
+	 *	\brief Points to the bottom of the gray stack.
+	 */
+	void **const sentinel;
+
+	/**	\var gray
+	 *	\brief Points to the position beyond the top of the gray stack.
+	 */
+	void **gray;
+
 	/**	\var slots
 	 *	\brief The start of the address range to allocate objects from.
 	 */
@@ -398,17 +426,21 @@ private:
 	 */
 	void deallocate(void *ptr) noexcept;
 
-	/**	\fn pool(vmem &&mem, identity const &id, std::size_t cap, std::size_t u, void *start) noexcept
+	/**	\fn pool(vmem &&mem, identity const &id, std::size_t cap, std::size_t u, void **g, void *start) noexcept
 	 *	\brief Called by create to initialize a new pool.
 	 *	\param mem The virtual memory the pool is allocated on is to be owned by the pool.
 	 *	\param id The type of object placed in the pool.
 	 *	\param cap The maximum capacity of the pool.
 	 *	\param u The unit size of slots in the pool.
+	 *	\param g The start of the gray stack and the value of sentinel.
 	 *	\param start The starting address for the memory to allocate objects from.
 	 *	\details Sets the bits in bitmap and colors to false.
 	 *	\details Places all slots in the free stack.
+	 *	\pre The value of 'g' must be nullptr if the type is not traversable.
+	 *	\pre The value of 'g' must be a valid pointer if the type is traversable.
 	 */
-	pool(vmem &&mem, identity const &id, std::size_t cap, std::size_t u, void *start) noexcept;
+	pool(vmem &&mem, identity const &id, std::size_t cap, std::size_t u, void **g,
+		void *start) noexcept;
 
 public:
 	/**	\var min_unit
@@ -484,6 +516,14 @@ public:
 	 */
 	virtual void mark(void *ptr) noexcept override final;
 
+	/**	\fn traverse(void *data, enumerate_cb cb) noexcept override final
+	 *	\brief Traverses all pending objects from the pool.
+	 *	\param data The argument for cb.
+	 *	\param cb The callback for enumerating the pointers in traversed objects.
+	 *	\returns Returns true if any objects were traversed, otherwise false.
+	 */
+	virtual bool traverse(void *data, enumerate_cb cb) noexcept override final;
+
 	/**	\fn sweep() noexcept override final
 	 *	\brief Deallocates all unmarked objects.
 	 *	\details Sets the appropriate bit in the colors array.
@@ -502,6 +542,12 @@ public:
 	 */
 	std::size_t available() const noexcept { return space; }
 
+	/**	\fn pending() const noexcept
+	 *	\brief Gets the number of objects pending traversal.
+	 *	\returns gray - sentinel
+	 */
+	std::size_t pending() const noexcept { return static_cast<std::size_t>(gray - sentinel); }
+
 	/**	\fn empty() const noexcept
 	 *	\brief Checks if the pool is empty.
 	 *	\returns capacity == space
@@ -513,6 +559,12 @@ public:
 	 *	\returns space == 0
 	 */
 	bool full() const noexcept { return space == 0; }
+
+	/**	\fn has_pending() const noexcept
+	 *	\brief Checks if the pool has objects pending traversal.
+	 *	\returns sentinel < gray
+	 */
+	bool has_pending() const noexcept { return sentinel < gray; }
 };
 
 }
