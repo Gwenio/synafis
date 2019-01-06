@@ -72,6 +72,13 @@ public:
 		id.traverse(ptr, data, cb);
 	}
 
+	/**	\fn has_traverser(identity const &id) noexcept
+	 *	\brief Checks if id has a traversal callback.
+	 *	\param id The identity of the object type.
+	 *	\returns Returns true if id has a traversal callback.
+	 */
+	static bool has_traverser(identity const &id) noexcept { return id.tcb != nullptr; }
+
 	/**	\fn relocate(identity const &id, void *orig, void *dest, void *data, remap_cb cb)
 	 *	\brief Wrapper for identity::relocate() that provides access to it.
 	 *	\param id The identity of the object.
