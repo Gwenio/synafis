@@ -76,6 +76,14 @@ public:
 	 */
 	virtual void mark(void *ptr) noexcept = 0;
 
+	/**	\fn traverse(void *data, traverse_cb cb) noexcept override final
+	 *	\brief Traverses all pending objects from the source.
+	 *	\param data The argument for cb.
+	 *	\param cb The callback for enumerating the pointers in traversed objects.
+	 *	\returns Returns true if any objects were traversed, otherwise false.
+	 */
+	virtual bool traverse(void *data, enumerate_cb cb) noexcept = 0;
+
 	/**	\fn sweep() noexcept
 	 *	\brief Deallocates all unmarked objects.
 	 */
