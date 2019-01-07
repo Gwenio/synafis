@@ -150,6 +150,11 @@ private:
 	 */
 	mutable std::mutex mtx;
 
+	/**	\var alive
+	 *	\brief Used to signal the worker to shutdown.
+	 */
+	std::atomic<bool> alive;
+
 	/**	\var readers
 	 *	\brief The condition variable for lock() requests to wait with.
 	 *	\details When flag is false lock() will wait with readers until flag is true.
@@ -178,11 +183,6 @@ private:
 	 *	\brief The worker thread of the collector.
 	 */
 	std::thread worker;
-
-	/**	\var alive
-	 *	\brief Used to signal the worker to shutdown.
-	 */
-	std::atomic_flag alive;
 
 	/**	\var requests
 	 *	\brief The number of failures to allocate memory since a collection cycle.
@@ -395,9 +395,17 @@ private:
 	 */
 	void shrink() noexcept;
 
+	/**	\fn wait_read() const
+	 *	\brief Checks if a thread other than worker should continue to wait.
+	 *	\returns Returns true if the thread may stop waiting.
+	 *	\throws Throws std::runtime_error if the collector's destructor has been called.
+	 */
+	bool wait_read() const;
+
 public:
 	/**	\fn ~collector() noexcept
 	 *	\brief Destructor.
+	 *	\pre managed.empty() && unmanaged.empty()
 	 */
 	~collector() noexcept;
 

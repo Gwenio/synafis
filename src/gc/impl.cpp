@@ -24,16 +24,27 @@ PERFORMANCE OF THIS SOFTWARE.
 namespace gc {
 
 collector::collector() noexcept :
-	mtx(), readers(), writer(), flag(false), count(0), worker(), alive(), requests(0),
+	mtx(), alive(true), readers(), writer(), flag(false), count(0), worker(), requests(0),
 	period(std::chrono::milliseconds{config::gc_period}), sources(), traversable()
-{
-	alive.test_and_set();
-}
+{}
 
 collector::~collector() noexcept
 {
-	alive.clear();
+	SYNAFIS_ASSERT(managed.empty());
+	SYNAFIS_ASSERT(unmanaged.empty());
+	alive = false;
+	{
+		std::lock_guard<std::mutex> l{mtx};
+		flag = false;
+		SYNAFIS_ASSERT(count == 0);
+	}
+	writer.notify_one();
 	worker.join();
+	{
+		std::lock_guard<std::mutex> l{mtx};
+		flag = true;
+	}
+	readers.notify_all();
 }
 
 void collector::init_impl()
@@ -46,7 +57,7 @@ void collector::init_impl()
 void collector::lock_impl()
 {
 	std::unique_lock<std::mutex> l{mtx};
-	readers.wait(l, [this]() -> bool { return this->flag; });
+	readers.wait(l, [this]() -> bool { return this->wait_read(); });
 	count++;
 }
 
@@ -68,7 +79,7 @@ void collector::wait_impl(std::unique_lock<std::mutex> &l)
 	l.unlock();
 	writer.notify_one();
 	l.lock();
-	readers.wait(l, [this]() -> bool { return this->flag; });
+	readers.wait(l, [this]() -> bool { return this->wait_read(); });
 	count++;
 }
 
@@ -192,14 +203,12 @@ void collector::insert_alloc_impl(iallocator &alloc) noexcept
 
 void collector::erase_alloc_impl(iallocator const &alloc) noexcept
 {
-	if (alive.test_and_set()) {
+	if (alive.load()) {
 		std::lock_guard<std::mutex> l{mtx};
 		auto const it =
 			std::lower_bound(allocators.cbegin(), allocators.cend(), std::addressof(alloc),
 				[](iallocator *cur, iallocator const *addr) -> bool { return addr <= cur; });
 		if (it != allocators.cend()) { allocators.erase(it); }
-	} else {
-		alive.clear();
 	}
 }
 
@@ -209,14 +218,14 @@ void collector::work() noexcept
 	do {
 		l.lock();
 		if (!writer.wait_for(l, period, [this]() -> bool { return !flag; })) { flag = false; }
-		writer.wait(l, [this]() -> bool { return 0 < count; });
+		writer.wait(l, [this]() -> bool { return count < 1; });
 		mark();
 		sweep();
 		shrink();
 		flag = true;
 		l.unlock();
 		readers.notify_all();
-	} while (alive.test_and_set());
+	} while (alive.load());
 }
 
 void collector::mark() noexcept {}
@@ -248,6 +257,16 @@ void collector::shrink() noexcept
 		for (iallocator *cur : allocators) {
 			cur->shrink(0);
 		}
+	}
+}
+
+bool collector::wait_read() const
+{
+	if (alive.load()) {
+		return flag;
+	} else {
+		throw std::runtime_error{
+			"A thread was waiting after the collector's destructor was called."};
 	}
 }
 
