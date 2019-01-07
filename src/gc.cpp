@@ -119,13 +119,13 @@ void root::register_impl(void *obj, traverse_cb tcb, root_cb rcb)
 	SYNAFIS_ASSERT(obj != nullptr);
 	SYNAFIS_ASSERT(tcb != nullptr);
 	SYNAFIS_ASSERT(rcb != nullptr);
-	;
+	collector::register_root(obj, tcb, rcb);
 }
 
 void root::unregister_impl(void *obj) noexcept
 {
 	SYNAFIS_ASSERT(obj != nullptr);
-	;
+	collector::unregister_root(obj);
 }
 
 void initialize() { collector::init(); }
