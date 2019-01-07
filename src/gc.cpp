@@ -29,12 +29,17 @@ PERFORMANCE OF THIS SOFTWARE.
 
 namespace gc {
 
-identity::~identity() {}
+identity::~identity()
+{
+	if (alloc) { collector::erase_alloc(*dynamic_cast<collector::iallocator *>(alloc)); }
+}
 
-std::unique_ptr<identity::iallocator> identity::select_alloc(
+identity::iallocator *identity::select_alloc(
 	identity const &id, std::size_t unit, traits::flag_type flags)
 {
-	return std::unique_ptr<iallocator>(dynamic_cast<iallocator *>(new allocator(id, unit, flags)));
+	auto *ptr = collector::insert_alloc(collector::alloc_ptr{
+		dynamic_cast<collector::iallocator *>(new allocator(id, unit, flags))});
+	return dynamic_cast<iallocator *>(ptr);
 }
 
 identity const *identity::fetch_impl(void *obj) noexcept { return collector::get_type(obj); }

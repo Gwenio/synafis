@@ -102,6 +102,11 @@ public:
 	 */
 	using source = isource *;
 
+	/**	\typedef alloc_ptr
+	 *	\brief The type for stored allocators.
+	 */
+	using alloc_ptr = std::unique_ptr<iallocator>;
+
 	/**	\struct mroot
 	 *	\brief The type to store roots to managed objects.
 	 *	\see managed
@@ -211,7 +216,7 @@ private:
 	 *	\brief Tracks allocators for shrink request.
 	 *	\invariant Should be kept sorted by location in memory.
 	 */
-	std::vector<iallocator *> allocators;
+	std::vector<alloc_ptr> allocators;
 
 	/**	\var managed
 	 *	\brief Tracks root objects with lifetimes managed by the collector.
@@ -292,7 +297,7 @@ private:
 	 */
 	void free_soft_ptr_impl(soft_ptr::data *ptr);
 
-	/**	\fn insert_helper(std::vector<T1> &vec, T2 const &find, T1 const add, F &func, std::unique_lock<std::mutex> &l)
+	/**	\fn insert_helper(std::vector<T1> &vec, T2 const &find, T1 &&add, F &func, std::unique_lock<std::mutex> &l)
 	 *	\param vec The vector to insert the root into.
 	 *	\param find The object to search for the insert location.
 	 *	\param add The object record to insert.
@@ -302,8 +307,8 @@ private:
 	 *	\post The lock l will own the lock on mtx.
 	 */
 	template<typename T1, typename T2, typename F>
-	void insert_helper(std::vector<T1> &vec, T2 const &find, T1 const add, F &func,
-		std::unique_lock<std::mutex> &l);
+	void insert_helper(
+		std::vector<T1> &vec, T2 const &find, T1 &&add, F &func, std::unique_lock<std::mutex> &l);
 
 	/**	\fn register_root_impl(void *obj, traverse_cb tcb, root_cb rcb)
 	 *	\param obj A pointer to the root object being registered.
@@ -363,15 +368,16 @@ private:
 	 */
 	void erase_source_impl(isource const &src) noexcept;
 
-	/**	\fn insert_alloc_impl(iallocator &alloc) noexcept
-	 *	\brief Tracks an allocator.
-	 *	\param alloc The source to track.
+	/**	\fn insert_alloc_impl(alloc_ptr &&alloc) noexcept
+	 *	\brief Takes ownership of an allocator.
+	 *	\param alloc The source to take ownership of.
+	 *	\returns Returns a pointer to the inserted allocator.
 	 */
-	void insert_alloc_impl(iallocator &alloc) noexcept;
+	iallocator *insert_alloc_impl(alloc_ptr &&alloc) noexcept;
 
 	/**	\fn erase_alloc_impl(iallocator const &alloc) noexcept
-	 *	\brief Stops tracking an allocator.
-	 *	\param alloc The allocator to stop tracking.
+	 *	\brief Removes an allocator.
+	 *	\param alloc The allocator to remove.
 	 */
 	void erase_alloc_impl(iallocator const &alloc) noexcept;
 
@@ -511,15 +517,19 @@ public:
 	 */
 	static void erase_source(isource const &src) noexcept { singleton.erase_source_impl(src); }
 
-	/**	\fn insert_alloc(iallocator &alloc) noexcept
-	 *	\brief Tracks an allocator.
-	 *	\param alloc The source to track.
+	/**	\fn insert_alloc(alloc_ptr &&alloc) noexcept
+	 *	\brief Takes ownership of an allocator.
+	 *	\param alloc The source to take ownership of.
+	 *	\returns Returns a pointer to the inserted allocator.
 	 */
-	static void insert_alloc(iallocator &alloc) noexcept { singleton.insert_alloc_impl(alloc); }
+	static iallocator *insert_alloc(alloc_ptr &&alloc) noexcept
+	{
+		return singleton.insert_alloc_impl(std::forward<alloc_ptr>(alloc));
+	}
 
 	/**	\fn erase_alloc(iallocator const &alloc) noexcept
-	 *	\brief Stops tracking an allocator.
-	 *	\param alloc The allocator to stop tracking.
+	 *	\brief Removes an allocator.
+	 *	\param alloc The allocator to remove.
 	 */
 	static void erase_alloc(iallocator const &alloc) noexcept { singleton.erase_alloc_impl(alloc); }
 };

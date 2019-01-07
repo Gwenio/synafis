@@ -108,10 +108,11 @@ public:
 
 private:
 	/**	\var alloc
-	 *	\brief Data provided for passing to the allocate callback (acb).
+	 *	\brief The allocator for the identified type.
+	 *	\invariant alloc != nullptr after the constructor successfully completes.
 	 *	\see select_alloc
 	 */
-	std::unique_ptr<iallocator> alloc;
+	iallocator *alloc;
 
 	/**	\var fcb
 	 *	\brief The callback used to clean up an object.
@@ -147,17 +148,15 @@ private:
 	}
 
 	/**	\fn select_alloc(identity const &id, std::size_t unit, traits::flag_type flags)
-	 *	\brief Gets the allocation callback and the allocator data.
+	 *	\brief Gets the allocator for the identified type.
 	 *	\param id The identity of the type to get an allocator for.
 	 *	\param unit The return value of unit_size for the type to select an allocator for.
 	 *	\param flags The flags from traits::get_flags().
-	 *	\returns Returns a tuple with the allocator data and callback.
-	 *	\returns The data maybe nullptr, but the callback must be valid.
+	 *	\returns Returns non-null pointer to the allocator.
 	 *	\pre Is to only be called once per identity object.
 	 *	\see traits::get_flags()
 	 */
-	std::unique_ptr<iallocator> select_alloc(
-		identity const &id, std::size_t unit, traits::flag_type flags);
+	iallocator *select_alloc(identity const &id, std::size_t unit, traits::flag_type flags);
 
 	/**	\fn fetch_impl(void *obj) noexcept
 	 *	\brief Gets the identity of an object.

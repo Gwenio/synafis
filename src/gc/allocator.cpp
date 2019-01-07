@@ -32,11 +32,10 @@ namespace gc {
 allocator::allocator(identity const &id, std::size_t u, traits::flag_type f) :
 	iallocator(), mtx(), pools(), type(id), unit(u), capacity(pool::select_capacity(u)), flags(f)
 {
-	collector::insert_alloc(*this);
 	grow();
 }
 
-allocator::~allocator() noexcept { collector::erase_alloc(*this); }
+allocator::~allocator() noexcept {}
 
 allocator::handle &allocator::grow()
 {

@@ -131,10 +131,10 @@ public:
 	 */
 	allocator(identity const &id, std::size_t u, traits::flag_type f);
 
-	/**	\fn ~allocator() noexcept
+	/**	\fn ~allocator() noexcept final
 	 *	\brief Destructor.
 	 */
-	virtual ~allocator() noexcept;
+	virtual ~allocator() noexcept final;
 
 	/**	\fn allocate() override final
 	 *	\brief Allocates memory for an object.

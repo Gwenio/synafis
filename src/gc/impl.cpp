@@ -89,15 +89,15 @@ void collector::free_soft_ptr_impl(soft_ptr::data *ptr) {}
 
 template<typename T1, typename T2, typename F>
 void collector::insert_helper(
-	std::vector<T1> &vec, T2 const &find, T1 const add, F &func, std::unique_lock<std::mutex> &l)
+	std::vector<T1> &vec, T2 const &find, T1 &&add, F &func, std::unique_lock<std::mutex> &l)
 {
 	auto const it = std::upper_bound(vec.cbegin(), vec.cend(), find, func);
 	try {
-		vec.insert(it, add);
+		vec.insert(it, std::forward<T1>(add));
 		return;
 	} catch (std::bad_alloc const &) {}
 	wait_impl(l);
-	vec.insert(it, add);
+	vec.insert(it, std::forward<T1>(add));
 }
 
 void collector::register_root_impl(void *obj, traverse_cb tcb, root_cb rcb)
@@ -191,23 +191,24 @@ void collector::erase_source_impl(isource const &src) noexcept
 	}
 }
 
-void collector::insert_alloc_impl(iallocator &alloc) noexcept
+collector::iallocator *collector::insert_alloc_impl(alloc_ptr &&alloc) noexcept
 {
+	iallocator *ptr{alloc.get()};
 	std::unique_lock<std::mutex> l{mtx};
-	iallocator *addr{std::addressof(alloc)};
-	insert_helper(allocators, addr, addr,
-		[](iallocator *find, iallocator *cur) -> bool { return find < cur; }, l);
+	insert_helper(allocators, ptr, std::forward<alloc_ptr>(alloc),
+		[](iallocator *find, alloc_ptr const &cur) -> bool { return find < cur.get(); }, l);
 	SYNAFIS_ASSERT(std::is_sorted(allocators.cbegin(), allocators.cend(),
 		[](auto const &x, auto const &y) -> bool { return x < y; }));
+	return ptr;
 }
 
 void collector::erase_alloc_impl(iallocator const &alloc) noexcept
 {
 	if (alive.load()) {
 		std::lock_guard<std::mutex> l{mtx};
-		auto const it =
-			std::lower_bound(allocators.cbegin(), allocators.cend(), std::addressof(alloc),
-				[](iallocator *cur, iallocator const *addr) -> bool { return addr <= cur; });
+		auto const it = std::lower_bound(allocators.cbegin(), allocators.cend(),
+			std::addressof(alloc),
+			[](alloc_ptr const &cur, iallocator const *addr) -> bool { return addr <= cur.get(); });
 		if (it != allocators.cend()) { allocators.erase(it); }
 	}
 }
@@ -232,7 +233,7 @@ void collector::mark() noexcept {}
 
 void collector::sweep() noexcept
 {
-	for (auto cur : sources) {
+	for (source cur : sources) {
 		cur->sweep();
 	}
 }
@@ -241,7 +242,7 @@ void collector::shrink() noexcept
 {
 	if (0 < requests) {
 		std::size_t remaining{allocators.size()};
-		for (iallocator *cur : allocators) {
+		for (alloc_ptr &cur : allocators) {
 			std::size_t const freed{cur->shrink((requests / remaining) + 1)};
 			requests = requests <= freed ? 0 : requests - freed;
 		}
@@ -254,7 +255,7 @@ void collector::shrink() noexcept
 			requests = 0;
 		}
 	} else {
-		for (iallocator *cur : allocators) {
+		for (alloc_ptr &cur : allocators) {
 			cur->shrink(0);
 		}
 	}
