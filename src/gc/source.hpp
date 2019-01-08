@@ -47,12 +47,6 @@ public:
 	 */
 	virtual void *location() const noexcept = 0;
 
-	/**	\fn traversable() const noexcept
-	 *	\brief Checks if the source may contain traversable objects.
-	 *	\returns Returns true if the source may contain traversable objects.
-	 */
-	virtual bool traversable() const noexcept = 0;
-
 	/**	\fn from(void *ptr) const noexcept
 	 *	\brief Checks if a pointer is from the pool.
 	 *	\param ptr The object to check.

@@ -79,8 +79,21 @@ private:
 
 	/**	\var pools
 	 *	\brief A list of pools managed by the allocator.
+	 *	\details The pools are partitioned as follows:
+	 *	\details - The pool we are currently allocating from.
+	 *	\details - The empty pools ordered by address.
+	 *	\details - The partially used pools ordered by address.
+	 *	\details - The full pools ordered by address.
+	 *	\note The first pool is moved to the full partition when it becomes full.
+	 *	\todo Investigate if there are move ways to exploit the layout to optimize the allocators.
+	 *	\todo Inparticular, if sorting can be done more efficiently that std::list::sort().
 	 */
 	std::list<handle> pools;
+
+	/**	\var full_begin
+	 *	\brief The iterator position to the first full pool is pools.
+	 */
+	std::list<handle>::const_iterator full_begin;
 
 	/**	\var type
 	 *	\brief The identity of the type the allocator allocates.
@@ -116,9 +129,13 @@ private:
 	 *	\returns Returns a reference to the new pool's handle.
 	 *	\throws std::bad_alloc if another pool could not be added.
 	 *	\pre The mutex mtx must be held by the calling thread.
-	 *	\todo There should be an method for shrinking the number of pools.
 	 */
 	handle &grow();
+
+	/**	\fn move_back() noexcept
+	 *	\brief Moves the full pool at the front of pools back.
+	 */
+	void move_back() noexcept;
 
 public:
 	/**	\fn allocator(identity const &id, std::size_t u, traits::flag_type f)

@@ -73,6 +73,58 @@ public:
 		 */
 		constexpr iallocator() noexcept = default;
 
+		/**	\fn insert_source(isource &src, bool trav) noexcept
+		 *	\brief Adds a source to the collector to track.
+		 *	\param src The source to track.
+		 *	\param trav Indicates if the source is traversable.
+		 */
+		static void insert_source(isource &src, bool trav) noexcept
+		{
+			collector::singleton.insert_source(src, trav);
+		}
+
+		/**	\fn erase_sources(Iter const begin, Iter const end, bool trav) noexcept
+		 *	\brief Stops tracking as set of sources.
+		 *	\tparam Iter The type of iterator. Must be a forward iterator.
+		 *	\param begin The iterator of the first source to stop tracking.
+		 *	\param end The iterator past the last source to stop tracking.
+		 *	\param trav Indicates if the sources are traversable.
+		 */
+		template<typename Iter>
+		static void erase_sources(Iter const begin, Iter const end, bool trav) noexcept
+		{
+			std::lock_guard<std::mutex> l{collector::singleton.mtx};
+			erase_sources(begin, end, trav, std::defer_lock);
+		}
+
+		/**	\fn erase_sources(Iter const begin, Iter const end, bool trav, std::defer_lock_t) noexcept
+		 *	\brief Stops tracking as set of sources.
+		 *	\tparam Iter The type of iterator. Must be a forward iterator.
+		 *	\param begin The iterator of the first source to stop tracking.
+		 *	\param end The iterator past the last source to stop tracking.
+		 *	\param trav Indicates if the sources are traversable.
+		 *	\pre Only call in response to a shrink request.
+		 */
+		template<typename Iter>
+		static void erase_sources(
+			Iter const begin, Iter const end, bool trav, std::defer_lock_t) noexcept
+		{
+			{
+				auto &vec = collector::singleton.sources;
+				auto tag = vec.cbegin();
+				for (auto cur = begin; cur != end; cur++) {
+					collector::singleton.erase_source(vec, tag, static_cast<isource const &>(*cur));
+				}
+			}
+			if (trav) {
+				auto &vec = collector::singleton.traversable;
+				auto tag = vec.cbegin();
+				for (auto cur = begin; cur != end; cur++) {
+					collector::singleton.erase_source(vec, tag, static_cast<isource const &>(*cur));
+				}
+			}
+		}
+
 	public:
 		/**	\fn ~iallocator()
 		 *	\brief Default.
@@ -91,6 +143,9 @@ public:
 		 */
 		virtual std::size_t shrink(std::size_t goal) noexcept = 0;
 	};
+	//!	\cond friends
+	friend iallocator;
+	//!	\endcond
 
 	/**	\typedef duration
 	 *	\brief The type used to describe the length of a time period.
@@ -356,17 +411,21 @@ private:
 		period = value;
 	}
 
-	/**	\fn insert_source_impl(isource &src) noexcept
+	/**	\fn insert_source(isource &src, bool trav) noexcept
 	 *	\brief Adds a source to the collector to track.
 	 *	\param src The source to track.
+	 *	\param trav Indicates if the source is traversable.
 	 */
-	void insert_source_impl(isource &src) noexcept;
+	void insert_source(isource &src, bool trav) noexcept;
 
-	/**	\fn erase_source_impl(isource const &src) noexcept
+	/**	\fn erase_source(std::vector<source> &vec, decltype(vec.cbegin()) &start, isource const &src) noexcept
 	 *	\brief Stops tracking a source.
-	 *	\param src The source to stop tracking.
+	 *	\param vec Either sources or traversable to remove the source from.
+	 *	\param start The start of the search range. Updated to the location of the removed source.
+	 *	\param src The source to remove.
 	 */
-	void erase_source_impl(isource const &src) noexcept;
+	void erase_source(
+		std::vector<source> &vec, decltype(vec.cbegin()) &start, isource const &src) noexcept;
 
 	/**	\fn insert_alloc_impl(alloc_ptr &&alloc) noexcept
 	 *	\brief Takes ownership of an allocator.
@@ -503,19 +562,6 @@ public:
 	 *	\param value The new value for period.
 	 */
 	static void set_period(duration value) noexcept { singleton.set_period_impl(value); }
-
-	/**	\fn insert_source(isource &src) noexcept
-	 *	\brief Adds a source to the collector to track.
-	 *	\param src The source to track.
-	 */
-	static void insert_source(isource &src) noexcept { singleton.insert_source_impl(src); }
-
-	/**	\fn erase_source(isource const &src) noexcept
-	 *	\brief Stops tracking a source.
-	 *	\param src The source to stop tracking.
-	 *	\pre Only call in response to a shrink request.
-	 */
-	static void erase_source(isource const &src) noexcept { singleton.erase_source_impl(src); }
 
 	/**	\fn insert_alloc(alloc_ptr &&alloc) noexcept
 	 *	\brief Takes ownership of an allocator.

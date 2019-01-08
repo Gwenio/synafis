@@ -184,6 +184,20 @@ public:
 		 */
 		constexpr operator bool() const noexcept { return ptr != nullptr; }
 
+		/**	\fn operator isource &() noexcept
+		 *	\brief Gets a reference to the owned pool.
+		 *	\returns *ptr
+		 *	\pre ptr != nullptr
+		 */
+		constexpr operator isource &() noexcept { return *ptr; }
+
+		/**	\fn operator isource const &() const noexcept
+		 *	\brief Gets a reference to the owned pool.
+		 *	\returns *ptr
+		 *	\pre ptr != nullptr
+		 */
+		constexpr operator isource const &() const noexcept { return *ptr; }
+
 		/**	\fn operator*() noexcept
 		 *	\brief Gets a reference to the owned pool.
 		 *	\returns *ptr
@@ -483,12 +497,6 @@ public:
 	 *	\returns An address used to compare sources for sorting.
 	 */
 	virtual void *location() const noexcept override final { return slots; }
-
-	/**	\fn traversable() const noexcept override final
-	 *	\brief Checks if the pool may contain traversable objects.
-	 *	\returns sentinel != nullptr
-	 */
-	virtual bool traversable() const noexcept override final { return sentinel != nullptr; }
 
 	/**	\fn from(void *ptr) const noexcept override final
 	 *	\brief Checks if a pointer is from the pool.

@@ -161,14 +161,14 @@ identity const *collector::get_type_impl(void *ptr) const noexcept
 	return from ? from->type_of(ptr) : nullptr;
 }
 
-void collector::insert_source_impl(isource &src) noexcept
+void collector::insert_source(isource &src, bool trav) noexcept
 {
 	std::unique_lock<std::mutex> l{mtx};
 	insert_helper(sources, src.location(), std::addressof(src),
 		[](void *addr, auto const &cur) -> bool { return addr < cur->location(); }, l);
 	SYNAFIS_ASSERT(std::is_sorted(sources.cbegin(), sources.cend(),
 		[](auto const &x, auto const &y) -> bool { return x->location() < y->location(); }));
-	if (src.traversable()) {
+	if (trav) {
 		insert_helper(traversable, src.location(), std::addressof(src),
 			[](void *addr, auto const &cur) -> bool { return addr < cur->location(); }, l);
 		SYNAFIS_ASSERT(std::is_sorted(traversable.cbegin(), traversable.cend(),
@@ -176,18 +176,15 @@ void collector::insert_source_impl(isource &src) noexcept
 	}
 }
 
-void collector::erase_source_impl(isource const &src) noexcept
+void collector::erase_source(
+	std::vector<source> &vec, decltype(vec.cbegin()) &start, isource const &src) noexcept
 {
-	auto it = std::lower_bound(sources.cbegin(), sources.cend(), std::addressof(src),
+	auto it = std::lower_bound(start, vec.cend(), std::addressof(src),
 		[](source cur, isource const *addr) -> bool { return addr <= cur; });
-	if (it != sources.cend()) {
-		sources.erase(it);
-		if (src.traversable()) {
-			it = std::lower_bound(traversable.cbegin(), traversable.cend(), std::addressof(src),
-				[](source cur, isource const *addr) -> bool { return addr <= cur; });
-			SYNAFIS_ASSERT(it != traversable.cend());
-			traversable.erase(it);
-		}
+	start = it;
+	if (it != vec.cend()) {
+		start++;
+		vec.erase(it);
 	}
 }
 
@@ -205,11 +202,19 @@ collector::iallocator *collector::insert_alloc_impl(alloc_ptr &&alloc) noexcept
 void collector::erase_alloc_impl(iallocator const &alloc) noexcept
 {
 	if (alive.load()) {
-		std::lock_guard<std::mutex> l{mtx};
-		auto const it = std::lower_bound(allocators.cbegin(), allocators.cend(),
-			std::addressof(alloc),
-			[](alloc_ptr const &cur, iallocator const *addr) -> bool { return addr <= cur.get(); });
-		if (it != allocators.cend()) { allocators.erase(it); }
+		// The allocator's destructor needs to wait on running until mtx is not held.
+		alloc_ptr ptr{nullptr};
+		{
+			std::lock_guard<std::mutex> l{mtx};
+			auto it = std::lower_bound(allocators.begin(), allocators.end(), std::addressof(alloc),
+				[](alloc_ptr const &cur, iallocator const *addr) -> bool {
+					return addr <= cur.get();
+				});
+			if (it != allocators.end()) {
+				ptr = std::move(*it);
+				allocators.erase(it);
+			}
+		}
 	}
 }
 
