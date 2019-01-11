@@ -25,7 +25,9 @@ namespace gc {
 
 collector::collector() noexcept :
 	mtx(), alive(true), readers(), writer(), flag(false), count(0), worker(), requests(0),
-	period(std::chrono::milliseconds{config::gc_period}), sources(), traversable()
+	sources(), traversable(),
+	period(0 < config::gc_period ? std::chrono::milliseconds{config::gc_period} :
+								   std::chrono::milliseconds::zero())
 {}
 
 collector::~collector() noexcept
@@ -224,7 +226,11 @@ void collector::work() noexcept
 	std::unique_lock<std::mutex> l{mtx, std::defer_lock};
 	do {
 		l.lock();
-		if (!writer.wait_for(l, period, [this]() -> bool { return !flag; })) { flag = false; }
+		if (period == duration::zero()) {
+			writer.wait(l, [this]() -> bool { return !flag; });
+		} else {
+			if (!writer.wait_for(l, period, [this]() -> bool { return !flag; })) { flag = false; }
+		}
 		writer.wait(l, [this]() -> bool { return count < 1; });
 		mark();
 		sweep();
@@ -247,15 +253,23 @@ void collector::sweep() noexcept
 void collector::shrink() noexcept
 {
 	if (0 < requests) {
-		std::size_t freed;
 		do {
+			std::size_t freed{0};
 			std::size_t average{(requests / allocators.size()) + 1};
-			freed = 0;
 			for (alloc_ptr &cur : allocators) {
 				freed += cur->shrink(average);
 			}
-			requests = (requests <= freed ? 0 : requests - freed);
-		} while (0 < requests && 0 < freed);
+			if (0 < freed) {
+				requests = (requests <= freed ? 0 : requests - freed);
+			} else {
+				allocators.shrink_to_fit();
+				sources.shrink_to_fit();
+				managed.shrink_to_fit();
+				unmanaged.shrink_to_fit();
+				requests = 0;
+				return;
+			}
+		} while (0 < requests);
 	} else {
 		for (alloc_ptr &cur : allocators) {
 			cur->shrink(0);

@@ -44,15 +44,18 @@ void initialize();
 /**	\fn set_period(std::chrono::steady_clock::duration value) noexcept
  *	\brief Sets the time period between unforced GC cycles.
  *	\param value The new period.
+ *	\details If the period is set to the special value zero, then collection cycles will only
+ *	\details occur when forced with collect() or by running out of memory.
  *	\note The default value for the period is set by config::gc_period.
  */
 void set_period(std::chrono::steady_clock::duration value) noexcept;
 
-/**	\fn collect() noexcept
+/**	\fn collect(bool wait) noexcept
  *	\brief Causes the collector to run a collection cycle as soon as possible.
+ *	\param wait If true will cause the call to block until a collection cycle has run.
  *	\pre initialize() has been called.
  */
-void collect() noexcept;
+void collect(bool wait) noexcept;
 
 }
 

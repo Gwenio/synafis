@@ -130,7 +130,14 @@ void root::unregister_impl(void *obj) noexcept
 
 void initialize() { collector::init(); }
 
-void collect() noexcept { collector::collect(); }
+void collect(bool wait) noexcept
+{
+	if (wait) {
+		collector::wait();
+	} else {
+		collector::collect();
+	}
+}
 
 void set_period(std::chrono::steady_clock::duration value) noexcept
 {

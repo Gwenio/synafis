@@ -101,6 +101,8 @@ inline constexpr std::size_t const max_pool = SYNAFIS_CONFIG_MAX_POOL;
 /**	\var gc_period
  *	\brief The default time to wait between unforced GC cycles.
  *	\details The value is the number of miliseconds between cycles.
+ *	\details If zero, then collection cycles will only run when forced.
+ *	\see gc::set_period()
  */
 inline constexpr std::size_t const gc_period = SYNAFIS_CONFIG_GC_PERIOD;
 
