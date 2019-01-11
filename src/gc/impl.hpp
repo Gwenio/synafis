@@ -445,6 +445,13 @@ private:
 	 */
 	void work() noexcept;
 
+	/**	\fn enumerate(void *data, void *ptr) noexcept
+	 *	\brief Marks the objects indicated by ptr.
+	 *	\param data A pointer to a collector.
+	 *	\param ptr A pointer to the object to mark.
+	 */
+	static void enumerate(void *data, void *ptr) noexcept;
+
 	/**	\fn mark() noexcept
 	 *	\brief Preforms the marking phase of a collection cycle.
 	 */

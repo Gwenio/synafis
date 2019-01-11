@@ -52,6 +52,7 @@ collector::~collector() noexcept
 void collector::init_impl()
 {
 	std::lock_guard<std::mutex> l{mtx};
+	allocators.shrink_to_fit(); // Ideally all allocators are setup at this point.
 	worker = std::thread{[this]() -> void { this->work(); }};
 	flag = true;
 }
@@ -241,7 +242,32 @@ void collector::work() noexcept
 	} while (alive.load());
 }
 
-void collector::mark() noexcept {}
+void collector::enumerate(void *data, void *ptr) noexcept
+{
+	SYNAFIS_ASSERT(data != nullptr);
+	SYNAFIS_ASSERT(ptr != nullptr);
+	collector *const ref{reinterpret_cast<collector *>(data)};
+	source const src{ref->find_source(ptr)};
+	SYNAFIS_ASSERT(src != nullptr);
+	src->mark(ptr);
+}
+
+void collector::mark() noexcept
+{
+	for (uroot const &x : unmanaged) {
+		x.tcb(x.obj, this, enumerate);
+	}
+	for (mroot const &x : managed) {
+		x.src->mark(x.obj);
+	}
+	bool found;
+	do {
+		found = false;
+		for (source const cur : traversable) {
+			found |= cur->traverse(this, enumerate);
+		}
+	} while (found);
+}
 
 void collector::sweep() noexcept
 {
@@ -262,10 +288,6 @@ void collector::shrink() noexcept
 			if (0 < freed) {
 				requests = (requests <= freed ? 0 : requests - freed);
 			} else {
-				allocators.shrink_to_fit();
-				sources.shrink_to_fit();
-				managed.shrink_to_fit();
-				unmanaged.shrink_to_fit();
 				requests = 0;
 				return;
 			}

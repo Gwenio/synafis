@@ -39,6 +39,8 @@ typedef void (*finalize_cb)(void *) noexcept;
 /**	\typedef enumerate_cb
  *	\brief The callback type for adding a pointer to the reachable set.
  *	\details Provided as a parameter to other callbacks.
+ *	\details The first parameter must be the data provided by the collector.
+ *	\details The second parameter must be the pointer being enumerated.
  */
 typedef void (*enumerate_cb)(void *, void *) noexcept;
 
