@@ -121,10 +121,10 @@ void collector::unregister_root_impl(void *obj) noexcept
 {
 	std::lock_guard<std::mutex> l{mtx};
 	auto const m = std::lower_bound(managed.cbegin(), managed.cend(), obj,
-		[](auto const &cur, void *addr) -> bool { return addr <= cur.obj; });
+		[](auto const &cur, void *addr) -> bool { return cur.obj < addr; });
 	if (m == managed.cend() || m->obj != obj) {
 		auto const u = std::lower_bound(unmanaged.cbegin(), unmanaged.cend(), obj,
-			[](auto const &cur, void *addr) -> bool { return addr <= cur.obj; });
+			[](auto const &cur, void *addr) -> bool { return cur.obj < addr; });
 		if (u != unmanaged.cend() && u->obj == obj) { unmanaged.erase(u); }
 	} else {
 		managed.erase(m);
@@ -179,12 +179,13 @@ void collector::insert_source(isource &src, bool trav) noexcept
 void collector::erase_source(
 	std::vector<source> &vec, decltype(vec.cbegin()) &start, isource const &src) noexcept
 {
-	auto it = std::lower_bound(start, vec.cend(), std::addressof(src),
-		[](source cur, isource const *addr) -> bool { return addr <= cur; });
-	start = it;
+	auto const it = std::lower_bound(start, vec.cend(), src.location(),
+		[](source cur, void *addr) -> bool { return cur->location() < addr; });
 	if (it != vec.cend()) {
-		start++;
+		SYNAFIS_ASSERT(std::addressof(src) == *it);
+		std::size_t const off = std::distance(vec.cbegin(), it);
 		vec.erase(it);
+		start = vec.cbegin() + off;
 	}
 }
 
@@ -246,19 +247,15 @@ void collector::sweep() noexcept
 void collector::shrink() noexcept
 {
 	if (0 < requests) {
-		std::size_t remaining{allocators.size()};
-		for (alloc_ptr &cur : allocators) {
-			std::size_t const freed{cur->shrink((requests / remaining) + 1)};
-			requests = requests <= freed ? 0 : requests - freed;
-		}
-		if (0 < requests) { // If more requests, shrink again going in reverse order.
-			for (remaining = allocators.size(); 0 < remaining;) {
-				std::size_t const goal{(requests / remaining) + 1};
-				std::size_t const freed{allocators[--remaining]->shrink(goal)};
-				requests = requests <= freed ? 0 : requests - freed;
+		std::size_t freed;
+		do {
+			std::size_t average{(requests / allocators.size()) + 1};
+			freed = 0;
+			for (alloc_ptr &cur : allocators) {
+				freed += cur->shrink(average);
 			}
-			requests = 0;
-		}
+			requests = (requests <= freed ? 0 : requests - freed);
+		} while (0 < requests && 0 < freed);
 	} else {
 		for (alloc_ptr &cur : allocators) {
 			cur->shrink(0);
