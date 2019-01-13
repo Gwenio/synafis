@@ -17,29 +17,67 @@ OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
 PERFORMANCE OF THIS SOFTWARE.
 */
 
-#ifndef SYNAFIS_GC_SOFT_PTR_DATA_HPP
-#define SYNAFIS_GC_SOFT_PTR_DATA_HPP
-#pragma once
-
 #ifndef SYNAFIS_GC_HPP
 #include "../gc.hpp"
 #endif
+
+#ifndef SYNAFIS_GC_SOURCE_HPP
+#include "source.hpp"
+#endif
+
+#ifndef SYNAFIS_GC_SOFT_PTR_DATA_HPP
+#define SYNAFIS_GC_SOFT_PTR_DATA_HPP
+#pragma once
 
 /**	\file src/gc/soft_ptr_data.hpp
  *	\brief Defines the implementation for parts of the GC API.
  */
 
+#ifndef SYNAFIS_STDINC_ATOMIC
 #include <atomic>
+#define SYNAFIS_STDINC_ATOMIC
+#endif
+
+#ifndef SYNAFIS_STDINC_MEMORY
+#include <memory>
+#define SYNAFIS_STDINC_MEMORY
+#endif
+
+#ifndef SYNAFIS_STDINC_MUTEX
+#include <mutex>
+#define SYNAFIS_STDINC_MUTEX
+#endif
+
+#ifndef SYNAFIS_STDINC_VECTOR
+#include <vector>
+#define SYNAFIS_STDINC_VECTOR
+#endif
 
 namespace gc {
 
 class soft_ptr::data
 {
-public:
-	/**	\var ptr
-	 *	\brief A pointer to the object weakly referenced.
+	//!	\cond friends
+	friend soft_ptr;
+	//!	\endcond
+private:
+	/**	\var mtx
+	 *	\brief The mutex for static member records.
 	 */
-	void *ptr;
+	static std::mutex mtx;
+
+	/**	\var stale
+	 *	\brief Tracks the soft pointers waiting for deallocation.
+	 *	\invariant Should be kept sorted by address pointed to.
+	 */
+	static std::vector<data *> stale;
+
+	/**	\fn insert_stale(data *ptr) noexcept
+	 *	\brief Puts ptr in stale.
+	 *	\param ptr The object that is now stale.
+	 *	\details De-increments ptr->count, and frees it without inserting if it is zero.
+	 */
+	static void insert_stale(data *ptr) noexcept;
 
 	/**	\var next
 	 *	\brief A pointer to another data that takes precedence over this.
@@ -57,28 +95,35 @@ public:
 	 */
 	std::atomic<std::size_t> count;
 
-	/**	\fn data(void *obj) noexcept
-	 *	\brief Creates a new data object.
-	 *	\param obj The address of the object the data points to.
-	 *	\details The reference count starts at zero so we can increment it with
-	 *	\details copy when returned by collector::get_soft_ptr just as we would
-	 *	\details for a pre-existing data.
+	/**	\var ptr
+	 *	\brief A pointer to the object weakly referenced.
+	 *	\warning Only modify from the collector's worker.
 	 */
-	constexpr data(void *obj) noexcept : ptr(obj), next(nullptr), count(0) {}
+	void *ptr;
+
+	/**	\fn data(void *p) noexcept
+	 *	\brief Creates a new data object.
+	 *	\param p The pointer to the object associated with the data.
+	 *	\details The reference count starts at one so the data will exist at least until it is
+	 *	\details marked as stale.
+	 */
+	constexpr data(void *p) noexcept : next(nullptr), count(1), ptr(p) {}
 
 	/**	\fn ~data() noexcept
 	 *	\brief Default.
 	 */
 	~data() noexcept = default;
 
+public:
 	/**	\fn operator=(std::nullptr_t) noexcept
 	 *	\brief Sets ptr to nullptr.
 	 *	\returns *this
 	 *	\post The data is stale, and will be deallocated when the reference count reaches zero.
 	 */
-	constexpr data &operator=(std::nullptr_t) noexcept
+	data &operator=(std::nullptr_t) noexcept
 	{
 		ptr = nullptr;
+		insert_stale(this);
 		return *this;
 	}
 
@@ -94,8 +139,39 @@ public:
 		SYNAFIS_ASSERT(other != this);
 		SYNAFIS_ASSERT(other->next == nullptr);
 		next.store(other);
+		insert_stale(this);
 		return *this;
 	}
+
+	/**	\fn get() const noexcept
+	 *	\brief Gets the value of ptr.
+	 *	\returns ptr
+	 */
+	void *get() const noexcept { return ptr; }
+
+	/**	\fn create(void *ptr) noexcept
+	 *	\brief Creates a new soft_ptr::data.
+	 *	\param ptr The pointer to the object associated with the data.
+	 *	\returns Returns a pointer to the new soft pointer data.
+	 */
+	static data *create(void *ptr) noexcept;
+
+	/**	\fn get_soft_ptr(void *ptr) noexcept
+	 *	\brief Gets the soft pointer associated with an object.
+	 *	\param ptr A pointer to the object to get the soft pointer data for.
+	 *	\returns Returns a pointer to the soft pointer data.
+	 *	\details Gets the existing data if there is one or creates it if there is not.
+	 */
+	static soft_ptr::data *get_soft_ptr(void *ptr) noexcept;
+
+	/**	\fn free_soft_ptr(soft_ptr::data *ptr) noexcept
+	 *	\brief Frees the soft pointer data.
+	 *	\param ptr The data to deallocate.
+	 *	\pre ptr->count.load() == 0
+	 *	\post The data object is no longer valid.
+	 *	\details Deallocates the memory.
+	 */
+	static void free_soft_ptr(soft_ptr::data *ptr) noexcept;
 };
 
 }

@@ -17,10 +17,6 @@ OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
 PERFORMANCE OF THIS SOFTWARE.
 */
 
-#ifndef SYNAFIS_GC_POOL_HPP
-#define SYNAFIS_GC_POOL_HPP
-#pragma once
-
 #ifndef SYNAFIS_GC_HPP
 #include "../gc.hpp"
 #endif
@@ -31,6 +27,15 @@ PERFORMANCE OF THIS SOFTWARE.
 
 #ifndef SYNAFIS_GC_SOURCE_HPP
 #include "source.hpp"
+#endif
+
+#ifndef SYNAFIS_GC_POOL_HPP
+#define SYNAFIS_GC_POOL_HPP
+#pragma once
+
+#ifndef SYNAFIS_STDINC_LIST
+#include <list>
+#define SYNAFIS_STDINC_LIST
 #endif
 
 /**	\file src/gc/pool.hpp
@@ -370,6 +375,11 @@ private:
 	 */
 	identity const &type;
 
+	/**	\var tracking
+	 *	\brief A list of soft_ptr::data objects being tracked.
+	 */
+	std::list<soft_ptr::data *> tracking;
+
 	/**	\var free
 	 *	\brief The next free object to allocate. Acts as a stack.
 	 *	\note If free == nullptr, there is no free memory to allocate.
@@ -543,6 +553,14 @@ public:
 	 *	\details Sets the appropriate bit in the colors array.
 	 */
 	virtual void sweep() noexcept override final;
+
+	/**	\fn fetch(void *ptr) noexcept override final
+	 *	\brief Gets a tracked soft_ptr::data.
+	 *	\param ptr The object associated with the soft_ptr::data.
+	 *	\returns Returns the associated soft_ptr::data or nullptr if not found.
+	 *	\pre from(ptr) == true
+	 */
+	virtual soft_ptr::data *fetch(void *ptr) noexcept override final;
 
 	/**	\fn used() const noexcept
 	 *	\brief Gets the number of allocated slots.

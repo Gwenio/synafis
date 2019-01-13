@@ -17,6 +17,14 @@ OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
 PERFORMANCE OF THIS SOFTWARE.
 */
 
+#ifndef SYNAFIS_GC_IDENTITY_HPP
+#include "identity.hpp"
+#endif
+
+#ifndef SYNAFIS_GC_SOFT_PTR_HPP
+#include "soft_ptr.hpp"
+#endif
+
 #ifndef SYNAFIS_GC_SOURCE_HPP
 #define SYNAFIS_GC_SOURCE_HPP
 #pragma once
@@ -73,6 +81,7 @@ public:
 	/**	\fn mark(void *ptr) noexcept
 	 *	\brief Marks an object as reachable so it will not be deallocate be sweep.
 	 *	\param ptr The object to mark as reachable.
+	 *	\pre from(ptr) == true
 	 */
 	virtual void mark(void *ptr) noexcept = 0;
 
@@ -88,6 +97,14 @@ public:
 	 *	\brief Deallocates all unmarked objects.
 	 */
 	virtual void sweep() noexcept = 0;
+
+	/**	\fn fetch(void *ptr) noexcept
+	 *	\brief Gets the soft_ptr::data for ptr or creates it.
+	 *	\param ptr The object associated with the soft_ptr::data.
+	 *	\returns Returns the associated soft_ptr::data.
+	 *	\pre from(ptr) == true
+	 */
+	virtual soft_ptr::data *fetch(void *ptr) noexcept = 0;
 };
 
 }

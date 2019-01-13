@@ -86,10 +86,6 @@ void collector::wait_impl(std::unique_lock<std::mutex> &l)
 	count++;
 }
 
-soft_ptr::data *collector::get_soft_ptr_impl(void *ptr) { return nullptr; }
-
-void collector::free_soft_ptr_impl(soft_ptr::data *ptr) {}
-
 template<typename T1, typename T2, typename F>
 void collector::insert_helper(
 	std::vector<T1> &vec, T2 const &find, T1 &&add, F &func, std::unique_lock<std::mutex> &l)
@@ -106,7 +102,7 @@ void collector::insert_helper(
 void collector::register_root_impl(void *obj, traverse_cb tcb, root_cb rcb)
 {
 	std::unique_lock<std::mutex> l{mtx};
-	source const src{find_source(obj)};
+	source const src{find_source_impl(obj)};
 	if (src) {
 		insert_helper(managed, obj, mroot{obj, src},
 			[](void *addr, auto const &cur) -> bool { return addr < cur.obj; }, l);
@@ -134,7 +130,7 @@ void collector::unregister_root_impl(void *obj) noexcept
 	}
 }
 
-isource *collector::find_source(void *ptr) const noexcept
+isource *collector::find_source_impl(void *ptr) const noexcept
 {
 	auto const upper = std::upper_bound(sources.cbegin(), sources.cend(), ptr,
 		[](void *p, auto const &cur) -> bool { return p < cur->location(); });
@@ -153,14 +149,14 @@ isource *collector::find_source(void *ptr) const noexcept
 void *collector::base_ptr_impl(void *ptr) const noexcept
 {
 	std::lock_guard<std::mutex> l{mtx};
-	source const from{find_source(ptr)};
+	source const from{find_source_impl(ptr)};
 	return from ? from->base_of(ptr) : nullptr;
 }
 
 identity const *collector::get_type_impl(void *ptr) const noexcept
 {
 	std::lock_guard<std::mutex> l{mtx};
-	source const from{find_source(ptr)};
+	source const from{find_source_impl(ptr)};
 	return from ? from->type_of(ptr) : nullptr;
 }
 
@@ -247,7 +243,7 @@ void collector::enumerate(void *data, void *ptr) noexcept
 	SYNAFIS_ASSERT(data != nullptr);
 	SYNAFIS_ASSERT(ptr != nullptr);
 	collector *const ref{reinterpret_cast<collector *>(data)};
-	source const src{ref->find_source(ptr)};
+	source const src{ref->find_source_impl(ptr)};
 	SYNAFIS_ASSERT(src != nullptr);
 	src->mark(ptr);
 }

@@ -17,10 +17,6 @@ OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
 PERFORMANCE OF THIS SOFTWARE.
 */
 
-#ifndef SYNAFIS_GC_IMPL_HPP
-#define SYNAFIS_GC_IMPL_HPP
-#pragma once
-
 #ifndef SYNAFIS_GC_HPP
 #include "../gc.hpp"
 #endif
@@ -28,6 +24,10 @@ PERFORMANCE OF THIS SOFTWARE.
 #ifndef SYNAFIS_GC_SOURCE_HPP
 #include "source.hpp"
 #endif
+
+#ifndef SYNAFIS_GC_IMPL_HPP
+#define SYNAFIS_GC_IMPL_HPP
+#pragma once
 
 #include <algorithm>
 #include <atomic>
@@ -208,7 +208,7 @@ private:
 	 *	\todo This mutex is used for all synchronization for now. Later investigate if some
 	 *	\todo parts of the interface could use a separate one.
 	 */
-	mutable std::mutex mtx;
+	std::mutex mutable mtx;
 
 	/**	\var alive
 	 *	\brief Used to signal the worker to shutdown.
@@ -340,18 +340,6 @@ private:
 		writer.notify_one();
 	}
 
-	/**	\fn get_soft_ptr_impl(void *ptr)
-	 *	\param ptr A pointer to the object to get the soft pointer data for.
-	 *	\see get_soft_ptr(void *ptr)
-	 */
-	soft_ptr::data *get_soft_ptr_impl(void *ptr);
-
-	/**	\fn free_soft_ptr_impl(soft_ptr::data *ptr)
-	 *	\param ptr The data to deallocate.
-	 *	\see free_soft_ptr(soft_ptr::data *ptr)
-	 */
-	void free_soft_ptr_impl(soft_ptr::data *ptr);
-
 	/**	\fn insert_helper(std::vector<T1> &vec, T2 const &find, T1 &&add, F &func, std::unique_lock<std::mutex> &l)
 	 *	\param vec The vector to insert the root into.
 	 *	\param find The object to search for the insert location.
@@ -379,13 +367,24 @@ private:
 	 */
 	void unregister_root_impl(void *obj) noexcept;
 
-	/**	\fn find_source(void *ptr) const noexcept
+	/**	\fn find_source_impl(void *ptr) const noexcept
 	 *	\brief Gets the source of a pointer.
 	 *	\param ptr The pointer to get a base address for.
 	 *	\returns Returns the source of ptr or nullptr if none.
 	 *	\pre The caller must own the lock on mtx.
 	 */
-	isource *find_source(void *ptr) const noexcept;
+	isource *find_source_impl(void *ptr) const noexcept;
+
+	/**	\fn find_source_wrap(void *ptr) const noexcept
+	 *	\brief A wrapper for find_source_impl() that locks mtx.
+	 *	\param ptr The pointer to get a base address for.
+	 *	\returns Returns the source of ptr or nullptr if none.
+	 */
+	isource *find_source_wrap(void *ptr) const noexcept
+	{
+		std::lock_guard<std::mutex> l{mtx};
+		return find_source_impl(ptr);
+	}
 
 	/**	\fn base_ptr_impl(void *ptr) const noexcept
 	 *	\param ptr The pointer to get the base address for.
@@ -511,27 +510,6 @@ public:
 	 */
 	static void collect() noexcept { singleton.collect_impl(); }
 
-	/**	\fn get_soft_ptr(void *ptr)
-	 *	\brief Gets the soft pointer associated with an object.
-	 *	\param ptr A pointer to the object to get the soft pointer data for.
-	 *	\returns Returns a pointer to the soft pointer data.
-	 *	\throws Throws std::bad_alloc if a soft_ptr::data needed to be allocated but memory
-	 *	\throws was lacking.
-	 *	\details Gets the existing data if there is one or creates it if there is not.
-	 */
-	static soft_ptr::data *get_soft_ptr(void *ptr) { return singleton.get_soft_ptr_impl(ptr); }
-
-	/**	\fn free_soft_ptr(soft_ptr::data *ptr)
-	 *	\brief Frees the soft pointer data.
-	 *	\param ptr The data to deallocate.
-	 *	\pre The object the soft pointer refers to must no longer exist or a replacement has
-	 *	\pre been set in next.
-	 *	\pre Also the reference count must be zero.
-	 *	\post The data object is no longer valid.
-	 *	\details Deallocates the memory if needed.
-	 */
-	static void free_soft_ptr(soft_ptr::data *ptr) { singleton.free_soft_ptr_impl(ptr); }
-
 	/**	\fn base_ptr(void *ptr) noexcept
 	 *	\brief Gets the originally allocated address.
 	 *	\param ptr The pointer to get the base address for.
@@ -585,6 +563,13 @@ public:
 	 *	\param alloc The allocator to remove.
 	 */
 	static void erase_alloc(iallocator const &alloc) noexcept { singleton.erase_alloc_impl(alloc); }
+
+	/**	\fn find_source(void *ptr) noexcept
+	 *	\brief Finds the source an address was allocated from.
+	 *	\param ptr The pointer to get a base address for.
+	 *	\returns Returns the source of ptr or nullptr if none.
+	 */
+	static isource *find_source(void *ptr) noexcept { return singleton.find_source_wrap(ptr); }
 };
 
 }

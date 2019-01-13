@@ -27,6 +27,19 @@ PERFORMANCE OF THIS SOFTWARE.
 #include "idaccess.hpp"
 #endif
 
+#ifndef SYNAFIS_GC_SOFT_PTR_DATA_HPP
+#include "soft_ptr_data.hpp"
+#endif
+
+#ifndef SYNAFIS_GC_IMPL_HPP
+#include "impl.hpp"
+#endif
+
+#ifndef SYNAFIS_STDINC_ALGORITHM
+#include <algorithm>
+#define SYNAFIS_STDINC_ALGORITHM
+#endif
+
 namespace {
 
 /**	\var bit_group_size
@@ -105,8 +118,8 @@ namespace gc {
 pool::pool(vmem &&mem, identity const &id, std::size_t cap, std::size_t u, void **g,
 	void *start) noexcept :
 	isource(),
-	region(std::forward<vmem>(mem)), type(id), capacity(cap), space(cap), unit(u), free(nullptr),
-	sentinel(g), gray(g), slots(start), end(add_offset(start, cap * u))
+	region(std::forward<vmem>(mem)), type(id), tracking(), capacity(cap), space(cap), unit(u),
+	free(nullptr), sentinel(g), gray(g), slots(start), end(add_offset(start, cap * u))
 {
 	// The bitmap is always located bitmap_offset from the start of the virtual memory.
 	bitmap = reinterpret_cast<bit_group *>(
@@ -148,7 +161,10 @@ pool::pool(vmem &&mem, identity const &id, std::size_t cap, std::size_t u, void 
 
 pool::~pool() noexcept
 {
-	if (idaccess::has_finalizer(type)) {
+	for (auto *cur : tracking) {
+		*cur = nullptr;
+	}
+	if (idaccess::has_finalizer(type) && space < capacity) {
 		std::size_t bit{0};
 		bit_group *batch{bitmap};
 		for (void *current = slots; current < end; current = add_offset(current, unit)) {
@@ -304,6 +320,7 @@ void pool::sweep() noexcept
 	bit_group *alloc{bitmap};
 	bit_group *marks{colors};
 	void *current{slots};
+	auto start = tracking.begin();
 	do {
 		// Only bits for slots that are allocated and unmarked will be true.
 		bit_group const group{*alloc ^ *marks};
@@ -312,6 +329,17 @@ void pool::sweep() noexcept
 				if (group[bit]) {
 					SYNAFIS_ASSERT(alloc->test(bit));
 					SYNAFIS_ASSERT(!(marks->test(bit)));
+					auto pos = std::find_if(start, tracking.end(),
+						[&current](soft_ptr::data *cur) -> bool { return current <= cur->get(); });
+					if (pos != tracking.end()) {
+						if ((*pos)->get() == current) {
+							auto *soft = *pos;
+							start = tracking.erase(pos);
+							*soft = nullptr;
+						} else {
+							start = pos; // All future items will be greater than the current.
+						}
+					}
 					deallocate(current);
 				}
 				current = add_offset(current, unit);
@@ -327,6 +355,26 @@ void pool::sweep() noexcept
 	} while (current < end);
 	// The black slots are the new allocated set.
 	std::swap(bitmap, colors);
+}
+
+soft_ptr::data *pool::fetch(void *ptr) noexcept
+{
+	SYNAFIS_ASSERT(from(ptr));
+	auto pos = std::find_if(tracking.begin(), tracking.end(),
+		[ptr](soft_ptr::data *cur) -> bool { return ptr <= cur->get(); });
+	if (pos != tracking.end() && (*pos)->get() == ptr) {
+		return *pos;
+	} else {
+		try {
+			pos = tracking.insert(pos, static_cast<soft_ptr::data *>(nullptr));
+			*pos = soft_ptr::data::create(ptr);
+			return *pos;
+		} catch (std::bad_alloc const &) {}
+		collector::wait();
+		pos = tracking.insert(pos, static_cast<soft_ptr::data *>(nullptr));
+		*pos = soft_ptr::data::create(ptr);
+		return *pos;
+	}
 }
 
 }

@@ -59,51 +59,11 @@ scoped_lock::~scoped_lock()
 	if (--lock_count == 0) { collector::unlock(); }
 }
 
-soft_ptr::data *soft_ptr::get_soft(hard_ptr const &other)
-{
-	return copy(collector::get_soft_ptr(other.ptr));
-}
-
-soft_ptr::data *soft_ptr::copy(soft_ptr::data *other) noexcept
-{
-	data *temp{other->next.load(std::memory_order_relaxed)};
-	if (temp) {
-		return copy(temp);
-	} else if (other->ptr) {
-		other->count.fetch_add(1, std::memory_order_relaxed);
-		return other;
-	} else {
-		return nullptr;
-	}
-}
-
-soft_ptr::data *soft_ptr::update(soft_ptr::data *old) noexcept
-{
-	data *temp{old->next.load(std::memory_order_relaxed)};
-	if (temp) {
-		soft_ptr::free(old);
-		return copy(temp);
-	} else if (old->ptr) {
-		return old;
-	} else {
-		soft_ptr::free(old);
-		return nullptr;
-	}
-}
-
-void soft_ptr::free(soft_ptr::data *other) noexcept
-{
-	std::size_t temp{other->count.fetch_sub(1, std::memory_order_seq_cst)};
-	if ((!(other->ptr) || other->next) && temp == 1) { // temp == 1 means it is now zero
-		collector::free_soft_ptr(other);
-	}
-}
-
 std::tuple<void *, identity const *> hard_ptr::get_hard(soft_ptr const &other)
 {
 	using rtype = std::tuple<void *, identity const *>;
-	if (other.ptr && other.ptr->ptr) {
-		return rtype{other.ptr->ptr, identity::fetch(other.ptr->ptr, std::nothrow)};
+	if (other.ptr && other.ptr->get()) {
+		return rtype{other.ptr->get(), identity::fetch(other.ptr->get(), std::nothrow)};
 	} else {
 		return rtype{nullptr, nullptr};
 	}
