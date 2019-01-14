@@ -57,31 +57,37 @@ namespace unit_test {
 
 //!	\cond impl_details
 
+bool t::invariants(allocator const &obj) noexcept
+{
+	if (obj.pools.empty()) {
+		return false;
+	} else {
+		for (handle const &x : obj.pools) {
+			if (!x) {
+				SYNAFIS_FAILURE("A pool was not allocated.");
+				return false;
+			}
+		}
+	}
+	return true;
+}
+
 void t::creation(collector &)
 {
 	allocator temp{id, simple_unit, simple_flags};
-	SYNAFIS_ASSERT(!temp.pools.empty());
-	SYNAFIS_ASSERT(temp.pools.front());
+	SYNAFIS_ASSERT(invariants(temp));
 }
 
 void t::growth(collector &)
 {
 	allocator temp{id, simple_unit, simple_flags};
-	SYNAFIS_ASSERT(!temp.pools.empty());
+	SYNAFIS_ASSERT(invariants(temp));
 	auto &h = temp.grow();
 	SYNAFIS_ASSERT(std::addressof(h) == std::addressof(temp.pools.front()));
-	std::size_t x{0};
-	for (auto &y : temp.pools) {
-		if (y) {
-			x++;
-		} else {
-			SYNAFIS_FAILURE("A pool was not allocated.");
-			return;
-		}
-	}
-	if (x < 2) {
+	SYNAFIS_ASSERT(invariants(temp));
+	if (temp.pools.size() < 2) {
 		SYNAFIS_FAILURE("The allocator contained too few pools.");
-	} else if (x > 2) {
+	} else if (temp.pools.size() > 2) {
 		SYNAFIS_FAILURE("The allocator contained too many pools.");
 	}
 }

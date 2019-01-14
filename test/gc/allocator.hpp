@@ -53,6 +53,13 @@ public:
 	 */
 	typedef gc::pool::handle handle;
 
+	/**	\fn invariants(allocator const &obj) noexcept
+	 *	\brief Checks invariants for objects of the vmem class.
+	 *	\param obj The object to check.
+	 *	\returns Returns true if obj satisfy invariants.
+	 */
+	static bool invariants(allocator const &obj) noexcept;
+
 	/**	\fn creation(collector &)
 	 *	\brief Tests the construction of an allocator.
 	 */
