@@ -31,6 +31,7 @@ PERFORMANCE OF THIS SOFTWARE.
 #include <stack>
 #include <vector>
 #include <string>
+#include <thread>
 
 namespace {
 
@@ -337,6 +338,7 @@ void fail_msg(std::string_view msg, int lineno, std::string_view file) noexcept
 int main()
 {
 	std::cout << "main()" << std::endl;
+	gc::set_period(std::chrono::steady_clock::duration::zero()); // Disable automatic cycles.
 	gc::initialize();
 	output.init("master");
 	std::cout << "Beginning testing..." << std::endl;
