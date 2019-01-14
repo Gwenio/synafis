@@ -174,6 +174,87 @@ public:
 			}
 			out << std::endl;
 		}
+
+		/**	\fn operator==(status comp) const noexcept
+		 *	\brief Checks if a status is the expected one.
+		 *	\param comp The status to compare with expect.
+		 *	\returns Returns true if expect == comp.
+		 */
+		bool operator==(status comp) const noexcept { return expect == comp; }
+	};
+
+	class summary
+	{
+	private:
+		/**	\var target
+		 *	\brief The status the summary tracks for.
+		 */
+		status const target;
+
+		/**	\var name
+		 *	\brief The display name of the summary in output.
+		 */
+		std::string_view const name;
+
+		/**	\var count
+		 *	\brief The number of cases resulting in target.
+		 */
+		std::size_t count;
+
+		/**	\var expected
+		 *	\brief The number of cases expected to result in target.
+		 */
+		std::size_t expected;
+
+		/**	\var unexpected
+		 *	\brief The number of cases unexpectedly resulting in target.
+		 */
+		std::size_t unexpected;
+
+	public:
+		/**	\fn summary(status s, std::string_view n) noexcept
+		 *	\brief Constructor.
+		 *	\param s The value for target.
+		 *	\param n The value for name.
+		 */
+		constexpr summary(status s, std::string_view n) noexcept :
+			target(s), name(n), count(0), expected(0), unexpected(0)
+		{}
+
+		/**	\fn ~summary() noexcept
+		 *	\brief Default destructor.
+		 */
+		~summary() noexcept = default;
+
+		/**	\fn print(std::ostream &out) const
+		 *	\brief Prints the summary.
+		 *	\param out The output stream to print too.
+		 *	\returns out
+		 */
+		std::ostream &print(std::ostream &out) const
+		{
+			out << name << ":\t" << count << " / " << expected << " expected (" << unexpected
+				<< " unexpected)" << std::endl;
+			return out;
+		}
+
+		/**	\fn operator()(results const &r, status s) noexcept
+		 *	\brief Updates the summary's counters.
+		 *	\param r The results for the test case.
+		 *	\param s The status result of the test case.
+		 *	\details If s == target, increment count.
+		 *	\details If r == target, increment expected.
+		 *	\details If s == target and not r == target, increment unexpected.
+		 */
+		void operator()(results const &r, status s) noexcept
+		{
+			if (r == target) {
+				expected++;
+			} else if (s == target) {
+				unexpected++;
+			}
+			if (s == target) { count++; }
+		}
 	};
 
 private:
@@ -187,6 +268,21 @@ private:
 	 */
 	std::size_t indent;
 
+	/**	\var passed
+	 *	\brief The summary of passed cases.
+	 */
+	summary passed;
+
+	/**	\var failed
+	 *	\brief The summary of failed cases.
+	 */
+	summary failed;
+
+	/**	\var skipped
+	 *	\brief The summary of skipped cases.
+	 */
+	summary skipped;
+
 	/**	\var cases
 	 *	\brief A stack of unfinished test cases.
 	 */
@@ -196,7 +292,10 @@ public:
 	/**	\fn collector_impl()
 	 *	\brief Default.
 	 */
-	collector_impl() = default;
+	collector_impl() :
+		msg_lock(), indent(0), passed(unit_test::pass, "Passed"), failed(unit_test::fail, "Failed"),
+		skipped(unit_test::skip, "Skipped")
+	{}
 
 	/**	\fn ~collector_impl() noexcept
 	 *	\brief Default.
@@ -231,7 +330,11 @@ public:
 	virtual void end(status result) noexcept override
 	{
 		std::lock_guard<std::mutex> l{msg_lock};
-		cases.top().print(std::cout, result, indent);
+		results const &top = cases.top();
+		passed(top, result);
+		failed(top, result);
+		skipped(top, result);
+		top.print(std::cout, result, indent);
 		cases.pop();
 	}
 
@@ -265,11 +368,16 @@ public:
 		indent--;
 	}
 
-	/**	\fn init(std::string_view start)
-	 *	\brief Sets up the collector.
-	 *	\param start The name of the primary test suite.
+	/**	\fn conclude()
+	 *	\brief Prints a summary of results.
 	 */
-	void init(std::string_view start) { indent = 0; }
+	void conclude()
+	{
+		std::cout << "Summary:" << std::endl;
+		passed.print(std::cout);
+		failed.print(std::cout);
+		skipped.print(std::cout);
+	}
 };
 
 /**	\var master
@@ -340,9 +448,9 @@ int main()
 	std::cout << "main()" << std::endl;
 	gc::set_period(std::chrono::steady_clock::duration::zero()); // Disable automatic cycles.
 	gc::initialize();
-	output.init("master");
 	std::cout << "Beginning testing..." << std::endl;
 	unit_test::suite::run(output, master);
-	std::cout << "Testing complete." << std::endl;
+	std::cout << "Testing complete." << std::endl << std::endl;
+	output.conclude();
 	return 0;
 }
