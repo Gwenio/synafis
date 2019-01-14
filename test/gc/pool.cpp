@@ -24,6 +24,7 @@ PERFORMANCE OF THIS SOFTWARE.
 #include "pool.hpp"
 #include "vmem.hpp"
 #include "../../src/gc/idaccess.hpp"
+#include "gc.hpp"
 
 #include <algorithm>
 #include <stdexcept>
@@ -264,7 +265,7 @@ using unit_test::pass;
 using unit_test::fail;
 using unit_test::skip;
 
-static unit_test::suite s{"pool", unit_test::gc_suite};
+inline unit_test::suite &s{unit_test::gc_pool};
 
 static c sweeping{"sweeping", s, pass, &t::sweeping};
 

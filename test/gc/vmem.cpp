@@ -22,6 +22,7 @@ PERFORMANCE OF THIS SOFTWARE.
  */
 
 #include "vmem.hpp"
+#include "gc.hpp"
 
 #include <windows.h>
 
@@ -283,7 +284,7 @@ using unit_test::pass;
 using unit_test::fail;
 using unit_test::skip;
 
-static unit_test::suite s{"vmem", unit_test::gc_suite};
+inline unit_test::suite &s{unit_test::gc_vmem};
 
 static c protect{"protect", s, pass, &t::protect};
 

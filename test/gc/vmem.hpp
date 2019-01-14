@@ -21,8 +21,8 @@ PERFORMANCE OF THIS SOFTWARE.
  *	\brief Declares the tester for gc::vmem.
  */
 
-#include "../../src/gc/vmem.hpp"
 #include "../master.hpp"
+#include "../../src/gc/vmem.hpp"
 
 namespace unit_test {
 

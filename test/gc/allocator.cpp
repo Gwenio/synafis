@@ -23,6 +23,7 @@ PERFORMANCE OF THIS SOFTWARE.
 
 #include "allocator.hpp"
 #include "../../src/gc/idaccess.hpp"
+#include "gc.hpp"
 
 #include <algorithm>
 #include <stdexcept>
@@ -96,7 +97,7 @@ using unit_test::pass;
 using unit_test::fail;
 using unit_test::skip;
 
-static unit_test::suite s{"allocator", unit_test::gc_suite};
+inline unit_test::suite &s{unit_test::gc_alloc};
 
 static c growth{"growth", s, pass, &t::growth};
 

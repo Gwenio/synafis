@@ -1,14 +1,16 @@
-
 {
-	"variants": {
-		"target": {
+	"variants":
+	{
+		"target":
+		{
 			"description": "The build target.",
 			"options": [
 				"synafis",
 				"unit"
 			]
 		},
-		"platform": {
+		"platform":
+		{
 			"description": "The platform to build for.",
 			"options": [
 				"winapi"
@@ -16,50 +18,52 @@
 		}
 	},
 	"sources": [
+	{
+		"group": "src",
+		"prefix": "src/",
+		"suffix": ".cpp",
+		"files": [
+			"gc",
+			"gc/vmem",
+			"gc/pool",
+			"gc/allocator",
+			"gc/hard_ptr",
+			"gc/soft_ptr",
+			"gc/impl"
+		]
+	},
+	{
+		"group": "src",
+		"prefix": "test/",
+		"suffix": ".cpp",
+		"files": [
+			"unit_runner",
+			"gc/gc",
+			"gc/vmem",
+			"gc/pool",
+			"gc/allocator",
+			"gc/ptr_math"
+		],
+		"filters": [
 		{
-			"group": "src",
-			"prefix": "src/",
-			"suffix": ".cpp",
-			"files": [
-				"gc",
-				"gc/vmem",
-				"gc/pool",
-				"gc/allocator",
-				"gc/hard_ptr",
-				"gc/soft_ptr",
-				"gc/impl"
-			]
-		},
+			"target": "unit"
+		}]
+	}],
+	"steps":
+	{
+		"objects":
 		{
-			"group": "src",
-			"prefix": "test/",
-			"suffix": ".cpp",
-			"files": [
-				"unit_runner",
-				"gc/vmem",
-				"gc/pool",
-				"gc/allocator",
-				"gc/ptr_math"
-			],
-			"filters": [
-				{
-					"target": "unit"
-				}
-			]
-		}
-	],
-	"steps": {
-		"objects": {
 			"action": "cxx",
 			"sources": [
+			{
+				"group": "src",
+				"implicit": false,
+				"produces": "obj"
+			}],
+			"outputs":
+			{
+				"obj":
 				{
-					"group": "src",
-					"implicit": false,
-					"produces": "obj"
-				}
-			],
-			"outputs": {
-				"obj": {
 					"implicit": false,
 					"extension": "obj",
 					"location": "tmp",
@@ -67,22 +71,23 @@
 				}
 			}
 		},
-		"unit_exe": {
+		"unit_exe":
+		{
 			"action": "link",
 			"filters": [
-				{
-					"target": "unit"
-				}
-			],
+			{
+				"target": "unit"
+			}],
 			"inputs": [
+			{
+				"step": "objects",
+				"group": "obj",
+				"implicit": false
+			}],
+			"outputs":
+			{
+				"exe":
 				{
-					"step": "objects",
-					"group": "obj",
-					"implicit": false
-				}
-			],
-			"outputs": {
-				"exe": {
 					"implicit": false,
 					"location": "tmp",
 					"extension": "exe",

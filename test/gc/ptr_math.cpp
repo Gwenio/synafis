@@ -21,7 +21,7 @@ PERFORMANCE OF THIS SOFTWARE.
  *	\brief Defines test cases for the pointer math functions.
  */
 
-#include "../master.hpp"
+#include "gc.hpp"
 #include "../../src/gc/ptr_math.hpp"
 
 namespace {
@@ -61,7 +61,7 @@ using unit_test::pass;
 using unit_test::fail;
 using unit_test::skip;
 
-static unit_test::suite s{"pointer math", unit_test::gc_suite};
+inline unit_test::suite &s{unit_test::gc_ptrmath};
 
 static c differencing{"difference", s, pass, difference};
 
