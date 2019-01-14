@@ -182,9 +182,7 @@ void collector::erase_source(
 		[](source cur, void *addr) -> bool { return cur->location() < addr; });
 	if (it != vec.cend()) {
 		SYNAFIS_ASSERT(std::addressof(src) == *it);
-		std::size_t const off = std::distance(vec.cbegin(), it);
-		vec.erase(it);
-		start = vec.cbegin() + off;
+		start = vec.erase(it);
 	}
 }
 
