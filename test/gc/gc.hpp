@@ -17,6 +17,8 @@ OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
 PERFORMANCE OF THIS SOFTWARE.
 */
 
+#include "../../src/gc/identity.hpp"
+
 #ifndef SYNAFIS_TEST_GC_HPP
 #define SYNAFIS_TEST_GC_HPP
 #pragma once
@@ -29,27 +31,64 @@ PERFORMANCE OF THIS SOFTWARE.
 
 namespace unit_test {
 
+/**	\namespace gc
+ *	\brief Namespace for GC unit test items.
+ */
+namespace gc {
+
 // Declare the gc test suites.
 
-/**	\var gc_alloc
+/**	\var alloc_suite
  *	\brief The main test suite for the garbage collector.
  */
-extern suite gc_alloc;
+extern suite alloc_suite;
 
-/**	\var gc_pool
+/**	\var pool_suite
  *	\brief The main test suite for the garbage collector.
  */
-extern suite gc_pool;
+extern suite pool_suite;
 
-/**	\var gc_ptrmath
+/**	\var ptrmath_suite
  *	\brief The main test suite for the garbage collector.
  */
-extern suite gc_ptrmath;
+extern suite ptrmath_suite;
 
-/**	\var gc_vmem
+/**	\var vmem_suite
  *	\brief The main test suite for the garbage collector.
  */
-extern suite gc_vmem;
+extern suite vmem_suite;
+
+/**	\class simple
+ *	\brief A simple type for allocator testing.
+ */
+class simple
+{
+public:
+	simple() = default;
+	~simple() = default;
+	std::uintptr_t data;
+};
+
+/**	\class simple_ptr
+ *	\brief A simple type for allocator testing containing a pointer.
+ */
+class simple_ptr
+{
+public:
+	simple_ptr() = default;
+	~simple_ptr() = default;
+	simple *data;
+};
+
+}
+
+}
+
+namespace gc {
+
+extern template identity const &get_id<unit_test::gc::simple>() noexcept;
+
+extern template identity const &get_id<unit_test::gc::simple_ptr>() noexcept;
 
 }
 

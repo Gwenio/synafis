@@ -25,12 +25,44 @@ PERFORMANCE OF THIS SOFTWARE.
 
 namespace unit_test {
 
-extern suite gc_alloc{"allocator", gc_suite};
+namespace gc {
 
-extern suite gc_pool{"pool", gc_suite};
+extern suite alloc_suite{"allocator", gc_suite};
 
-extern suite gc_ptrmath{"pointer math", gc_suite};
+extern suite pool_suite{"pool", gc_suite};
 
-extern suite gc_vmem{"vmem", gc_suite};
+extern suite ptrmath_suite{"pointer math", gc_suite};
+
+extern suite vmem_suite{"vmem", gc_suite};
+
+}
+
+}
+
+namespace gc {
+
+using unit_test::gc::simple;
+
+using unit_test::gc::simple_ptr;
+
+static identity const simple_id(static_cast<simple *>(nullptr));
+
+static identity const simple_ptr_id(static_cast<simple_ptr *>(nullptr));
+
+template<>
+identity const &get_id<simple>() noexcept
+{
+	return simple_id;
+}
+
+template<>
+identity const &get_id<simple_ptr>() noexcept
+{
+	return simple_ptr_id;
+}
+
+template identity const &get_id<simple>() noexcept;
+
+template identity const &get_id<simple_ptr>() noexcept;
 
 }

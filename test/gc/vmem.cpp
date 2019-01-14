@@ -28,6 +28,8 @@ PERFORMANCE OF THIS SOFTWARE.
 
 namespace {
 
+using namespace gc;
+
 using t = unit_test::tester<gc::vmem>;
 
 }
@@ -215,7 +217,7 @@ void t::bounds(collector &)
 	SYNAFIS_ASSERT(temp1.end() == nullptr);
 	SYNAFIS_ASSERT(temp1.size() == 0);
 	SYNAFIS_ASSERT(temp2.begin() == temp2.ptr);
-	SYNAFIS_ASSERT(temp2.end() == gc::add_offset(temp2.ptr, temp2.len));
+	SYNAFIS_ASSERT(temp2.end() == add_offset(temp2.ptr, temp2.len));
 	SYNAFIS_ASSERT(temp2.size() == temp2.len);
 }
 
@@ -223,8 +225,8 @@ void t::access(collector &)
 {
 	vmem temp{vmem::page_size, true};
 	SYNAFIS_ASSERT(temp[0] == temp.ptr);
-	SYNAFIS_ASSERT(temp[vmem::page_size / 2] == gc::add_offset(temp.ptr, temp.len / 2));
-	SYNAFIS_ASSERT(temp[vmem::page_size - 1] == gc::add_offset(temp.ptr, temp.len - 1));
+	SYNAFIS_ASSERT(temp[vmem::page_size / 2] == add_offset(temp.ptr, temp.len / 2));
+	SYNAFIS_ASSERT(temp[vmem::page_size - 1] == add_offset(temp.ptr, temp.len - 1));
 	SYNAFIS_ASSERT(temp.at(0) == temp[0]);
 	SYNAFIS_ASSERT(temp.at(vmem::page_size / 2) == temp[vmem::page_size / 2]);
 	SYNAFIS_ASSERT(temp.at(vmem::page_size - 1) == temp[vmem::page_size - 1]);
@@ -234,9 +236,7 @@ void t::access(collector &)
 	} catch (std::out_of_range &) {
 		threw = true;
 	}
-	if (!threw) {
-		fail_msg("Out of bounds vmem::at should throw std::logic_error.", __LINE__, __FILE__);
-	}
+	if (!threw) { SYNAFIS_FAILURE("Out of bounds vmem::at should throw std::logic_error."); }
 	threw = false;
 	temp = nullptr;
 	try {
@@ -244,9 +244,7 @@ void t::access(collector &)
 	} catch (std::logic_error &) {
 		threw = true;
 	}
-	if (!threw) {
-		fail_msg("vmem::at should throw std::logic_error when ptr == nullptr.", __LINE__, __FILE__);
-	}
+	if (!threw) { SYNAFIS_FAILURE("vmem::at should throw std::logic_error when ptr == nullptr."); }
 }
 
 void t::protect(collector &)
@@ -284,7 +282,7 @@ using unit_test::pass;
 using unit_test::fail;
 using unit_test::skip;
 
-inline unit_test::suite &s{unit_test::gc_vmem};
+inline unit_test::suite &s{unit_test::gc::vmem_suite};
 
 static c protect{"protect", s, pass, &t::protect};
 

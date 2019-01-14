@@ -61,7 +61,7 @@ using unit_test::pass;
 using unit_test::fail;
 using unit_test::skip;
 
-inline unit_test::suite &s{unit_test::gc_ptrmath};
+inline unit_test::suite &s{unit_test::gc::ptrmath_suite};
 
 static c differencing{"difference", s, pass, difference};
 

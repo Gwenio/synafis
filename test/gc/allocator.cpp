@@ -31,25 +31,16 @@ PERFORMANCE OF THIS SOFTWARE.
 
 namespace {
 
-/**	\class simple
- *	\brief A simple type for allocator testing.
- */
-class simple
-{
-public:
-	simple() = default;
-	~simple() = default;
-	std::uintptr_t data;
-};
+using namespace gc;
 
-static gc::identity const id(static_cast<simple *>(nullptr));
+using simple = unit_test::gc::simple;
 
-static std::size_t const simple_unit{
-	std::max(gc::idaccess::unit_size<simple>(), gc::pool::min_unit)};
+constexpr inline static std::size_t const simple_unit{
+	std::max(idaccess::unit_size<simple>(), pool::min_unit)};
 
-static auto const simple_flags = gc::traits::get_flags<simple>();
+constexpr inline static auto const simple_flags = traits::get_flags<simple>();
 
-using t = unit_test::tester<gc::allocator>;
+using t = unit_test::tester<allocator>;
 
 }
 
@@ -68,19 +59,29 @@ bool t::invariants(allocator const &obj) noexcept
 				return false;
 			}
 		}
+		for (auto cur = obj.full_begin; cur != obj.pools.cend(); cur++) {
+			if (!cur->full()) {
+				SYNAFIS_FAILURE("A pool in the full range is not full.");
+				return false;
+			}
+		}
+		SYNAFIS_ASSERT(std::is_sorted(
+			obj.full_begin, obj.pools.cend(), [](handle const &x, handle const &y) -> bool {
+				return std::addressof(*x) < std::addressof(*y);
+			}));
+		return true;
 	}
-	return true;
 }
 
 void t::creation(collector &)
 {
-	allocator temp{id, simple_unit, simple_flags};
+	allocator temp{get_id<simple>(), simple_unit, simple_flags};
 	SYNAFIS_ASSERT(invariants(temp));
 }
 
 void t::growth(collector &)
 {
-	allocator temp{id, simple_unit, simple_flags};
+	allocator temp{get_id<simple>(), simple_unit, simple_flags};
 	SYNAFIS_ASSERT(invariants(temp));
 	auto &h = temp.grow();
 	SYNAFIS_ASSERT(std::addressof(h) == std::addressof(temp.pools.front()));
@@ -103,7 +104,7 @@ using unit_test::pass;
 using unit_test::fail;
 using unit_test::skip;
 
-inline unit_test::suite &s{unit_test::gc_alloc};
+inline unit_test::suite &s{unit_test::gc::alloc_suite};
 
 static c growth{"growth", s, pass, &t::growth};
 

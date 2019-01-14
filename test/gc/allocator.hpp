@@ -26,11 +26,11 @@ PERFORMANCE OF THIS SOFTWARE.
 
 namespace unit_test {
 
-/**	\class tester<gc::allocator>
+/**	\class tester<::gc::allocator>
  *	\brief Class with access to the interals of gc::allocator to make tests.
  */
 template<>
-class tester<gc::allocator>
+class tester<::gc::allocator>
 {
 	/**	\fn tester()
 	 *	\brief Deleted.
@@ -46,12 +46,12 @@ public:
 	/**	\typedef allocator
 	 *	\brief Shorthand for the class being tested.
 	 */
-	typedef gc::allocator allocator;
+	typedef ::gc::allocator allocator;
 
 	/**	\typedef handle
 	 *	\brief Shorthand for a pool::handle.
 	 */
-	typedef gc::pool::handle handle;
+	typedef ::gc::pool::handle handle;
 
 	/**	\fn invariants(allocator const &obj) noexcept
 	 *	\brief Checks invariants for objects of the allocator class.
