@@ -58,6 +58,8 @@ extern suite ptrmath_suite;
  */
 extern suite vmem_suite;
 
+//!	\cond impl_details
+
 /**	\class simple
  *	\brief A simple type for allocator testing.
  */
@@ -80,15 +82,21 @@ public:
 	simple *data;
 };
 
+//!	\endcond
+
 }
 
 }
 
 namespace gc {
 
+//!	\cond impl_details
+
 extern template identity const &get_id<unit_test::gc::simple>() noexcept;
 
 extern template identity const &get_id<unit_test::gc::simple_ptr>() noexcept;
+
+//!	\endcond
 
 }
 

@@ -41,6 +41,8 @@ extern suite vmem_suite{"vmem", gc_suite};
 
 namespace gc {
 
+//!	\cond impl_details
+
 using unit_test::gc::simple;
 
 using unit_test::gc::simple_ptr;
@@ -64,5 +66,7 @@ identity const &get_id<simple_ptr>() noexcept
 template identity const &get_id<simple>() noexcept;
 
 template identity const &get_id<simple_ptr>() noexcept;
+
+//!	\endcond
 
 }
