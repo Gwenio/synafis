@@ -105,6 +105,7 @@ void *allocator::allocate(std::nothrow_t) noexcept
 
 std::size_t allocator::shrink(std::size_t goal) noexcept
 {
+	std::lock_guard<std::mutex> l{mtx};
 	// Sort pools by available slots. This puts empty pools at the front and full at the back.
 	// For those of same available slots, sort by memory location.
 	// This lets us send the empties to erase_sources which needs a sorted range sorted by location.
