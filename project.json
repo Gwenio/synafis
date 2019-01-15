@@ -43,7 +43,8 @@
 			"gc/vmem",
 			"gc/pool",
 			"gc/allocator",
-			"gc/ptr_math"
+			"gc/ptr_math",
+			"gc/lock"
 		],
 		"filters": [
 		{

@@ -31,9 +31,11 @@ extern suite alloc_suite{"allocator", gc_suite};
 
 extern suite pool_suite{"pool", gc_suite};
 
-extern suite ptrmath_suite{"pointer math", gc_suite};
+extern suite lock_suite{"lock", gc_suite};
 
 extern suite vmem_suite{"vmem", gc_suite};
+
+extern suite ptrmath_suite{"pointer math", gc_suite};
 
 }
 

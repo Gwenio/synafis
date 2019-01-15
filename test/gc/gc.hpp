@@ -39,24 +39,29 @@ namespace gc {
 // Declare the gc test suites.
 
 /**	\var alloc_suite
- *	\brief The main test suite for the garbage collector.
+ *	\brief The test suite for ::gc::allocator.
  */
 extern suite alloc_suite;
 
 /**	\var pool_suite
- *	\brief The main test suite for the garbage collector.
+ *	\brief The test suite for ::gc::pool.
  */
 extern suite pool_suite;
 
-/**	\var ptrmath_suite
- *	\brief The main test suite for the garbage collector.
+/**	\var lock_suite
+ *	\brief The test suite for ::gc::basic_mutex and ::gc::debug_mutex.
  */
-extern suite ptrmath_suite;
+extern suite lock_suite;
 
 /**	\var vmem_suite
- *	\brief The main test suite for the garbage collector.
+ *	\brief The test suite for ::gc::vmem.
  */
 extern suite vmem_suite;
+
+/**	\var ptrmath_suite
+ *	\brief The test suite for the pointer math functions.
+ */
+extern suite ptrmath_suite;
 
 //!	\cond impl_details
 
