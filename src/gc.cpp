@@ -44,21 +44,6 @@ identity::iallocator *identity::select_alloc(
 
 identity const *identity::fetch_impl(void *obj) noexcept { return collector::get_type(obj); }
 
-/**	\var lock_count
- *	\brief Count how many times a thread has acquired the collector's lock.
- */
-thread_local std::size_t lock_count{0};
-
-scoped_lock::scoped_lock()
-{
-	if (lock_count++ == 0) { collector::lock(); }
-}
-
-scoped_lock::~scoped_lock()
-{
-	if (--lock_count == 0) { collector::unlock(); }
-}
-
 std::tuple<void *, identity const *> hard_ptr::get_hard(soft_ptr const &other)
 {
 	using rtype = std::tuple<void *, identity const *>;
@@ -93,7 +78,13 @@ void initialize() { collector::init(); }
 void collect(bool wait) noexcept
 {
 	if (wait) {
-		collector::wait();
+		if (mutex::locked()) {
+			collector::wait();
+		} else {
+			mutex m;
+			lock_guard l{m};
+			collector::wait();
+		}
 	} else {
 		collector::collect();
 	}

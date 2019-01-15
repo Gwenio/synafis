@@ -25,6 +25,7 @@
 		"files": [
 			"gc",
 			"gc/vmem",
+			"gc/lock",
 			"gc/pool",
 			"gc/allocator",
 			"gc/hard_ptr",

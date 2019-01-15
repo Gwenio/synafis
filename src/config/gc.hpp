@@ -17,13 +17,13 @@ OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
 PERFORMANCE OF THIS SOFTWARE.
 */
 
+#include "general.hpp"
+
 #ifndef SYNAFIS_CONFIG_GC_HPP
 #define SYNAFIS_CONFIG_GC_HPP
 #pragma once
 
-#ifndef SYNAFIS_CONFIG_GENERAL_HPP
-#include "general.hpp"
-#endif
+#include <cstddef>
 
 /**	\file src/config/gc.hpp
  *	\brief Configures the garbage collector.
@@ -67,6 +67,15 @@ PERFORMANCE OF THIS SOFTWARE.
 #define SYNAFIS_CONFIG_GC_PERIOD 1000
 #endif
 
+/**	\def SYNAFIS_CONFIG_GC_DEBUG_MUTEX
+ *	\brief The value for config::gc_debug_mutex.
+ *	\note Define this value in the compiler commandline.
+ *	\see config::gc_debug_mutex
+ */
+#ifndef SYNAFIS_CONFIG_GC_DEBUG_MUTEX
+#define SYNAFIS_CONFIG_GC_DEBUG_MUTEX config::debug
+#endif
+
 namespace config {
 
 /**	\var guard_pages
@@ -106,6 +115,12 @@ inline constexpr std::size_t const max_pool = SYNAFIS_CONFIG_MAX_POOL;
  */
 inline constexpr std::size_t const gc_period = SYNAFIS_CONFIG_GC_PERIOD;
 
+/**	\var gc_debug_mutex
+ *	\brief When true gc::debug_mutex will be used; otherwise, gc::basic_mutex will be used.
+ *	\see gc::mutex
+ */
+inline constexpr bool const gc_debug_mutex = SYNAFIS_CONFIG_GC_DEBUG_MUTEX;
+
 }
 
 //	Remove preprocessor definitions that are no longer needed.
@@ -113,5 +128,6 @@ inline constexpr std::size_t const gc_period = SYNAFIS_CONFIG_GC_PERIOD;
 #undef SYNAFIS_CONFIG_MIN_POOL
 #undef SYNAFIS_CONFIG_MAX_POOL
 #undef SYNAFIS_CONFIG_GC_PERIOD
+#undef SYNAFIS_CONFIG_GC_DEBUG_MUTEX
 
 #endif
