@@ -38,6 +38,11 @@ namespace gc {
 
 // Declare the gc test suites.
 
+/**	\var collector_suite
+ *	\brief The test suite for ::gc::collector.
+ */
+extern suite collector_suite;
+
 /**	\var alloc_suite
  *	\brief The test suite for ::gc::allocator.
  */

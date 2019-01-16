@@ -27,6 +27,8 @@ namespace unit_test {
 
 namespace gc {
 
+extern suite collector_suite{"collector", gc_suite};
+
 extern suite alloc_suite{"allocator", gc_suite};
 
 extern suite pool_suite{"pool", gc_suite};
