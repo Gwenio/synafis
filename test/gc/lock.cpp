@@ -18,17 +18,19 @@ PERFORMANCE OF THIS SOFTWARE.
 */
 
 /**	\file test/gc/lock.cpp
- *	\brief Defines test cases for the pointer math functions.
+ *	\brief Defines test cases for the ::gc::basic_mutex and ::gc::debug_mutex.
  */
 
 #include "gc.hpp"
 #include "../../src/gc/lock.hpp"
+#include "collector.hpp"
 
 namespace {
 
 using unit_test::collector;
 using gc::basic_mutex;
 using gc::debug_mutex;
+using gc_tester = unit_test::tester<gc::collector>;
 
 template<typename Mutex>
 void locking(collector &)
@@ -37,11 +39,16 @@ void locking(collector &)
 	if (Mutex::locked()) {
 		SYNAFIS_FAILURE("The collector lock was locked before the test.");
 		return;
+	} else if (gc_tester::has_readers()) {
+		SYNAFIS_FAILURE("The collector should have no readers when this test starts.");
+		return;
 	} else {
 		std::lock_guard<Mutex> l{mtx};
 		SYNAFIS_ASSERT(Mutex::locked());
+		SYNAFIS_ASSERT(gc_tester::has_readers());
 	}
 	SYNAFIS_ASSERT(!Mutex::locked());
+	SYNAFIS_ASSERT(gc_tester::no_readers());
 }
 
 using c = unit_test::case_type;
