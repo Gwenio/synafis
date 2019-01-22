@@ -76,6 +76,15 @@ PERFORMANCE OF THIS SOFTWARE.
 #define SYNAFIS_CONFIG_GC_DEBUG_MUTEX config::debug
 #endif
 
+/**	\def SYNAFIS_CONFIG_INIT_TRACKING
+ *	\brief The value for config::init_tracking.
+ *	\note Define this value in the compiler commandline.
+ *	\see config::gc_debug_mutex
+ */
+#ifndef SYNAFIS_CONFIG_INIT_TRACKING
+#define SYNAFIS_CONFIG_INIT_TRACKING config::debug
+#endif
+
 namespace config {
 
 /**	\var guard_pages
@@ -121,6 +130,12 @@ inline constexpr std::size_t const gc_period = SYNAFIS_CONFIG_GC_PERIOD;
  */
 inline constexpr bool const gc_debug_mutex = SYNAFIS_CONFIG_GC_DEBUG_MUTEX;
 
+/**	\var init_tracking
+ *	\brief When true allocators will always track if allocated memory is initialized.
+ */
+inline constexpr bool const init_tracking = SYNAFIS_CONFIG_INIT_TRACKING;
+// TODO At this time config::init_tracking does nothing, as initialization is always tracked.
+
 }
 
 //	Remove preprocessor definitions that are no longer needed.
@@ -129,5 +144,6 @@ inline constexpr bool const gc_debug_mutex = SYNAFIS_CONFIG_GC_DEBUG_MUTEX;
 #undef SYNAFIS_CONFIG_MAX_POOL
 #undef SYNAFIS_CONFIG_GC_PERIOD
 #undef SYNAFIS_CONFIG_GC_DEBUG_MUTEX
+#undef SYNAFIS_CONFIG_INIT_TRACKING
 
 #endif
