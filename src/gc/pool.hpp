@@ -17,26 +17,14 @@ OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
 PERFORMANCE OF THIS SOFTWARE.
 */
 
-#ifndef SYNAFIS_GC_HPP
-#include "../gc.hpp"
-#endif
-
-#ifndef SYNAFIS_GC_VMEM_HPP
 #include "vmem.hpp"
-#endif
-
-#ifndef SYNAFIS_GC_SOURCE_HPP
 #include "source.hpp"
-#endif
 
 #ifndef SYNAFIS_GC_POOL_HPP
 #define SYNAFIS_GC_POOL_HPP
 #pragma once
 
-#ifndef SYNAFIS_STDINC_LIST
 #include <list>
-#define SYNAFIS_STDINC_LIST
-#endif
 
 /**	\file src/gc/pool.hpp
  *	\brief Defines the type for managing a memory pool.
@@ -233,6 +221,34 @@ public:
 		 */
 		constexpr bool operator!=(handle const &other) const noexcept { return ptr != other.ptr; }
 
+		/**	\fn operator<(handle const &other) const noexcept
+		 *	\brief If the owned pool has a lower address that other's.
+		 *	\param other The other handle to compare with.
+		 *	\returns Returns true if ptr < other.ptr.
+		 */
+		constexpr bool operator<(handle const &other) const noexcept { return ptr < other.ptr; }
+
+		/**	\fn operator>(handle const &other) const noexcept
+		 *	\brief If the owned pool has a higher address that other's.
+		 *	\param other The other handle to compare with.
+		 *	\returns Returns true if ptr > other.ptr.
+		 */
+		constexpr bool operator>(handle const &other) const noexcept { return ptr > other.ptr; }
+
+		/**	\fn operator<=(handle const &other) const noexcept
+		 *	\brief If the owned pool has a lower or equal to the address of other's.
+		 *	\param other The other handle to compare with.
+		 *	\returns Returns true if ptr <= other.ptr.
+		 */
+		constexpr bool operator<=(handle const &other) const noexcept { return ptr <= other.ptr; }
+
+		/**	\fn operator>=(handle const &other) const noexcept
+		 *	\brief If the owned pool has a higher or equal to the address of other's.
+		 *	\param other The other handle to compare with.
+		 *	\returns Returns true if ptr >= other.ptr.
+		 */
+		constexpr bool operator>=(handle const &other) const noexcept { return ptr >= other.ptr; }
+
 		/**	\fn operator==(std::nullptr_t) const noexcept
 		 *	\brief Checks that ptr is null.
 		 *	\returns Returns true if ptr is null.
@@ -252,6 +268,18 @@ public:
 		 *	\see pool::allocate
 		 */
 		void *allocate() noexcept { return ptr->allocate(); }
+
+		/**	\fn discarded(void *addr) noexcept
+		 *	\brief Informs the pool if an allocated slot was uninitialized.
+		 *	\param addr The address of the slot.
+		 *	\pre ptr != nullptr
+		 *	\see pool::discarded
+		 */
+		void discarded(void *addr) noexcept
+		{
+			SYNAFIS_ASSERT(ptr != nullptr);
+			ptr->discarded(addr);
+		}
 
 		/**	\fn mark(void *addr) noexcept
 		 *	\brief Marks an object as reachable so it will not be deallocate be sweep.
@@ -501,6 +529,14 @@ public:
 	 *	\details Reduces space by one.
 	 */
 	void *allocate() noexcept;
+
+	/**	\fn discarded(void *addr, bool init) noexcept
+	 *	\brief Informs the pool if an allocated slot was uninitialized.
+	 *	\param addr The address of the slot.
+	 *	\details Unset the bit for the object being allocated if needed.
+	 *	\details Deallocate the memory so it can be reused.
+	 */
+	void discarded(void *addr) noexcept;
 
 	/**	\fn location() const noexcept override final
 	 *	\brief Gets an address to compare sources for sorting.

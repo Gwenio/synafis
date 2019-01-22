@@ -40,6 +40,20 @@ constexpr inline static std::size_t const simple_unit{
 
 constexpr inline static auto const simple_flags = traits::get_flags<simple>();
 
+using handle = allocator::handle;
+using pool_list = allocator::pool_list;
+
+/**	\fn is_sorted_pools(pool_list const &l)
+ *	\brief Checks if a list of pools are sorted.
+ *	\param l The list to check.
+ *	\returns Returns true if the pools in 'l' are sorted.
+ */
+bool is_sorted_pools(pool_list const &l)
+{
+	return std::is_sorted(
+		l.cbegin(), l.cend(), [](handle const &x, handle const &y) { return x < y; });
+}
+
 using t = unit_test::tester<allocator>;
 
 }
@@ -50,25 +64,12 @@ namespace unit_test {
 
 bool t::invariants(allocator const &obj) noexcept
 {
-	if (obj.pools.empty()) {
+	if (!(obj.empty_pools.empty() || obj.part_pools.empty() || obj.full_pools.empty())) {
 		return false;
 	} else {
-		for (handle const &x : obj.pools) {
-			if (!x) {
-				SYNAFIS_FAILURE("A pool was not allocated.");
-				return false;
-			}
-		}
-		for (auto cur = obj.full_begin; cur != obj.pools.cend(); cur++) {
-			if (!cur->full()) {
-				SYNAFIS_FAILURE("A pool in the full range is not full.");
-				return false;
-			}
-		}
-		SYNAFIS_ASSERT(std::is_sorted(
-			obj.full_begin, obj.pools.cend(), [](handle const &x, handle const &y) -> bool {
-				return std::addressof(*x) < std::addressof(*y);
-			}));
+		SYNAFIS_ASSERT(is_sorted_pools(obj.empty_pools));
+		SYNAFIS_ASSERT(is_sorted_pools(obj.part_pools));
+		SYNAFIS_ASSERT(is_sorted_pools(obj.full_pools));
 		return true;
 	}
 }
@@ -83,14 +84,12 @@ void t::growth(collector &)
 {
 	allocator temp{get_id<simple>(), simple_unit, simple_flags};
 	SYNAFIS_ASSERT(invariants(temp));
-	auto &h = temp.grow();
-	SYNAFIS_ASSERT(std::addressof(h) == std::addressof(temp.pools.front()));
-	SYNAFIS_ASSERT(invariants(temp));
-	if (temp.pools.size() < 2) {
-		SYNAFIS_FAILURE("The allocator contained too few pools.");
-	} else if (temp.pools.size() > 2) {
-		SYNAFIS_FAILURE("The allocator contained too many pools.");
+	temp.full_pools.merge(std::move(temp.empty_pools));
+	auto const &h = temp.grow();
+	if (temp.empty_pools.size() != 1) {
+		SYNAFIS_FAILURE("The allocator did not add exactly one empty pool.");
 	}
+	SYNAFIS_ASSERT(std::addressof(h) == std::addressof(temp.empty_pools.front()));
 }
 
 //!	\endcond

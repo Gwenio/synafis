@@ -17,21 +17,12 @@ OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
 PERFORMANCE OF THIS SOFTWARE.
 */
 
+#include "pool.hpp"
+#include "impl.hpp"
+
 #ifndef SYNAFIS_GC_ALLOCATOR_HPP
 #define SYNAFIS_GC_ALLOCATOR_HPP
 #pragma once
-
-#ifndef SYNAFIS_GC_HPP
-#include "../gc.hpp"
-#endif
-
-#ifndef SYNAFIS_GC_POOL_HPP
-#include "pool.hpp"
-#endif
-
-#ifndef SYNAFIS_GC_IMPL_HPP
-#include "impl.hpp"
-#endif
 
 /**	\file src/gc/allocator.hpp
  *	\brief Defines the type that manages the pools for a type of object.
@@ -66,18 +57,34 @@ class allocator : public collector::iallocator
 	 */
 	allocator(allocator &&) = delete;
 
-private:
+public:
 	/**	\typedef handle
 	 *	\brief Shorthand for pool::handle.
 	 */
-	typedef pool::handle handle;
+	using handle = pool::handle;
 
+	/**	\typedef pool_list
+	 *	\brief The container type for pools.
+	 */
+	using pool_list = std::list<handle>;
+
+	/**	\typedef pool_iter
+	 *	\brief The iterator type of pool_list.
+	 */
+	using pool_iter = typename pool_list::iterator;
+
+private:
 	/**	\var mtx
 	 *	\brief The mutex controlling access to the member pools.
 	 */
 	std::mutex mtx;
 
-	/**	\var pools
+	/**	\var current
+	 *	\brief The pool to allocate from.
+	 */
+	pool_iter current;
+
+	/**	\var empty_pools
 	 *	\brief A list of pools managed by the allocator.
 	 *	\details The pools are partitioned as follows:
 	 *	\details - The pool we are currently allocating from.
@@ -85,15 +92,31 @@ private:
 	 *	\details - The partially used pools ordered by address.
 	 *	\details - The full pools ordered by address.
 	 *	\note The first pool is moved to the full partition when it becomes full.
+	 *	\invariant All pools have free space and sorted by the address of the pool.
 	 *	\todo Investigate if there are move ways to exploit the layout to optimize the allocators.
 	 *	\todo Inparticular, if sorting can be done more efficiently that std::list::sort().
 	 */
-	std::list<handle> pools;
+	pool_list empty_pools;
 
-	/**	\var full_begin
-	 *	\brief The iterator position to the first full pool is pools.
+	/**	\var part_pools
+	 *	\brief A list of pools managed by the allocator.
+	 *	\details The pools are partitioned as follows:
+	 *	\details - The pool we are currently allocating from.
+	 *	\details - The empty pools ordered by address.
+	 *	\details - The partially used pools ordered by address.
+	 *	\details - The full pools ordered by address.
+	 *	\note The first pool is moved to the full partition when it becomes full.
+	 *	\invariant All pools have free space and sorted by the address of the pool.
+	 *	\todo Investigate if there are move ways to exploit the layout to optimize the allocators.
+	 *	\todo Inparticular, if sorting can be done more efficiently that std::list::sort().
 	 */
-	std::list<handle>::const_iterator full_begin;
+	pool_list part_pools;
+
+	/**	\var full_pools
+	 *	\brief A list of pools with no free slots remaining.
+	 *	\invariant All pools are full and sorted by the address of the pool.
+	 */
+	pool_list full_pools;
 
 	/**	\var type
 	 *	\brief The identity of the type the allocator allocates.
@@ -117,9 +140,17 @@ private:
 	 */
 	traits::flag_type const flags;
 
+	/**	\fn try_allocate()
+	 *	\brief Attempts to allocate memory for an object.
+	 *	\returns Returns a pointer to the allocated memory.
+	 *	\throws std::bad_alloc if memory could not be allocated.
+	 */
+	void *try_allocate();
+
 	/**	\fn allocate_impl()
-	 *	\brief Implements the bulk of the public allocate() methods.
-	 *	\returns Returns a pointer to the allocated memory or nullptr on failure.
+	 *	\brief Tries to allocate twice with try_allocate.
+	 *	\returns Returns a pointer to the allocated memory.
+	 *	\details If the first try fails, waits until after a collection cycle to try again.
 	 *	\throws std::bad_alloc if memory could not be allocated.
 	 */
 	void *allocate_impl();
@@ -127,6 +158,7 @@ private:
 	/**	\fn grow()
 	 *	\brief Adds a new pool to the pools list.
 	 *	\returns Returns a reference to the new pool's handle.
+	 *	\details The new pool will be indicated by current.
 	 *	\throws std::bad_alloc if another pool could not be added.
 	 *	\pre The mutex mtx must be held by the calling thread.
 	 */
@@ -165,6 +197,14 @@ public:
 	 *	\returns Returns a pointer to the allocated memory or nullptr on failure.
 	 */
 	virtual void *allocate(std::nothrow_t) noexcept override final;
+
+	/**	\fn discarded(void *addr) noexcept override final
+	 *	\brief Informs the allocator that an allocated object was not initialized.
+	 *	\param addr The address of the previously allocated memory.
+	 *	\details If the collector lock was properly held since allocate() was called, then
+	 *	\details either the object is from the front of pools or was moved to the full range.
+	 */
+	virtual void discarded(void *addr) noexcept override final;
 
 	/**	\fn shrink(std::size_t goal) noexcept override final
 	 *	\brief Causes the allocator to try and free unneeded memory.

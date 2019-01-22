@@ -104,6 +104,12 @@ public:
 		 *	\returns Returns a pointer to the allocated memory or nullptr on failure.
 		 */
 		virtual void *allocate(std::nothrow_t) noexcept = 0;
+
+		/**	\fn discarded(void *addr) noexcept
+		 *	\brief Informs the allocator that an allocated object was not initialized.
+		 *	\param addr The address of the previously allocated memory.
+		 */
+		virtual void discarded(void *addr) noexcept = 0;
 	};
 
 private:
@@ -282,6 +288,21 @@ public:
 	 *	\pre The collector lock must be held by the calling thread.
 	 */
 	void *allocate(std::nothrow_t) const noexcept { return alloc->allocate(std::nothrow); }
+
+	/**	\fn discarded(void *addr) noexcept
+	 *	\brief Informs the allocator if an allocated object uninitialized.
+	 *	\param addr The address of the previously allocated memory.
+	 *	\details Prevents the finalizer from being run on uninitialized objects.
+	 *	\details The memory may be reclaimed immediately.
+	 *	\warning The collector must be locked from before allocate() is called until after
+	 *	\warning discarded() returns.
+	 *	\note The allocator is only informed if there is a finalizer.
+	 *	\note Otherwise the object can wait for a normal collection cycle.
+	 */
+	void discarded(void *addr) noexcept
+	{
+		if (fcb) { alloc->discarded(addr); }
+	}
 
 	/**	\fn equal(void const *lhs, void const *rhs) const noexcept
 	 *	\brief Checks that two objects will always be equal.
