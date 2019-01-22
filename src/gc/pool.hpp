@@ -478,6 +478,13 @@ private:
 	 */
 	void deallocate(void *ptr) noexcept;
 
+	/**	\fn bit_locate(void *ptr) const noexcept
+	 *	\brief Calculates the information for accessing the bit associated with an address.
+	 *	\param ptr The slot to calculate fore.
+	 *	\returns Returns a tuple containing the offset for the bit group and the bit number.
+	 */
+	std::tuple<std::size_t, std::size_t> bit_locate(void *ptr) const noexcept;
+
 	/**	\fn pool(vmem &&mem, identity const &id, std::size_t cap, std::size_t u, void **g, void *start) noexcept
 	 *	\brief Called by create to initialize a new pool.
 	 *	\param mem The virtual memory the pool is allocated on is to be owned by the pool.

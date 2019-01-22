@@ -234,6 +234,14 @@ pool::handle::handle(identity const &id, std::size_t capacity, std::size_t unit)
 	}
 }
 
+std::tuple<std::size_t, std::size_t> pool::bit_locate(void *ptr) const noexcept
+{
+	std::size_t const offset{sub_addr(ptr, slots) / unit};
+	std::size_t const bit{offset % bit_group_size};
+	std::size_t const group{offset / bit_group_size};
+	return std::tuple<std::size_t, std::size_t>{group, bit};
+}
+
 void pool::deallocate(void *ptr) noexcept
 {
 	SYNAFIS_ASSERT(from(ptr));
@@ -251,9 +259,8 @@ void *pool::allocate() noexcept
 		space--;
 		void *addr{static_cast<void *>(std::exchange(free, free->next))};
 		// Mark as initialized.
-		std::size_t const offset{sub_addr(addr, slots) / unit};
-		std::size_t const bit{offset % bit_group_size};
-		std::size_t const group{offset / bit_group_size};
+		std::size_t bit, group;
+		std::tie(group, bit) = bit_locate(addr);
 		SYNAFIS_ASSERT(!bitmap[group].test(bit)); // Assert that it is not being marked twice.
 		bitmap[group].set(bit);
 		return addr;
@@ -265,10 +272,9 @@ void *pool::allocate() noexcept
 void pool::discarded(void *addr) noexcept
 {
 	SYNAFIS_ASSERT(from(addr));
-	SYNAFIS_ASSERT(sub_addr(ptr, slots) % unit == 0);
-	std::size_t const offset{sub_addr(addr, slots) / unit};
-	std::size_t const bit{offset % bit_group_size};
-	std::size_t const group{offset / bit_group_size};
+	SYNAFIS_ASSERT(sub_addr(addr, slots) % unit == 0);
+	std::size_t bit, group;
+	std::tie(group, bit) = bit_locate(addr);
 	SYNAFIS_ASSERT(bitmap[group].test(bit)); // Assert that the slot is marked as allocated.
 	bitmap[group].reset(bit);
 	node *temp{static_cast<node *>(addr)};
@@ -291,9 +297,8 @@ void *pool::base_of(void *ptr) const noexcept
 void pool::mark(void *ptr) noexcept
 {
 	SYNAFIS_ASSERT(from(ptr));
-	std::size_t const offset{sub_addr(ptr, slots) / unit};
-	std::size_t const bit{offset % bit_group_size};
-	std::size_t const group{offset / bit_group_size};
+	std::size_t bit, group;
+	std::tie(group, bit) = bit_locate(ptr);
 	// Assert that the slot is initialized.
 	SYNAFIS_ASSERT(bitmap[group].test(bit));
 	auto &ref = colors[group];
