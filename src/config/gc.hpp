@@ -134,7 +134,7 @@ inline constexpr bool const gc_debug_mutex = SYNAFIS_CONFIG_GC_DEBUG_MUTEX;
  *	\brief When true allocators will always track if allocated memory is initialized.
  */
 inline constexpr bool const init_tracking = SYNAFIS_CONFIG_INIT_TRACKING;
-// TODO At this time config::init_tracking does nothing, as initialization is always tracked.
+//!	TODO At this time config::init_tracking does nothing, as initialization is always tracked.
 
 }
 

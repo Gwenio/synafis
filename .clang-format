@@ -39,7 +39,7 @@ BreakConstructorInitializers: AfterColon
 BreakInheritanceList: AfterColon
 BreakStringLiterals: true
 ColumnLimit: 100
-CommentPragmas: '^([\!\*]?\t\\)|(\\ (TODO)|(FIXME)|(TEST))'
+CommentPragmas: '^([\!\*])'
 CompactNamespaces: false
 ConstructorInitializerAllOnOneLineOrOnePerLine: false
 ConstructorInitializerIndentWidth: 4
