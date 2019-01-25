@@ -27,7 +27,7 @@ PERFORMANCE OF THIS SOFTWARE.
 namespace unit_test {
 
 /**	\class tester<::gc::collector>
- *	\brief Class with access to the interals of ::gc::collector to make tests.
+ *	\brief Class with access to the internals of ::gc::collector to make tests.
  */
 template<>
 class tester<::gc::collector>
