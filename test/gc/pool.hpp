@@ -27,7 +27,7 @@ PERFORMANCE OF THIS SOFTWARE.
 namespace unit_test {
 
 /**	\class tester<::gc::pool>
- *	\brief Class with access to the interals of gc::pool to make tests.
+ *	\brief Class with access to the internals of gc::pool to make tests.
  */
 template<>
 class tester<::gc::pool>
@@ -52,6 +52,13 @@ public:
 	 *	\brief Shorthand for a pool::handle.
 	 */
 	typedef pool::handle handle;
+
+	/**	\fn invariants(pool const &obj) noexcept
+	 *	\brief Checks invariants for objects of the pool class.
+	 *	\param obj The object to check.
+	 *	\details Preforms assertions checking if the invariants are true.
+	 */
+	static void invariants(pool const &obj) noexcept;
 
 	/**	\fn capacity_selection(collector &)
 	 *	\brief Tests pool::select_capacity.
@@ -97,6 +104,16 @@ public:
 	 *	\brief Tests the ability to mark and sweep objects.
 	 */
 	static void sweeping(collector &);
+
+	/**	\fn discarding(collector &)
+	 *	\brief Tests the ability to discard objects that failed to be initialized.
+	 */
+	static void discarding(collector &);
+
+	/**	\fn traversing(collector &)
+	 *	\brief Tests the ability to traverse objects in a pool to mark reachable objects.
+	 */
+	static void traversing(collector &);
 };
 
 }

@@ -28,6 +28,8 @@ PERFORMANCE OF THIS SOFTWARE.
  */
 
 #include "../master.hpp"
+#include "../../src/gc/callbacks.hpp"
+#include "../../src/gc/traits.hpp"
 
 namespace unit_test {
 
@@ -87,8 +89,21 @@ public:
 class simple_ptr
 {
 public:
-	simple_ptr() = default;
-	~simple_ptr() = default;
+	simple_ptr() noexcept = default;
+	~simple_ptr() noexcept = default;
+	simple_ptr(simple_ptr const &) noexcept = delete;
+	simple_ptr(simple_ptr &&other) : data(std::exchange(other.data, nullptr)) {}
+	simple_ptr &operator=(simple_ptr const &) = delete;
+	simple_ptr &operator=(simple_ptr &&other) noexcept
+	{
+		data = std::exchange(other.data, nullptr);
+		return *this;
+	}
+	void traverse(void *arg, ::gc::enumerate_cb cb) const noexcept { cb(arg, data); }
+	void remap(void *arg, ::gc::remap_cb cb) noexcept
+	{
+		data = static_cast<simple *>(cb(arg, data));
+	}
 	simple *data;
 };
 
@@ -101,6 +116,14 @@ public:
 namespace gc {
 
 //!	\cond impl_details
+
+namespace traits {
+
+template<>
+class pointers_type<unit_test::gc::simple_ptr> : public std::integral_constant<bool, true>
+{};
+
+}
 
 extern template identity const &get_id<unit_test::gc::simple>() noexcept;
 
