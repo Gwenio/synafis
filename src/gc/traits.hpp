@@ -2,7 +2,7 @@
 /*
 ISC License (ISC)
 
-Copyright 2018 Adam Armstrong
+Copyright 2018-2019 Adam Armstrong
 
 Permission to use, copy, modify, and/or distribute this software for any
 purpose with or without fee is hereby granted, provided that the above copyright
@@ -45,7 +45,7 @@ typedef std::bitset<5> flag_type;
 /**	\class moveable_type
  *	\brief Trait to check if the garbage collector can move objects.
  *	\tparam T The type to check for being movable by the collector.
- *	\details All trivial copyable types are considered movable by default.
+ *	\details All types that can be trivially copied are considered movable by default.
  *	\details
  *	\details Other types should have a specialization defined.
  *	\see movable\<T\>
@@ -556,9 +556,9 @@ inline constexpr equality_cb const equalizer{equality_type<std::remove_volatile_
 template<typename T>
 constexpr inline flag_type get_flags() noexcept
 {
-	return flag_type{(movable<T> ? 0x1 : 0) | (finalizer<T> != nullptr ? 0x2 : 0) |
-					 (pointers<T> ? 0x4 : 0) | (relocator<T> != nullptr ? 0x8 : 0) |
-					 (readonly<T> ? 0x10 : 0)};
+	return flag_type{(movable<T> ? 0x1u : 0u) | (finalizer<T> != nullptr ? 0x2u : 0u) |
+					 (pointers<T> ? 0x4u : 0u) | (relocator<T> != nullptr ? 0x8u : 0u) |
+					 (readonly<T> ? 0x10u : 0u)};
 }
 }
 }
