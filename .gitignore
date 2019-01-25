@@ -6,6 +6,7 @@ doxygen
 Doxyfile
 !templates/Doxyfile
 .vscode
+!.vscode/spellright.dict
 *.ninja
 config.json
 node_modules

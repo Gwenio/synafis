@@ -1,0 +1,14 @@
+sizeof
+alignof
+noexcept
+param
+tparam
+nullptr
+cond
+impl
+endcond
+boolean
+vmem
+idaccess
+const
+readonly
