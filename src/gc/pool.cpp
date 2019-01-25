@@ -210,12 +210,12 @@ pool::handle::handle(identity const &id, std::size_t capacity, std::size_t unit)
 	// Calculate the offset to the end of bit groups.
 	std::size_t offset{guard + bitmap_offset + (bitmap_length(capacity) * bit_group_unit * 2)};
 	// Calculate gray stack beginning and end if needed.
-	void **gray{nullptr};
+	std::size_t gray_offset{0};
 	if (idaccess::has_traverser(id)) {
 		// Calculate needed alignment adjustment if needed.
 		std::size_t const gray_rem{offset % alignof(void **)};
 		if (0 < gray_rem) { offset += alignof(void **) - gray_rem; }
-		gray = reinterpret_cast<void **>(offset);
+		gray_offset = offset;
 		// Calculate end of gray stack.
 		offset += gray_unit * capacity;
 	}
@@ -228,6 +228,8 @@ pool::handle::handle(identity const &id, std::size_t capacity, std::size_t unit)
 			mem.writable(vmem::page_size, offset - (vmem::page_size * 2));
 			mem.writable(offset, size);
 		}
+		void **gray{idaccess::has_traverser(id) ? static_cast<void **>(mem[gray_offset]) :
+												  static_cast<void **>(nullptr)};
 		ptr = new (mem[guard]) pool(std::move(mem), id, capacity, unit, gray, mem[offset]);
 	} else {
 		throw std::bad_alloc{};
