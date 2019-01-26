@@ -35,13 +35,13 @@ directories on your system.
 
 ## VSCode
 
-The files in the vscode subdirectory are for the Visual Studio Code text editor.
+The files in the 'vscode' subdirectory are for the Visual Studio Code text editor.
 
 To use, copy the files into a folder called '.vscode' in the root of the project.
 
 ### VSCode Tasks
 
-The file tasks.json defines commands to be run from 'Run Task' in the Terminal drop down menu.
+The file 'tasks.json' defines commands to be run from 'Run Task' in the Terminal drop down menu.
 
 The command setting for each task will need to be changed to point to the appropriate executable
 if it is not located on your PATH environment variable.
@@ -68,9 +68,15 @@ The defines list will need to be changed to simulate different build setups.
 
 ## Schemas
 
-The 'schemas' sub-directory contains schemas for various files in the project, especially for JSON configuration files.
+The 'schemas' sub-directory contains schemas for various files in the project, especially for JSON
+configuration files.
 
-When using VS Code as an editor, the JSON schemas can be used by either setting the "$schema" property in the root object of the JSON file to apply it to or by configuring the "json.schemas" setting in the workspace's 'settings.json' file. See https://code.visualstudio.com/docs/languages/json#_json-schemas-settings for details.
+When using VS Code as an editor, the JSON schemas can be used by either setting the "$schema"
+property in the root object of the JSON file to apply it to or by configuring the "json.schemas"
+setting in the workspace's 'settings.json' file.
+See the
+[VS Code Documentation for JSON Schemas](https://code.visualstudio.com/docs/languages/json#_json-schemas-settings)
+for details.
 
 ### Project JSON Schema
 

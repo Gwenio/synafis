@@ -31,7 +31,7 @@ Finally run Ninja in the directory containing the generated files.
 
 ## Requirements
 
-#### Setup.js Requirements
+### Setup.js Requirements
 
 - Node 10.0 or higher.
 - command-line-args 5.0.2
@@ -42,7 +42,7 @@ Finally run Ninja in the directory containing the generated files.
 - superstruct 0.6.0
 - neo-async 2.6.0 (async can be substituted if the require line is changed.)
 
-#### Build Requirements
+### Build Requirements
 
 - Ninja version 1.7 or higher.
 - C++ Compiler (MSVC 2017 is the current baseline for expected standard support).
@@ -51,17 +51,18 @@ The documentation is written to be generated from the source files by Doxygen.
 
 ## Project Layout
 
-- src			: Contains the source files for the project.
-- test			: Contains tests cases.
-- templates		: Contains examples of various configuration files for tools.
-- LICENSE		: The license for the project's code.
-- README.md		: This file.
-- templates.md	: Lists the uses of the files in templates and modifications that may be needed to use them.
-- setup.md      : Documents setup.js and the associated json files.
-- setup.js	    : Script for generating build files.
-- project.json	: Describes the project for setup.js.
-- config.json	: Configuration for setup.js (this file is for the user to create).
-- build.ninja	: The Ninja build file.
+- src: Contains the source files for the project.
+- test: Contains tests cases.
+- templates: Contains examples of various configuration files for tools.
+- LICENSE: The license for the project's code.
+- README.md: This file.
+- templates.md: Lists the uses of the files in templates and modifications that may be needed to
+  use them.
+- setup.md: Documents setup.js and the associated json files.
+- setup.js: Script for generating build files.
+- project.json: Describes the project for setup.js.
+- config.json: Configuration for setup.js (this file is for the user to create).
+- build.ninja: The Ninja build file.
 
 ## Developers
 
