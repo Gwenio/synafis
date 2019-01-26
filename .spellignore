@@ -1,0 +1,11 @@
+
+Doxyfile
+LICENSE
+.editorconfig
+.clang-format
+.jsbeautifyrc
+.markdownlint.json
+.gitattributes
+.gitignore
+.spellignore
+.vscode/spellright.dict
