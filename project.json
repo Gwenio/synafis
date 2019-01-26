@@ -1,4 +1,5 @@
 {
+	"$schema": "./templates/schemas/project.json",
 	"variants":
 	{
 		"target":
@@ -20,6 +21,7 @@
 	"sources": [
 	{
 		"group": "src",
+		"description": "Adds '.cpp' files used in all build variations to the 'src' group.",
 		"prefix": "src/",
 		"suffix": ".cpp",
 		"files": [
@@ -35,6 +37,7 @@
 	},
 	{
 		"group": "src",
+		"description": "Adds '.cpp' files used in all unit testing builds to the 'src' group.",
 		"prefix": "test/",
 		"suffix": ".cpp",
 		"files": [
@@ -57,8 +60,10 @@
 		"objects":
 		{
 			"action": "cxx",
+			"description": "The step of compiling '.cpp' files to object files.",
 			"sources": [
 			{
+				"description": "Use the sources in 'src' as input for building the 'obj' output group.",
 				"group": "src",
 				"implicit": false,
 				"produces": "obj"
@@ -67,6 +72,7 @@
 			{
 				"obj":
 				{
+					"description": "Each input is used to make an object file with a name derived from the input as output.",
 					"implicit": false,
 					"extension": "obj",
 					"location": "tmp",
@@ -77,12 +83,14 @@
 		"unit_exe":
 		{
 			"action": "link",
+			"description": "The step for linking the object files for the unit test runner executable.",
 			"filters": [
 			{
 				"target": "unit"
 			}],
 			"inputs": [
 			{
+				"description": "Use the outputs of 'objects.obj' as inputs.",
 				"step": "objects",
 				"group": "obj",
 				"implicit": false
@@ -91,6 +99,7 @@
 			{
 				"exe":
 				{
+					"description": "The test runner executable.",
 					"implicit": false,
 					"location": "tmp",
 					"extension": "exe",

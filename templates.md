@@ -65,3 +65,13 @@ Currently just defines the configuration for MSVC targeting a release build.
 Program and include paths may need to be updated to match your system.
 
 The defines list will need to be changed to simulate different build setups.
+
+## Schemas
+
+The 'schemas' sub-directory contains schemas for various files in the project, especially for JSON configuration files.
+
+When using VS Code as an editor, the JSON schemas can be used by either setting the "$schema" property in the root object of the JSON file to apply it to or by configuring the "json.schemas" setting in the workspace's 'settings.json' file. See https://code.visualstudio.com/docs/languages/json#_json-schemas-settings for details.
+
+### Project JSON Schema
+
+The file 'project.json' contains the schema for the 'project.json' located in the root of the project.

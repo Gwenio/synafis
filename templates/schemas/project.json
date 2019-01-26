@@ -1,0 +1,307 @@
+{
+	"$schema": "http://json-schema.org/draft-07/schema#",
+	"description": "Schema for Synafis's project description.",
+	"definitions":
+	{
+		"FilterList":
+		{
+			"type": "array",
+			"title": "Filters",
+			"uniqueItems": true,
+			"items":
+			{
+				"type": "object",
+				"title": "Filter",
+				"description": "A set of conditions paired with the option they must match.",
+				"additionalProperties":
+				{
+					"type": "string",
+					"title": "Selector",
+					"description": "A name-value pair of a condition ID and an option value, repectively."
+				},
+				"minProperties": 1
+			},
+			"default": []
+		},
+		"Description":
+		{
+			"type": "string",
+			"title": "Description",
+			"description": "Optional descriptive text that does not affect the interpretation of the project."
+		},
+		"GroupID":
+		{
+			"type": "string",
+			"title": "Source Group",
+			"minLength": 1
+		},
+		"ImpInput":
+		{
+			"type": "boolean",
+			"title": "Implicit Input",
+			"description": "When true, the associated input will be listed as an implicit input.",
+			"default": false
+		},
+		"Produces":
+		{
+			"anyOf": [
+				{ "type": "null" },
+				{
+					"type": "string",
+					"title": "Input Production",
+					"description": "Specifies the output group to that an input is mapped to.",
+					"minLength": 1
+				}
+			],
+			"default": null
+		}
+	},
+	"type": "object",
+	"properties":
+	{
+		"$schema":
+		{
+			"type": "string",
+			"title": "JSON Schema",
+			"description": "The path for the JSON schema."
+		},
+		"variants":
+		{
+			"type": "object",
+			"title": "Build Variations",
+			"description": "Used to define conditions for different builds.",
+			"additionalProperties":
+			{
+				"type": "object",
+				"title": "Build Condition",
+				"description": "A condition to filter by when generating different builds.",
+				"required": ["options"],
+				"properties":
+				{
+					"description": { "$ref": "#/definitions/Description" },
+					"options":
+					{
+						"type": "array",
+						"title": "Options",
+						"description": "The options for the condition.",
+						"uniqueItems": true,
+						"items":
+						{
+							"type": "string",
+							"title": "Option Value",
+							"description": "The identifier for an option.",
+							"minLength": 1
+						}
+					}
+				}
+			}
+		},
+		"sources":
+		{
+			"type": "array",
+			"title": "Source Groups",
+			"description": "Defines groups of source files to use in build rules.",
+			"uniqueItems": true,
+			"items":
+			{
+				"type": "object",
+				"required": [
+					"group",
+					"files"
+				],
+				"properties":
+				{
+					"group":
+					{
+						"$ref": "#/definitions/GroupID",
+						"description": "The identifier of the group to add the files to."
+					},
+					"prefix":
+					{
+						"type": "string",
+						"title": "Prefix",
+						"description": "A string to add to the front of each file name in the files list.",
+						"default": ""
+					},
+					"suffix":
+					{
+						"type": "string",
+						"title": "Suffix",
+						"description": "A string to add to the end of each file name in the files list.",
+						"default": ""
+					},
+					"files":
+					{
+						"type": "array",
+						"title": "Files",
+						"description": "A list of file names.",
+						"uniqueItems": true,
+						"minItems": 1,
+						"items":
+						{
+							"type": "string",
+							"title": "File Path/Name",
+							"description": "A relative file name to add Prefix and Suffix to."
+						}
+					},
+					"filters":
+					{
+						"$ref": "#/definitions/FilterList",
+						"description": "A list of filters to determine which build variations to include the files for."
+					},
+					"description": { "$ref": "#/definitions/Description" }
+				}
+			}
+		},
+		"steps":
+		{
+			"type": "object",
+			"title": "Build Steps",
+			"description": "Defines generic steps for building the project.",
+			"additionalProperties":
+			{
+				"type": "object",
+				"title": "Build Step",
+				"description": "A generic step for building the project.",
+				"required": ["action"],
+				"properties":
+				{
+					"action":
+					{
+						"$ref": "#/definitions/GroupID",
+						"title": "Build Action",
+						"description": "Identifies the type of action to preform for the step."
+					},
+					"description": { "$ref": "#/definitions/Description" },
+					"filters":
+					{
+						"$ref": "#/definitions/FilterList",
+						"description": "A list of filters to determine which build variations to include the step for."
+					},
+					"sources":
+					{
+						"type": "array",
+						"title": "Source Files",
+						"description": "Identifies the source file groups to include as inputs.",
+						"items":
+						{
+							"type": "object",
+							"title": "Source Specifier",
+							"description": "Specifies the source group to use as inputs and how to use it.",
+							"required": ["group"],
+							"properties":
+							{
+								"description": { "$ref": "#/definitions/Description" },
+								"group":
+								{
+									"$ref": "#/definitions/GroupID",
+									"description": "The name of the group of sources to use."
+								},
+								"implicit":
+								{
+									"$ref": "#/definitions/ImpInput"
+								},
+								"produces":
+								{
+									"$ref": "#/definitions/Produces"
+								}
+							}
+						},
+						"default": []
+					},
+					"inputs":
+					{
+						"type": "array",
+						"title": "Inputs",
+						"description": "Identifies the source file groups to include as inputs.",
+						"items":
+						{
+							"type": "object",
+							"title": "Input",
+							"description": "Specifies the output of another step to use as an input.",
+							"required": ["step", "group"],
+							"properties":
+							{
+								"description": { "$ref": "#/definitions/Description" },
+								"step":
+								{
+									"$ref": "#/definitions/GroupID",
+									"title": "Step ID",
+									"description": "The name of the step to take outputs from as inputs."
+								},
+								"group":
+								{
+									"$ref": "#/definitions/GroupID",
+									"title": "Import Group",
+									"description": "The name of the group of outputs from the step to use as inputs."
+								},
+								"implicit":
+								{
+									"$ref": "#/definitions/ImpInput"
+								},
+								"produces":
+								{
+									"$ref": "#/definitions/Produces"
+								}
+							}
+						},
+						"default": []
+					},
+					"outputs":
+					{
+						"type": "object",
+						"title": "Outputs",
+						"description": "Identifies the source file groups to include as inputs.",
+						"additionalProperties":
+						{
+							"type": "object",
+							"title": "Output",
+							"description": "Defines a set of outputs.",
+							"required": ["location", "extension"],
+							"properties":
+							{
+								"description": { "$ref": "#/definitions/Description" },
+								"implicit":
+								{
+									"$ref": "#/definitions/ImpInput"
+								},
+								"location":
+								{
+									"$ref": "#/definitions/GroupID",
+									"title": "Output Location",
+									"description": "A named location from the user configuration to place the outputs within."
+								},
+								"extension":
+								{
+									"$ref": "#/definitions/GroupID",
+									"title": "File Extension",
+									"description": "A named extension from the user configuration to use for the output file(s)."
+								},
+								"single":
+								{
+									"type": "boolean",
+									"title": "Individual Output Files",
+									"description": "When true each input that produces this output group will produce its own output file with a name derived from the input.",
+									"default": false
+								},
+								"products":
+								{
+									"type": "array",
+									"title": "Production Names",
+									"description": "An array of named outputs from the user configuration to produce as output files.",
+									"items":
+									{
+										"$ref": "#/definitions/GroupID",
+										"title": "Product ID",
+										"description": "A named output file name from the user configuration."
+									},
+									"default": []
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+}
