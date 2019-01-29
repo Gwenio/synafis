@@ -6,7 +6,7 @@
 	"preserve_newlines": true,
 	"js":
 	{
-		"max_preserve_newlines": 1,
+		"max_preserve_newlines": 2,
 		"wrap_line_length": 100,
 		"brace_style": "expand,preserve-inline",
 		"break_chained_methods": true,
