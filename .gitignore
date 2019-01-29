@@ -8,6 +8,11 @@ Doxyfile
 .vscode
 !.vscode/spellright.dict
 *.ninja
+*.ninja.tmp
+*.ninja.bak
+.ninja_deps
+.ninja_log
 config.json
 node_modules
 package-lock.json
+package.json

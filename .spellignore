@@ -1,5 +1,6 @@
 
 Doxyfile
+templates/Doxyfile
 LICENSE
 .editorconfig
 .clang-format
@@ -9,3 +10,7 @@ LICENSE
 .gitignore
 .spellignore
 .vscode/spellright.dict
+.eslintrc.json
+*.ninja
+*.ninja.bak
+*.ninja.tmp

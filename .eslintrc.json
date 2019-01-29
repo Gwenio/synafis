@@ -1,0 +1,62 @@
+{
+	"root": true,
+	"parserOptions":
+	{
+		"ecmaVersion": 9,
+		"sourceType": "script",
+		"ecmaFeatures":
+		{
+			"classes": true,
+			"arrowFunctions": true,
+			"jsx": true
+		}
+	},
+	"extends": [
+		"eslint:recommended",
+		"plugin:node/recommended",
+		"plugin:promise/recommended",
+		"plugin:lodash/recommended"
+	],
+	"rules":
+	{
+		"strict": "warn",
+		"semi": "off",
+		"no-console": "off",
+		"no-var": "warn",
+		"global-require": "warn",
+		"no-unused-vars": "warn",
+		"no-use-before-define": "error",
+		"no-shadow": "warn",
+		"no-caller": "warn",
+		"eqeqeq": "warn",
+		"yoda": "warn",
+		"block-scoped-var": "error",
+		"default-case": "warn",
+		"no-eval": "warn",
+		"no-new": "error",
+		"no-new-func": "error",
+		"no-new-object": "error",
+		"no-new-require": "error",
+		"no-new-wrappers": "error",
+		"no-new-symbol": "error",
+		"no-useless-call": "warn",
+		"no-useless-escape": "error",
+		"no-return-await": "warn",
+		"no-return-assign": "error",
+		"node/shebang": "off",
+		"node/no-extraneous-require": "off",
+		"promise/catch-or-return": "off",
+		"lodash/import-scope": "off",
+		"lodash/preferred-alias": "off"
+	},
+	"globals":
+	{
+		"Promise": true
+	},
+	"env":
+	{
+		"node": true,
+		"es6": true
+	},
+	"plugins": ["node", "promise", "lodash"]
+}
