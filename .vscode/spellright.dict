@@ -12,3 +12,7 @@ vmem
 idaccess
 const
 readonly
+init
+func
+alloc
+decltype
