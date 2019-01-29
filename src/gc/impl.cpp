@@ -303,6 +303,10 @@ bool collector::wait_read() const
 	}
 }
 
-collector collector::singleton{};
+collector &collector::singleton() noexcept
+{
+	static collector the_one_and_only{};
+	return the_one_and_only;
+}
 
 }

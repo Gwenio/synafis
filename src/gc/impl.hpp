@@ -80,7 +80,7 @@ public:
 		 */
 		static void insert_source(isource &src, bool trav) noexcept
 		{
-			collector::singleton.insert_source(src, trav);
+			collector::singleton().insert_source(src, trav);
 		}
 
 		/**	\fn erase_sources(Iter const begin, Iter const end, bool trav) noexcept
@@ -93,7 +93,7 @@ public:
 		template<typename Iter>
 		static void erase_sources(Iter const begin, Iter const end, bool trav) noexcept
 		{
-			std::lock_guard<std::mutex> l{collector::singleton.mtx};
+			std::lock_guard<std::mutex> l{collector::singleton().mtx};
 			erase_sources(begin, end, trav, std::defer_lock);
 		}
 
@@ -110,17 +110,19 @@ public:
 			Iter const begin, Iter const end, bool trav, std::defer_lock_t) noexcept
 		{
 			{
-				auto &vec = collector::singleton.sources;
+				auto &vec = collector::singleton().sources;
 				auto tag = vec.cbegin();
 				for (auto cur = begin; cur != end; cur++) {
-					collector::singleton.erase_source(vec, tag, static_cast<isource const &>(*cur));
+					collector::singleton().erase_source(
+						vec, tag, static_cast<isource const &>(*cur));
 				}
 			}
 			if (trav) {
-				auto &vec = collector::singleton.traversable;
+				auto &vec = collector::singleton().traversable;
 				auto tag = vec.cbegin();
 				for (auto cur = begin; cur != end; cur++) {
-					collector::singleton.erase_source(vec, tag, static_cast<isource const &>(*cur));
+					collector::singleton().erase_source(
+						vec, tag, static_cast<isource const &>(*cur));
 				}
 			}
 		}
@@ -290,10 +292,11 @@ private:
 	 */
 	collector() noexcept;
 
-	/**	\var singleton
+	/**	\fn singleton() noexcept
 	 *	\brief The singleton of type collector.
+	 *	\return Returns a reference the the singleton of the collector type.
 	 */
-	static collector singleton;
+	static collector &singleton() noexcept;
 
 	/**	\fn init_impl()
 	 *	\see init()
@@ -483,32 +486,32 @@ public:
 	/**	\fn init()
 	 *	\brief Finishes setting up the collector.
 	 */
-	static void init() { singleton.init_impl(); }
+	static void init() { singleton().init_impl(); }
 
 	/**	\fn lock()
 	 *	\brief Locks against collection.
 	 *	\details Called by the program when entering a section in which the collector must not run.
 	 *	\note If the collector needs to run, this call will block until after it runs.
 	 */
-	static void lock() { singleton.lock_impl(); }
+	static void lock() { singleton().lock_impl(); }
 
 	/**	\fn unlock()
 	 *	\brief Allows collection again.
 	 *	\details Called by the program when leaving a section in which the collector must not run.
 	 */
-	static void unlock() { singleton.unlock_impl(); }
+	static void unlock() { singleton().unlock_impl(); }
 
 	/**	\fn wait()
-	 *	\brief Called when insufficent memory was available.
+	 *	\brief Called when insufficient memory was available.
 	 *	\details Signals that a collection cycle is needed.
 	 *	\details Does not return until a cycle has run.
 	 */
-	static void wait() { singleton.wait_impl(); }
+	static void wait() { singleton().wait_impl(); }
 
 	/**	\fn collect() noexcept
 	 *	\brief Causes a collection cycle to run as soon as possible.
 	 */
-	static void collect() noexcept { singleton.collect_impl(); }
+	static void collect() noexcept { singleton().collect_impl(); }
 
 	/**	\fn base_ptr(void *ptr) noexcept
 	 *	\brief Gets the originally allocated address.
@@ -516,14 +519,14 @@ public:
 	 *	\returns Returns the address originally allocated for the object ptr points to a
 	 *	\returns location within. Or nullptr if not allocated by a registered source.
 	 */
-	static void *base_ptr(void *ptr) noexcept { return singleton.base_ptr_impl(ptr); }
+	static void *base_ptr(void *ptr) noexcept { return singleton().base_ptr_impl(ptr); }
 
 	/**	\fn get_type(void *ptr) noexcept
 	 *	\brief Gets the originally allocated address.
 	 *	\param ptr The pointer to get the identity for.
 	 *	\returns Returns the identity of an object or nullptr if not from a registered source.
 	 */
-	static identity const *get_type(void *ptr) noexcept { return singleton.get_type_impl(ptr); }
+	static identity const *get_type(void *ptr) noexcept { return singleton().get_type_impl(ptr); }
 
 	/**	\fn register_root(void *obj, traverse_cb tcb, root_cb rcb)
 	 *	\brief Registers a root object with the collector.
@@ -533,20 +536,20 @@ public:
 	 */
 	static void register_root(void *obj, traverse_cb tcb, root_cb rcb)
 	{
-		return singleton.register_root_impl(obj, tcb, rcb);
+		return singleton().register_root_impl(obj, tcb, rcb);
 	}
 
 	/**	\fn unregister_root(void *obj) noexcept
 	 *	\brief Unregisters a root object.
 	 *	\param obj A pointer to the root object to unregister.
 	 */
-	static void unregister_root(void *obj) noexcept { singleton.unregister_root_impl(obj); }
+	static void unregister_root(void *obj) noexcept { singleton().unregister_root_impl(obj); }
 
 	/**	\fn set_period(duration value) noexcept
-	 *	\brief Sets the period for singleton.
+	 *	\brief Sets the period for singleton().
 	 *	\param value The new value for period.
 	 */
-	static void set_period(duration value) noexcept { singleton.set_period_impl(value); }
+	static void set_period(duration value) noexcept { singleton().set_period_impl(value); }
 
 	/**	\fn insert_alloc(alloc_ptr &&alloc) noexcept
 	 *	\brief Takes ownership of an allocator.
@@ -555,21 +558,24 @@ public:
 	 */
 	static iallocator *insert_alloc(alloc_ptr &&alloc) noexcept
 	{
-		return singleton.insert_alloc_impl(std::forward<alloc_ptr>(alloc));
+		return singleton().insert_alloc_impl(std::forward<alloc_ptr>(alloc));
 	}
 
 	/**	\fn erase_alloc(iallocator const &alloc) noexcept
 	 *	\brief Removes an allocator.
 	 *	\param alloc The allocator to remove.
 	 */
-	static void erase_alloc(iallocator const &alloc) noexcept { singleton.erase_alloc_impl(alloc); }
+	static void erase_alloc(iallocator const &alloc) noexcept
+	{
+		singleton().erase_alloc_impl(alloc);
+	}
 
 	/**	\fn find_source(void *ptr) noexcept
 	 *	\brief Finds the source an address was allocated from.
 	 *	\param ptr The pointer to get a base address for.
 	 *	\returns Returns the source of ptr or nullptr if none.
 	 */
-	static isource *find_source(void *ptr) noexcept { return singleton.find_source_wrap(ptr); }
+	static isource *find_source(void *ptr) noexcept { return singleton().find_source_wrap(ptr); }
 };
 
 }
