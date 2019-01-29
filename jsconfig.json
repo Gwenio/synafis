@@ -1,0 +1,29 @@
+{
+	"compilerOptions":
+	{
+		"target": "es2018",
+		"module": "commonjs",
+		"moduleResolution": "node",
+		"checkJs": true
+	},
+	"typeAcquisition":
+	{
+		"include": [
+			"lodash",
+			"asyncmachine",
+			"superstruct"
+		]
+	},
+	"exclude": [
+		"node_modules",
+		"**/node_modules/*",
+		"./src/**",
+		"./tmp/**",
+		"./bin/**",
+		"./templates/**",
+		"./doxygen/**"
+	],
+	"files": [
+		"./setup.js"
+	]
+}
