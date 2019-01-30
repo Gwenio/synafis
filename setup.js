@@ -258,10 +258,20 @@ const ConfigSchema = struct.partial(
 	products: {}
 })
 
+/**
+ * @type Pipeline
+ */
 class Pipeline
 {
-	constructor(name, concurrency, tasks)
+	/**
+	 *
+	 * @param {string | symbol} id
+	 * @param {Number} concurrency
+	 * @param {Object} tasks
+	 */
+	constructor(id, concurrency, tasks)
 	{
+		const name = String(id)
 		this.filters = {}
 		this.stages = _.keys(tasks)
 		this.emitter = new EventEmitter()
@@ -278,16 +288,24 @@ class Pipeline
 			})
 			.id(`Pipeline.${name}.guard`)
 		_.each([this.automata, this.guard], (x) => x.set([]))
-		this.queue = async_queue(_.bind(this.worker, this), _.max([1, concurrency]))
+		this.queue = async_queue(_.bind(this.worker, this), _.max([1, Math.round(concurrency)]))
 		this.prepare(tasks)
 	}
 
+	/**
+	 * @param {string | symbol} stage
+	 * @param {Error} error
+	 */
 	abort(stage, error)
 	{
 		this.guard.add('Abort')
 		this.emitter.emit('failure', stage, error)
 	}
 
+	/**
+	 * @param {Array<string | symbol>} states
+	 * @returns {Promise}
+	 */
 	condition(states)
 	{
 		return Promise.race([this.guard.when('Abort'),
@@ -295,12 +313,22 @@ class Pipeline
 		])
 	}
 
+	/**
+	 * Applies the filter for the stage if there is one and emits the event for the stage.
+	 * @param {string | symbol} id The ID of the stage to forward the result of.
+	 * @param {*} result
+	 */
 	forward(id, result)
 	{
 		const filter = _.get(this.filters, id, _.identity)
 		this.emitter.emit(id, filter(result))
 	}
 
+	/**
+	 * Signals that a stage is complete and calls the worker exit callback.
+	 * @param {string | symbol} id The ID of the stage that completed.
+	 * @param {() => void} cb The completion callback for th worker.
+	 */
 	complete(id, cb)
 	{
 		this.automata.add(id)
@@ -308,6 +336,13 @@ class Pipeline
 		cb()
 	}
 
+	/**
+	 * The queue worker implementation.
+	 * @param {Object} param0
+	 * @param {string | symbol} param0.id The ID of the stage to run.
+	 * @param {() => any} param0.task The ID of the stage to run.
+	 * @param {() => void} cb The completion callback for th worker.
+	 */
 	worker({ id, task }, cb)
 	{
 		if (this.guard.is('Abort'))
@@ -325,7 +360,7 @@ class Pipeline
 	}
 
 	/**
-	 *
+	 * Sets an event to add the result of a task to the input set for all tasks that depend on it.
 	 * @param {string | symbol} from
 	 * @param {Array<string | symbol>} depends
 	 */
@@ -337,6 +372,10 @@ class Pipeline
 		})
 	}
 
+	/**
+	 * Sets an event to generate a log event when a task completes.
+	 * @param {string | symbol} id The ID of the stage to set an event for.
+	 */
 	setLogEvent(id)
 	{
 		this.emitter.once(id, (result) => this.emitter.emit('log', id, result))
@@ -420,6 +459,10 @@ class Pipeline
 		}
 	}
 
+	/**
+	 * @param {string | symbol} id
+	 * @param {(result: any) => void} listener
+	 */
 	applyListener(id, listener)
 	{
 		if (_.includes(this.stages, id))
@@ -432,10 +475,19 @@ class Pipeline
 		}
 	}
 
+	/**
+	 * @param {(stage: string | symbol | null, result: any) => void} logger
+	 */
 	applyLogger(logger) { this.emitter.on('log', logger) }
 
+	/**
+	 * @param {(stage: string | symbol | null, err: Error) => void} logger
+	 */
 	onFailure(logger) { this.emitter.on('failure', logger) }
 
+	/**
+	 * @param {() => void} listener
+	 */
 	onComplete(listener) { this.emitter.once('complete', listener) }
 }
 
@@ -498,8 +550,16 @@ class Variant
 	}
 }
 
+/**
+ * @type Step
+ */
 class Step
 {
+	/**
+	 * Constructs a Step from input.
+	 * @param {string} id The Step ID.
+	 * @param {Object} data
+	 */
 	constructor(id, data)
 	{
 		this.action = data.action
@@ -512,6 +572,11 @@ class Step
 		this.sources = _.get(data, 'sources', [])
 	}
 
+	/**
+	 * Creates an array of Step objects from a raw JSON object.
+	 * @param {Object} raw
+	 * @returns {Array<Step>}
+	 */
 	static process(raw)
 	{
 		return _.map(raw, (step, key) => new Step(key, step))
@@ -522,12 +587,17 @@ class Step
 		return _.union(this.after, _.map(this.inputs, 'step'))
 	}
 
+	/**
+	 * Sorts an array of Step objects so they will come later than those they depend on.
+	 * @param {Array<Step>} steps
+	 * @returns {Array<Step>}
+	 */
 	static sort(steps)
 	{
 		const tree = _.reduce(steps, (acc, item) =>
 			_.set(acc, item.id, item.get_deps()), {})
-		let [sorted, remaining] = _.partition(steps, (x) => tree[x.id] === [])
-		sorted = [sorted]
+		let [temp, remaining] = _.partition(steps, (x) => tree[x.id] === [])
+		let sorted = [temp]
 		while (_.size(remaining) > 0)
 		{
 			let removed; // this semicolon is important
@@ -549,6 +619,9 @@ class Step
 	}
 }
 
+/**
+ * @type Source
+ */
 class Source
 {
 	constructor(src)
@@ -562,11 +635,19 @@ class Source
 			_.replace(prefix + f + suffix, '/', path.sep))
 	}
 
+	/**
+	 * @param {Array<Object>} raw
+	 * @returns {Array<Source>}
+	 */
 	static process(raw)
 	{
 		return _.map(raw, (src) => new Source(src))
 	}
 
+	/**
+	 * @param {Array<Source>} sources
+	 * @returns {Object}
+	 */
 	static merge(sources)
 	{
 		const groups = _.uniq(_.map(sources, 'group'))
@@ -896,6 +977,13 @@ class Build
 	}
 }
 
+/**
+ * Partitions the result of a Pipeline stage.
+ * @param {string} parts The Pipeline stage used to determine the partitions.
+ * @param {string} source The Pipeline stage to partition the result of.
+ * @param {(value: any, by: any) => any} trans
+ * @param {*} filter
+ */
 function partition(parts, source, trans, filter = _.curry((x, y) => x.match(y)))
 {
 	if (_.isNil(trans))
@@ -1435,11 +1523,13 @@ else
 	driver.applyFilter('Project', ProjectSchema)
 	driver.applyFilter('Config', ConfigSchema)
 	driver.applyFilter('MergeSources', struct.list([struct.dict(['string',
-		struct.list(['string'])])]))
+		struct.list(['string'])
+	])]))
 	driver.onFailure((stage, error) =>
 	{
 		if (!_.isNil(stage))
 		{
+			stage = String(stage)
 			console.warn(`Failure encountered in stage '${stage}' of the Pipeline.`)
 		}
 		console.error(error)
