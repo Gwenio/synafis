@@ -728,6 +728,13 @@ class NinjaWriter
 		return this
 	}
 
+	/**
+	 * Outputs a variable line to the Ninja file.
+	 * @param {string} name The name of the Ninja variable.
+	 * @param {string | null} value The value of the Ninja variable.
+	 * @param {boolean} indent When true the variable line will be indented two spaces.
+	 * @returns {NinjaWriter} this
+	 */
 	variable(name, value, indent)
 	{
 		if (!(_.isNil(value) || value === ''))
@@ -737,17 +744,30 @@ class NinjaWriter
 		return this
 	}
 
-	pool(val, key)
+	/**
+	 * Outputs a pool definition to the Ninja file.
+	 * @param {Number} depth The 'depth' of the pool.
+	 * @param {string} key The name of the pool.
+	 * @returns {NinjaWriter} this
+	 */
+	pool(depth, key)
 	{
 		this.write("pool " + key + "\n")
-		return this.variable('depth', val, true)
+		return this.variable('depth', Math.round(depth)
+			.toString(), true)
 	}
 
-	rule(val, key)
+	/**
+	 * Outputs a rule definition to the Ninja file.
+	 * @param {Object} variables The variables for the rule.
+	 * @param {string} key The name of the rule.
+	 * @returns {NinjaWriter} this
+	 */
+	rule(variables, key)
 	{
 		this.write("rule " + key + "\n")
-		return _.reduce(val, (acc, x, y) =>
-			acc.variable(y, x, true), this)
+		_.each(variables, (x, y) => this.variable(y, x, true))
+		return this
 	}
 
 	buildList(pre, items)
@@ -760,8 +780,9 @@ class NinjaWriter
 	}
 
 	/**
-	 *
+	 * Outputs a build entry to the Ninja file.
 	 * @param {Build} param0
+	 * @returns {NinjaWriter} this
 	 */
 	build({ action, outputs, implicit, inputs, depends, after, vars })
 	{
@@ -773,10 +794,15 @@ class NinjaWriter
 		this.buildList(" |", depends)
 		this.buildList(" ||", after)
 		this.write("\n")
-		return _.reduce(vars, (acc, val, key) =>
-			acc.variable(key, val, true), this)
+		_.each(vars, (val, key) => this.variable(key, val, true))
+		return this
 	}
 
+	/**
+	 * Outputs a default line to the Ninja file.
+	 * @param {Array<string>} targets The build targets to be defauls.
+	 * @returns {NinjaWriter} this
+	 */
 	defs(targets)
 	{
 		if (_.size(targets) > 0)
@@ -789,8 +815,19 @@ class NinjaWriter
 	}
 }
 
+/**
+ * @type Directory
+ */
 class Directory
 {
+	/**
+	 *
+	 * @param {string} id The ID for the Directory.
+	 * @param {Object} param1
+	 * @param {string} param1.root The constant prefix for the Directory.
+	 * @param {Array<any>} param1.filters The filters.
+	 * @param {Object} param1.folders The build variation specific sub-folders.
+	 */
 	constructor(id, { root, filters, folders })
 	{
 		this.id = id
@@ -799,18 +836,35 @@ class Directory
 		this.folders = folders
 	}
 
+	/**
+	 * Processes the directory entries from JSON.
+	 * @param {Object} raw
+	 * @returns {Array<Directory>}
+	 */
 	static process(raw)
 	{
 		return _.map(raw, (val, key) => new Directory(key, val))
 	}
 
+	/**
+	 * Generates a build variation specific path.
+	 * @param {Variant} variant The variant to generate a path for.
+	 * @returns {string}
+	 */
 	location(variant)
 	{
 		const temp = _.map(this.folders, (val, key) =>
-			_.get(val, variant.get(key), variant.get(key)))
+		{
+			const x = variant.get(key)
+			return _.get(val, x, x)
+		})
 		return _.spread(path.join)(_.concat(this.root, temp))
 	}
 
+	/**
+	 * A work around for Node's fs.existsSync() not working correctly.
+	 * @param {string} dir
+	 */
 	static make(dir)
 	{
 		if (!fs.existsSync(dir))
@@ -864,6 +918,9 @@ class Product
 	}
 }
 
+/**
+ * @type Build
+ */
 class Build
 {
 	/**
@@ -935,6 +992,7 @@ class Build
 	 *
 	 * @param {String} name
 	 * @param {*} inputs
+	 * @returns {Build}
 	 */
 	static alias(name, inputs)
 	{
@@ -945,7 +1003,9 @@ class Build
 	/**
 	 *
 	 * @param {String} action
-	 * @param {*} param1
+	 * @param {Object} param1
+	 * @param {*} param1.single
+	 * @param {*} param1.multiple
 	 * @param {*} implicit
 	 * @param {*} inputs
 	 * @param {*} depends
