@@ -23,8 +23,10 @@
 		"./templates/**",
 		"./doxygen/**"
 	],
+	"include": [
+		"./js/"
+	],
 	"files": [
-		"./setup.js",
-		"./js/ninja.js"
+		"./setup.js"
 	]
 }
