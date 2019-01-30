@@ -38,14 +38,14 @@ namespace unit_test {
 
 bool t::no_readers() noexcept
 {
-	std::lock_guard<std::mutex> l{collector::singleton.mtx};
-	return collector::singleton.count < 1;
+	std::lock_guard<std::mutex> l{collector::singleton().mtx};
+	return collector::singleton().count < 1;
 }
 
 bool t::has_readers() noexcept
 {
-	std::lock_guard<std::mutex> l{collector::singleton.mtx};
-	return 0 < collector::singleton.count;
+	std::lock_guard<std::mutex> l{collector::singleton().mtx};
+	return 0 < collector::singleton().count;
 }
 
 //!	\endcond
