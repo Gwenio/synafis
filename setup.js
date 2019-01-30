@@ -32,7 +32,7 @@ const fs = _.merge(require('fs'), require('fs')
 const { machine } = require('asyncmachine')
 const { struct } = require('superstruct')
 const EventEmitter = require('events')
-const _a = require('neo-async')
+const async_queue = require('neo-async/queue')
 const path = require('path')
 // spellcheck: on
 
@@ -278,9 +278,7 @@ class Pipeline
 			})
 			.id(`Pipeline.${name}.guard`)
 		_.each([this.automata, this.guard], (x) => x.set([]))
-		this.guard.Abort_exit = _.constant(false)
-		this.guard.Abort_state = _.once((err) => { this.error = err })
-		this.queue = _a.queue(_.bind(this.worker, this), _.max([1, concurrency]))
+		this.queue = async_queue(_.bind(this.worker, this), _.max([1, concurrency]))
 		this.prepare(tasks)
 	}
 
@@ -326,6 +324,11 @@ class Pipeline
 		}
 	}
 
+	/**
+	 *
+	 * @param {string | symbol} from
+	 * @param {Array<string | symbol>} depends
+	 */
 	setReport(from, depends)
 	{
 		this.emitter.once(from, (result) =>
@@ -355,6 +358,10 @@ class Pipeline
 				this.queue.push({ id, task: () => task(this.inputs[id]) }))
 	}
 
+	/**
+	 *
+	 * @param {*} tasks
+	 */
 	prepare(tasks)
 	{
 		let deps = _.reduce(this.stages, (acc, x) => _.set(acc, x, []), {})
@@ -569,11 +576,9 @@ class Source
 			const files = _.union.apply(_, _.map(members, 'files'))
 			return (_.size(files) < 1) ? acc : _.set(acc, x, files)
 		}, {})
-		return Source.MergedSchema(result)
+		return result
 	}
 }
-
-Source.MergedSchema = struct.dict(['string', struct.list(['string'])])
 
 class Ninja
 {
@@ -673,6 +678,10 @@ class NinjaWriter
 		}
 	}
 
+	/**
+	 *
+	 * @param {Build} param0
+	 */
 	build({ action, outputs, implicit, inputs, depends, after, vars })
 	{
 		this.write("build")
@@ -776,6 +785,16 @@ class Product
 
 class Build
 {
+	/**
+	 *
+	 * @param {String} action
+	 * @param {*} outputs
+	 * @param {*} implicit
+	 * @param {*} inputs
+	 * @param {*} depends
+	 * @param {*} after
+	 * @param {*} vars
+	 */
 	constructor(action, outputs, implicit, inputs, depends, after, vars)
 	{
 		this.action = action
@@ -831,17 +850,33 @@ class Build
 		}, {})
 	}
 
+	/**
+	 *
+	 * @param {String} name
+	 * @param {*} inputs
+	 */
 	static alias(name, inputs)
 	{
 		return new Build('phony', [{ path: name }],
 			[], inputs, [], [], {})
 	}
 
+	/**
+	 *
+	 * @param {String} action
+	 * @param {*} param1
+	 * @param {*} implicit
+	 * @param {*} inputs
+	 * @param {*} depends
+	 * @param {*} after
+	 * @param {*} vars
+	 * @returns {Array<Build>}
+	 */
 	static create(action, { single, multiple }, implicit, inputs, depends, after, vars = {})
 	{
 		if (_.size(single) < 1)
 		{
-			return new Build(action, multiple, implicit, inputs, depends, after, vars)
+			return [new Build(action, multiple, implicit, inputs, depends, after, vars)]
 		}
 		else
 		{
@@ -1105,7 +1140,7 @@ else
 			Product.process(Config.products)],
 		PartProducts: partition('Variants', 'Products', (products, variant) =>
 			_.reduce(_.uniqBy(products, 'id'),
-				(acc, item) => _.set(acc, item.id, item.partition(variant)), {})),
+				(acc, item) => _.set(acc, item['id'], item['partition'](variant)), {})),
 		BuildProducts: partitioned(['PartProducts', 'StepOutputs'],
 			Build.process_products),
 		ProcessBuild: partitioned(['BuildSources', 'BuildProducts', 'StepInputs',
@@ -1332,11 +1367,12 @@ else
 					description: 'regen',
 					generator: 'true'
 				}, rule)
-				writer.build(Build.create(rule, { single: [], multiple: [] },
+				const builds = Build.create(rule, { single: [], multiple: [] },
 					[{ path: 'build.ninja' }], [], _.map([p, c, s], (x) =>
 					{
 						return { path: x }
-					}), [], {}))
+					}), [], {})
+				_.each(builds, (x) => writer.build(x))
 			}
 		}],
 		NinjaBuilds: partitioned(['BuildActions', 'BuildOutputs', 'BuildImplicits',
@@ -1374,7 +1410,7 @@ else
 		}],
 		NinjaAliasesPart: partition('Variants', 'NinjaAliases', (aliases, variant) =>
 			_.reduce(_.uniqBy(aliases, 'id'),
-				(acc, item) => _.set(acc, item.partition(variant), item.id), {})),
+				(acc, item) => _.set(acc, item['partition'](variant), _.get(item, 'id')), {})),
 		NinjaAliasesAssign: partitioned(['NinjaAliasesPart', 'BuildOutputs', 'BuildImplicits'],
 			(part, outs, deps) => _.reduce(part, (acc, val, key) =>
 			{
@@ -1398,6 +1434,8 @@ else
 	})
 	driver.applyFilter('Project', ProjectSchema)
 	driver.applyFilter('Config', ConfigSchema)
+	driver.applyFilter('MergeSources', struct.list([struct.dict(['string',
+		struct.list(['string'])])]))
 	driver.onFailure((stage, error) =>
 	{
 		if (!_.isNil(stage))
