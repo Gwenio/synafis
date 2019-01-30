@@ -37,6 +37,7 @@ const path = require('path')
 const Ninja = require('./js/ninja')
 const { Pipeline } = require('./js/pipeline')
 const { Shadow, Variant } = require('./js/variants')
+const { Step, Source } = require('./js/project')
 // spellcheck: on
 
 const VariantSchema = struct.dict(['string',
@@ -260,117 +261,6 @@ const ConfigSchema = struct.partial(
 	extensions: {},
 	products: {}
 })
-
-/**
- * @type Step
- */
-class Step
-{
-	/**
-	 * Constructs a Step from input.
-	 * @param {string} id The Step ID.
-	 * @param {Object} data
-	 */
-	constructor(id, data)
-	{
-		this.action = data.action
-		this.id = id
-		this.filters = _.get(data, 'filters', [])
-		this.inputs = _.get(data, 'inputs', [])
-		this.outputs = _.map(_.get(data, 'outputs', {}),
-			(val, key) => _.set(val, 'id', key))
-		this.after = _.get(data, 'after', [])
-		this.sources = _.get(data, 'sources', [])
-	}
-
-	/**
-	 * Creates an array of Step objects from a raw JSON object.
-	 * @param {Object} raw
-	 * @returns {Array<Step>}
-	 */
-	static process(raw)
-	{
-		return _.map(raw, (step, key) => new Step(key, step))
-	}
-
-	get_deps()
-	{
-		return _.union(this.after, _.map(this.inputs, 'step'))
-	}
-
-	/**
-	 * Sorts an array of Step objects so they will come later than those they depend on.
-	 * @param {Array<Step>} steps
-	 * @returns {Array<Step>}
-	 */
-	static sort(steps)
-	{
-		const tree = _.reduce(steps, (acc, item) =>
-			_.set(acc, item.id, item.get_deps()), {})
-		let [temp, remaining] = _.partition(steps, (x) => tree[x.id] === [])
-		let sorted = [temp]
-		while (_.size(remaining) > 0)
-		{
-			let removed; // this semicolon is important
-			[remaining, removed] = _.partition(remaining, (x) =>
-			{
-				const deps = tree[x.id]
-				return _.some(remaining, (y) => _.includes(deps, y.id))
-			})
-			if (_.size(removed) === 0)
-			{
-				throw new Error("Circular dependency detected in steps.")
-			}
-			else
-			{
-				sorted.push(removed)
-			}
-		}
-		return _.flatten(sorted)
-	}
-}
-
-/**
- * @type Source
- */
-class Source
-{
-	constructor(src)
-	{
-		const prefix = _.get(src, 'prefix', "")
-		const suffix = _.get(src, 'suffix', "")
-		const files = _.get(src, 'files', [])
-		this.filters = _.get(src, 'filters', [])
-		this.group = _.get(src, 'group', "")
-		this.files = _.map(files, (f) =>
-			_.replace(prefix + f + suffix, '/', path.sep))
-	}
-
-	/**
-	 * @param {Array<Object>} raw
-	 * @returns {Array<Source>}
-	 */
-	static process(raw)
-	{
-		return _.map(raw, (src) => new Source(src))
-	}
-
-	/**
-	 * @param {Array<Source>} sources
-	 * @returns {Object}
-	 */
-	static merge(sources)
-	{
-		const groups = _.uniq(_.map(sources, 'group'))
-		const result = _.reduce(groups, (acc, x) =>
-		{
-			const members = _.filter(sources, ['group', x])
-			const files = _.union.apply(_, _.map(members, 'files'))
-			return (_.size(files) < 1) ? acc : _.set(acc, x, files)
-		}, {})
-		return result
-	}
-}
 
 /**
  * @type Directory
