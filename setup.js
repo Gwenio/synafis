@@ -38,6 +38,7 @@ const Ninja = require('./js/ninja')
 const { Pipeline } = require('./js/pipeline')
 const { Shadow, Variant } = require('./js/variants')
 const { Step, Source } = require('./js/project')
+const { Directory } = require('./js/directory')
 // spellcheck: on
 
 const VariantSchema = struct.dict(['string',
@@ -261,70 +262,6 @@ const ConfigSchema = struct.partial(
 	extensions: {},
 	products: {}
 })
-
-/**
- * @type Directory
- */
-class Directory
-{
-	/**
-	 *
-	 * @param {string} id The ID for the Directory.
-	 * @param {Object} param1
-	 * @param {string} param1.root The constant prefix for the Directory.
-	 * @param {Array<any>} param1.filters The filters.
-	 * @param {Object} param1.folders The build variation specific sub-folders.
-	 */
-	constructor(id, { root, filters, folders })
-	{
-		this.id = id
-		this.root = root
-		this.filters = filters
-		this.folders = folders
-	}
-
-	/**
-	 * Processes the directory entries from JSON.
-	 * @param {Object} raw
-	 * @returns {Array<Directory>}
-	 */
-	static process(raw)
-	{
-		return _.map(raw, (val, key) => new Directory(key, val))
-	}
-
-	/**
-	 * Generates a build variation specific path.
-	 * @param {Variant} variant The variant to generate a path for.
-	 * @returns {string}
-	 */
-	location(variant)
-	{
-		const temp = _.map(this.folders, (val, key) =>
-		{
-			const x = variant.get(key)
-			return _.get(val, x, x)
-		})
-		return _.spread(path.join)(_.concat(this.root, temp))
-	}
-
-	/**
-	 * A work around for Node's fs.existsSync() not working correctly.
-	 * @param {string} dir
-	 */
-	static make(dir)
-	{
-		if (!fs.existsSync(dir))
-		{
-			const parent = path.dirname(dir)
-			if (!fs.existsSync(parent))
-			{
-				Directory.make(parent)
-			}
-			fs.mkdirSync(dir)
-		}
-	}
-}
 
 class Product
 {
