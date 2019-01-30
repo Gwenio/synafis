@@ -24,6 +24,7 @@
 		"./doxygen/**"
 	],
 	"files": [
-		"./setup.js"
+		"./setup.js",
+		"./js/ninja.js"
 	]
 }

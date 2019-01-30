@@ -1,17 +1,19 @@
 #!/usr/bin/env node
 
 // Copyright (c) 2018-2019 James Adam Armstrong
-
+//
+// ISC License (ISC)
+//
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
 // in the Software without restriction, including without limitation the rights
 // to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
 // copies of the Software, and to permit persons to whom the Software is
 // furnished to do so, subject to the following conditions:
-
+//
 // The above copyright notice and this permission notice shall be included in
 // all copies or substantial portions of the Software.
-
+//
 // THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 // IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 // FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -34,6 +36,7 @@ const { struct } = require('superstruct')
 const EventEmitter = require('events')
 const async_queue = require('neo-async/queue')
 const path = require('path')
+const Ninja = require('./js/ninja')
 // spellcheck: on
 
 const VariantSchema = struct.dict(['string',
@@ -661,160 +664,6 @@ class Source
 	}
 }
 
-class Ninja
-{
-	static process_pools(raw)
-	{
-		return _.reduce(raw, (acc, cur) => (_.has(cur, 'id') ?
-			_.set(acc, cur['id'], _.get(cur, 'depth', 1)) : acc), {})
-	}
-
-	static process_def_variables(raw)
-	{
-		return _.reduce(raw, (acc, cur, id) =>
-			_.set(acc, id, _.get(cur, 'default', '')), {})
-	}
-
-	static process_variables(raw)
-	{
-		return _.reduce(raw, (acc, cur, id) =>
-			_.set(acc, id, _.get(cur, 'specific', [])), {})
-	}
-
-	static process_rules(raw)
-	{
-		return _.reduce(raw, (acc, val, key) =>
-			_.set(acc, key, _.get(val, 'vars', '')), {})
-	}
-
-	static process_actions(raw)
-	{
-		return _.map(raw, (val, key) =>
-		{
-			return {
-				filters: _.get(val, 'filters', []),
-				action: val.action,
-				id: key
-			}
-		})
-	}
-}
-
-class NinjaWriter
-{
-	constructor(filename)
-	{
-		this.file = fs.open(filename, 'w')
-		this.order = this.file.then((f) => { this.file = f; return })
-	}
-
-	close()
-	{
-		this.order = this.order.finally(async () =>
-		{
-			if (!_.isNil(this.file))
-			{
-				let temp = this.file
-				this.file = null
-				await temp.sync()
-				return temp.close()
-			}
-		})
-	}
-
-	write(data)
-	{
-		this.order = this.order.then(() => this.file.writeFile(data))
-		return this
-	}
-
-	/**
-	 * Outputs a variable line to the Ninja file.
-	 * @param {string} name The name of the Ninja variable.
-	 * @param {string | null} value The value of the Ninja variable.
-	 * @param {boolean} indent When true the variable line will be indented two spaces.
-	 * @returns {NinjaWriter} this
-	 */
-	variable(name, value, indent)
-	{
-		if (!(_.isNil(value) || value === ''))
-		{
-			this.write((indent ? '  ' : '') + name + ' = ' + value + "\n")
-		}
-		return this
-	}
-
-	/**
-	 * Outputs a pool definition to the Ninja file.
-	 * @param {Number} depth The 'depth' of the pool.
-	 * @param {string} key The name of the pool.
-	 * @returns {NinjaWriter} this
-	 */
-	pool(depth, key)
-	{
-		this.write("pool " + key + "\n")
-		return this.variable('depth', Math.round(depth)
-			.toString(), true)
-	}
-
-	/**
-	 * Outputs a rule definition to the Ninja file.
-	 * @param {Object} variables The variables for the rule.
-	 * @param {string} key The name of the rule.
-	 * @returns {NinjaWriter} this
-	 */
-	rule(variables, key)
-	{
-		this.write("rule " + key + "\n")
-		_.each(variables, (x, y) => this.variable(y, x, true))
-		return this
-	}
-
-	buildList(pre, items)
-	{
-		if (_.size(items) > 0)
-		{
-			this.write(pre)
-			_.each(items, (val) => this.write(" " + val))
-		}
-	}
-
-	/**
-	 * Outputs a build entry to the Ninja file.
-	 * @param {Build} param0
-	 * @returns {NinjaWriter} this
-	 */
-	build({ action, outputs, implicit, inputs, depends, after, vars })
-	{
-		this.write("build")
-		_.each(outputs, (val) => this.write(" " + val))
-		this.buildList(" |", implicit)
-		this.write(": " + action)
-		_.each(inputs, (val) => this.write(" " + val))
-		this.buildList(" |", depends)
-		this.buildList(" ||", after)
-		this.write("\n")
-		_.each(vars, (val, key) => this.variable(key, val, true))
-		return this
-	}
-
-	/**
-	 * Outputs a default line to the Ninja file.
-	 * @param {Array<string>} targets The build targets to be defauls.
-	 * @returns {NinjaWriter} this
-	 */
-	defs(targets)
-	{
-		if (_.size(targets) > 0)
-		{
-			this.write("default")
-			_.each(targets, (x) => this.write(" " + x))
-			this.write("\n")
-		}
-		return this
-	}
-}
-
 /**
  * @type Directory
  */
@@ -915,125 +764,6 @@ class Product
 				return acc + this.separator + y
 			}, '')
 		return pre + this.base + post
-	}
-}
-
-/**
- * @type Build
- */
-class Build
-{
-	/**
-	 *
-	 * @param {String} action
-	 * @param {*} outputs
-	 * @param {*} implicit
-	 * @param {*} inputs
-	 * @param {*} depends
-	 * @param {*} after
-	 * @param {*} vars
-	 */
-	constructor(action, outputs, implicit, inputs, depends, after, vars)
-	{
-		this.action = action
-		this.outputs = _.map(outputs, 'path')
-		this.implicit = _.map(implicit, 'path')
-		this.inputs = _.map(inputs, 'path')
-		this.depends = _.map(depends, 'path')
-		this.after = _.map(after, 'path')
-		this.vars = vars
-	}
-
-	static process_actions(acts, steps)
-	{
-		return _.reduce(steps, (acc, item, id) =>
-			_.set(acc, id, acts[item.action]), {})
-	}
-
-	static process_sources(root, sources, steps)
-	{
-		return _.reduce(steps, (acc, item, id) =>
-			_.set(acc, id, _.map(item.sources, (src) =>
-			{
-				const files = _.map(_.map(_.get(sources, src.group, []),
-						(file) => path.parse(path.join(root, file))), (file) =>
-					_.set(file, 'origin', path.join(file.dir, file.name)))
-				return _.merge({ files: files },
-					_.pick(src, ['implicit', 'produces']))
-			})), {})
-	}
-
-	static process_products(names, steps)
-	{
-		return _.reduce(steps, (outer, outputs, key) =>
-		{
-			const temp = _.reduce(outputs,
-				(inner, { implicit, products, location, extension }, id) =>
-				(_.isNil(products) || _.size(products) < 1) ? inner :
-				_.set(inner, id,
-				{
-					implicit,
-					files: _.map(products, (name) =>
-					{
-						const origin = _.get(names, name, name)
-						return {
-							dir: location,
-							name: origin,
-							ext: extension,
-							origin
-						}
-					})
-				}), {})
-			return _.size(temp) < 1 ? outer : _.set(outer, key, temp)
-		}, {})
-	}
-
-	/**
-	 *
-	 * @param {String} name
-	 * @param {*} inputs
-	 * @returns {Build}
-	 */
-	static alias(name, inputs)
-	{
-		return new Build('phony', [{ path: name }],
-			[], inputs, [], [], {})
-	}
-
-	/**
-	 *
-	 * @param {String} action
-	 * @param {Object} param1
-	 * @param {*} param1.single
-	 * @param {*} param1.multiple
-	 * @param {*} implicit
-	 * @param {*} inputs
-	 * @param {*} depends
-	 * @param {*} after
-	 * @param {*} vars
-	 * @returns {Array<Build>}
-	 */
-	static create(action, { single, multiple }, implicit, inputs, depends, after, vars = {})
-	{
-		if (_.size(single) < 1)
-		{
-			return [new Build(action, multiple, implicit, inputs, depends, after, vars)]
-		}
-		else
-		{
-			let [isingle, imultiple] = _.partition(inputs, (x) =>
-				_.some(single, ['origin', x.origin]))
-			return _.map(single, ({ path: fpath, origin }) =>
-			{
-				let o = _.reject(multiple, ['origin', origin])
-				let m = _.reject(implicit, ['origin', origin])
-				let i = _.find(isingle, ['origin', origin])
-				let d = _.reject(depends, ['origin', origin])
-				let a = _.reject(after, ['origin', origin])
-				return new Build(action, _.concat(o, { path: fpath }), m,
-					_.concat(imultiple, i), d, a, vars)
-			})
-		}
 	}
 }
 
@@ -1160,7 +890,7 @@ else
 
 	const temp_filename = `${options.output}.tmp`
 
-	let writer = new NinjaWriter(temp_filename)
+	let writer = new Ninja.Writer(temp_filename)
 
 	const driver = new Pipeline("driver", options.jobs,
 	{
@@ -1208,7 +938,7 @@ else
 			_.reduce(acts,
 				(acc, { action, id }) => _.set(acc, action, id), {})),
 		BuildActions: partitioned(['PartActions', 'PartSteps'],
-			Build.process_actions),
+			Ninja.Build.process_actions),
 		Variables: ['NinjaCfg', async ({ NinjaCfg }) =>
 			Ninja.process_variables(NinjaCfg.variables)],
 		PartVars: ['Variants', 'Variables',
@@ -1240,7 +970,7 @@ else
 			_.reduce(part, (acc, { after }, id) =>
 				_.set(acc, id, after), {})),
 		BuildSources: partitioned(['MergeSources', 'PartSteps'],
-			_.partial(Build.process_sources, source_root)),
+			_.partial(Ninja.Build.process_sources, source_root)),
 		Destinations: ['Config', async ({ Config }) =>
 			Directory.process(Config.destinations)],
 		PartDests: partition('Variants', 'Destinations', (dirs, variant) =>
@@ -1290,7 +1020,7 @@ else
 			_.reduce(_.uniqBy(products, 'id'),
 				(acc, item) => _.set(acc, item['id'], item['partition'](variant)), {})),
 		BuildProducts: partitioned(['PartProducts', 'StepOutputs'],
-			Build.process_products),
+			Ninja.Build.process_products),
 		ProcessBuild: partitioned(['BuildSources', 'BuildProducts', 'StepInputs',
 				'StepOutputsFilter'
 			],
@@ -1515,7 +1245,7 @@ else
 					description: 'regen',
 					generator: 'true'
 				}, rule)
-				const builds = Build.create(rule, { single: [], multiple: [] },
+				const builds = Ninja.Build.create(rule, { single: [], multiple: [] },
 					[{ path: 'build.ninja' }], [], _.map([p, c, s], (x) =>
 					{
 						return { path: x }
@@ -1529,7 +1259,7 @@ else
 			(acts, outs, imps, ins, deps, afters, vars) =>
 			_.reduce(acts, (acc, action, id) =>
 			{
-				return _.concat(acc, Build.create(action, _.get(outs, id, []),
+				return _.concat(acc, Ninja.Build.create(action, _.get(outs, id, []),
 					_.get(imps, id, []), _.get(ins, id, []),
 					_.get(deps, id, []), _.get(afters, id, []),
 					_.get(vars, id, {})))
@@ -1572,7 +1302,7 @@ else
 				_.each(aliases, (part) =>
 				{
 					_.each(part, (val, key) =>
-						writer.build(Build.alias(key, val)))
+						writer.build(Ninja.Build.alias(key, val)))
 				})
 			}
 		],
