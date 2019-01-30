@@ -36,6 +36,7 @@ const EventEmitter = require('events')
 const path = require('path')
 const Ninja = require('./js/ninja')
 const { Pipeline } = require('./js/pipeline')
+const { Shadow, Variant } = require('./js/variants')
 // spellcheck: on
 
 const VariantSchema = struct.dict(['string',
@@ -259,65 +260,6 @@ const ConfigSchema = struct.partial(
 	extensions: {},
 	products: {}
 })
-
-class Shadow
-{
-	constructor()
-	{
-		this.shadows = {}
-	}
-
-	static process(raw)
-	{
-		return new Shadow()
-	}
-
-	apply(item)
-	{
-		return _.set(item, 'filters', _.reduce(this.shadows, (acc, val, key) =>
-		{
-			const [y, z] = _.partition(acc, (a) => _.has(a, key))
-			const b = _.flatMap(y, (c) =>
-				_.map(val, (d) => _.set(_.merge({}, c), key, d)))
-			return _.concat(b, z)
-		}, item.filters))
-	}
-}
-
-class Variant
-{
-	constructor(data)
-	{
-		this.data = data
-	}
-
-	static process(raw)
-	{
-		return _.reduce(raw, (acc, val, key) =>
-			_.set(acc, key, _.get(val, 'options', [])), {})
-	}
-
-	static merge(base, extra)
-	{
-		let temp = _.merge({}, base, extra)
-		temp = _.reduce(temp, (acc, val, key) =>
-			_.flatMap(val, (x) => _.map(acc, (y) =>
-				_.merge(_.set({}, key, x), y))), [{}])
-		return _.map(temp, (x) => new Variant(x))
-	}
-
-	match(item)
-	{
-		const filters = _.get(item, 'filters', [])
-		return _.size(filters) === 0 || _.some(filters, x =>
-			_.every(this.data, (y, key) => !_.has(x, key) || _.get(x, key) === y))
-	}
-
-	get(tag)
-	{
-		return this.data[tag]
-	}
-}
 
 /**
  * @type Step
