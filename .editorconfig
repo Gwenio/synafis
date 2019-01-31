@@ -42,6 +42,12 @@ end_of_line = crlf
 [**.sh]
 end_of_line = lf
 
+[**.ninja]
+charset = utf-8
+indent_style = space
+indent_size = 2
+end_of_line = lf
+
 [**.rb]
 indent_style = space
 indent_size = 2
