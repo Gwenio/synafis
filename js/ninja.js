@@ -80,6 +80,10 @@ function process_actions(raw)
 
 class Writer
 {
+	/**
+	 * Constructs a new Ninja file Writer.
+	 * @param {string} filename The name of the output file.
+	 */
 	constructor(filename)
 	{
 		this.file = fs.open(filename, 'w')
@@ -100,6 +104,11 @@ class Writer
 		})
 	}
 
+	/**
+	 * Writes text to the Ninja file.
+	 * @param {string} data Text to output.
+	 * @private
+	 */
 	write(data)
 	{
 		this.order = this.order.then(() => this.file.writeFile(data))
@@ -147,6 +156,12 @@ class Writer
 		return this
 	}
 
+	/**
+	 *
+	 * @param {string} pre
+	 * @param {Array<string>} items
+	 * @returns {Writer} this
+	 */
 	buildList(pre, items)
 	{
 		if (size(items) > 0)
@@ -154,6 +169,7 @@ class Writer
 			this.write(pre)
 			each(items, (val) => this.write(` ${val}`))
 		}
+		return this
 	}
 
 	/**
@@ -166,11 +182,11 @@ class Writer
 		this.write("build")
 		each(outputs, (val) => this.write(` ${val}`))
 		this.buildList(" |", implicit)
-		this.write(`: ${action}`)
+			.write(`: ${action}`)
 		each(inputs, (val) => this.write(` ${val}`))
 		this.buildList(" |", depends)
-		this.buildList(" ||", after)
-		this.write("\n")
+			.buildList(" ||", after)
+			.write("\n")
 		each(vars, (val, key) => this.variable(key, val, true))
 		return this
 	}
@@ -216,10 +232,26 @@ class Build
 		this.vars = vars
 	}
 
+	/**
+	 * Maps build steps to Ninja rules based on their action.
+	 * @param {Object} acts
+	 * @param {Object} steps
+	 * @returns {Object}
+	 */
 	static process_actions(acts, steps)
 	{
-		return reduce(steps, (acc, item, id) =>
-			set(acc, id, acts[item.action]), {})
+		/**
+		 * @param {Object} acc
+		 * @param {Object} step
+		 * @param {string} step.action
+		 * @param {string} id
+		 * @returns {Object} acc
+		 */
+		function reduction(acc, { action }, id)
+		{
+			return set(acc, id, acts[action])
+		}
+		return reduce(steps, reduction, {})
 	}
 
 	static process_sources(root, sources, steps)
