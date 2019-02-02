@@ -29,7 +29,7 @@ const commandLineArgs = require('command-line-args')
 const commandLineUsage = require('command-line-usage')
 const _ = require('lodash')
 const fs = require('fs')
-const { struct } = require('superstruct')
+const Ajv = require('ajv')
 const EventEmitter = require('events')
 const path = require('path')
 const Ninja = require('./js/ninja')
@@ -40,227 +40,7 @@ const { Directory } = require('./js/directory')
 const read_json_file = require('./js/json_input')
 // spellcheck: on
 
-const VariantSchema = struct.dict(['string',
-	struct.partial(
-	{
-		options: struct.intersection([struct.list(['string']),
-			(x) => _.size(x) > 0
-		])
-	})
-])
-
-const FilterSchema =
-	struct.list([struct.dict(['string', 'string'])])
-
-const ModSchema = struct.dict(['string',
-	struct.dict(['string', 'string'])
-])
-
-const ProjectSchema = struct.partial(
-{
-	variants: VariantSchema,
-	sources: struct.list([struct.partial(
-	{
-		group: 'string',
-		prefix: 'string',
-		suffix: 'string',
-		files: struct.intersection([struct.list(['string']),
-			(x) => _.size(x) > 0
-		]),
-		filters: FilterSchema
-	},
-	{
-		prefix: '',
-		suffix: '',
-		filters: []
-	})]),
-	steps: struct.dict(['string',
-		struct.partial(
-		{
-			action: 'string',
-			filters: FilterSchema,
-			sources: struct.list([struct.partial(
-			{
-				implicit: 'boolean',
-				group: 'string',
-				produces: 'string?'
-			},
-			{
-				implicit: false
-			})]),
-			inputs: struct.list([struct.partial(
-			{
-				implicit: 'boolean',
-				step: 'string',
-				group: 'string',
-				produces: 'string?'
-			},
-			{
-				implicit: false
-			})]),
-			outputs: struct.dict(['string',
-				struct.intersection([struct.partial(
-				{
-					implicit: 'boolean',
-					location: 'string',
-					extension: 'string',
-					products: struct.list(['string']),
-					single: 'boolean'
-				},
-				{
-					implicit: false,
-					products: [],
-					single: false
-				}), ({ implicit, single }) => !implicit || !single])
-			]),
-			after: struct.list(['string'])
-		},
-		{
-			filters: [],
-			sources: [],
-			inputs: [],
-			after: []
-		})
-	])
-})
-
-const NinjaSchema = struct.partial(
-{
-	id: struct.literal('ninja'),
-	version: 'number?',
-	directory: 'string',
-	regenerate: 'string?',
-	pools: struct.list([struct.partial(
-	{
-		id: 'string',
-		depth: struct.intersection(['number', Number.isInteger])
-	})]),
-	variables: struct.dict(['string',
-		struct.partial(
-		{
-			default: 'string',
-			specific: struct.list([struct.partial(
-			{
-				filters: FilterSchema,
-				rules: struct.list(['string']),
-				steps: struct.list(['string']),
-				value: 'string'
-			},
-			{
-				filters: [],
-				rules: [],
-				steps: []
-			})])
-		},
-		{
-			default: '',
-			specific: []
-		})
-	]),
-	rules: struct.dict(['string',
-		struct.partial(
-		{
-			action: 'string',
-			filters: FilterSchema,
-			vars: struct(
-			{
-				command: 'string',
-				pool: 'string?',
-				depfile: 'string?',
-				deps: struct.optional(struct.union([
-					struct.literal('gcc'),
-					struct.literal('msvc')
-				])),
-				msvc_deps_prefix: 'string?',
-				description: 'string?',
-				generator: 'boolean',
-				restat: 'boolean',
-				rspfile: 'string?',
-				rspfile_content: 'string?'
-			},
-			{
-				generator: false,
-				restat: false
-			})
-		},
-		{
-			filters: []
-		})
-	]),
-	aliases: struct.partial(
-	{
-		separator: 'string',
-		targets: struct.dict(['string', struct.partial(
-		{
-			step: 'string',
-			filters: FilterSchema
-		},
-		{
-			filters: []
-		})]),
-		prefix: ModSchema,
-		suffix: ModSchema
-	},
-	{
-		separator: '',
-		prefix: {},
-		suffix: {}
-	}),
-	defaults: struct.list(['string'])
-},
-{
-	directory: '',
-	defaults: []
-})
-
-const ConfigSchema = struct.partial(
-{
-	variants: VariantSchema,
-	generator: NinjaSchema,
-	destinations: struct.dict(['string', struct.partial(
-	{
-		root: 'string',
-		filters: FilterSchema,
-		folders: ModSchema
-	},
-	{
-		root: '',
-		filters: [],
-		folders: {}
-	})]),
-	extensions: struct.dict(['string', struct.list([
-		struct.partial(
-		{
-			filters: FilterSchema,
-			value: 'string'
-		},
-		{
-			value: '',
-			filters: []
-		})
-	])]),
-	products: struct.dict(['string', struct.list([
-		struct.partial(
-		{
-			filters: FilterSchema,
-			base: 'string',
-			separator: 'string',
-			prefix: ModSchema,
-			suffix: ModSchema
-		},
-		{
-			separator: '',
-			filters: [],
-			prefix: {},
-			suffix: {}
-		})
-	])])
-},
-{
-	destinations: {},
-	extensions: {},
-	products: {}
-})
+const ajv = new Ajv()
 
 class Product
 {
@@ -844,11 +624,19 @@ else
 			async ({ NinjaCfg }) => { writer.defs(NinjaCfg.defaults) }
 		]
 	})
-	driver.applyFilter('Project', ProjectSchema)
-	driver.applyFilter('Config', ConfigSchema)
-	driver.applyFilter('MergeSources', struct.list([struct.dict(['string',
-		struct.list(['string'])
-	])]))
+	driver.applyFilter('Sources', ajv.compile(
+	{
+		type: 'array',
+		items:
+		{
+			type: 'object',
+			'additionalProperties':
+			{
+				type: 'array',
+				items: { type: 'string' }
+			}
+		}
+	}))
 	driver.onFailure((stage, error) =>
 	{
 		if (!_.isNil(stage))
