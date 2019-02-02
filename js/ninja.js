@@ -33,7 +33,6 @@ const concat = require('lodash/concat')
 const partition = require('lodash/partition')
 const set = require('lodash/set')
 const get = require('lodash/get')
-const has = require('lodash/has')
 const each = require('lodash/forEach')
 const size = require('lodash/size')
 const pick = require('lodash/pick')
@@ -45,8 +44,8 @@ const path = require('path')
 
 function process_pools(raw)
 {
-	return reduce(raw, (acc, cur) => (has(cur, 'id') ?
-		set(acc, cur['id'], get(cur, 'depth', 1)) : acc), {})
+	return reduce(raw, (acc, cur, key) =>
+		set(acc, key, Math.round(get(cur, 'depth', 1))), {})
 }
 
 function process_def_variables(raw)
@@ -131,9 +130,8 @@ class Writer
 	 */
 	pool(depth, key)
 	{
-		this.write("pool " + key + "\n")
-		return this.variable('depth', Math.round(depth)
-			.toString(), true)
+		this.write(`pool ${key}\n`)
+		return this.variable('depth', depth.toString(), true)
 	}
 
 	/**
