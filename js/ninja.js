@@ -37,6 +37,7 @@ const each = require('lodash/forEach')
 const size = require('lodash/size')
 const pick = require('lodash/pick')
 const isNil = require('lodash/isNil')
+const join = require('lodash/join')
 const { promises: fs } = require('fs')
 const path = require('path')
 // spellcheck: on
@@ -116,7 +117,7 @@ class Writer
 	{
 		if (!(isNil(value) || value === ''))
 		{
-			this.write((indent ? '  ' : '') + name + ' = ' + value + "\n")
+			this.write(`${indent ? '  ' : ''} ${name} = ${value}\n`)
 		}
 		return this
 	}
@@ -141,7 +142,7 @@ class Writer
 	 */
 	rule(variables, key)
 	{
-		this.write("rule " + key + "\n")
+		this.write(`rule ${key}\n`)
 		each(variables, (x, y) => this.variable(y, x, true))
 		return this
 	}
@@ -151,7 +152,7 @@ class Writer
 		if (size(items) > 0)
 		{
 			this.write(pre)
-			each(items, (val) => this.write(" " + val))
+			each(items, (val) => this.write(` ${val}`))
 		}
 	}
 
@@ -163,10 +164,10 @@ class Writer
 	build({ action, outputs, implicit, inputs, depends, after, vars })
 	{
 		this.write("build")
-		each(outputs, (val) => this.write(" " + val))
+		each(outputs, (val) => this.write(` ${val}`))
 		this.buildList(" |", implicit)
-		this.write(": " + action)
-		each(inputs, (val) => this.write(" " + val))
+		this.write(`: ${action}`)
+		each(inputs, (val) => this.write(` ${val}`))
 		this.buildList(" |", depends)
 		this.buildList(" ||", after)
 		this.write("\n")
@@ -183,9 +184,7 @@ class Writer
 	{
 		if (size(targets) > 0)
 		{
-			this.write("default")
-			each(targets, (x) => this.write(" " + x))
-			this.write("\n")
+			this.write(`default ${join(targets, ' ')}\n`)
 		}
 		return this
 	}
