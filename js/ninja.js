@@ -37,8 +37,7 @@ const each = require('lodash/forEach')
 const size = require('lodash/size')
 const pick = require('lodash/pick')
 const isNil = require('lodash/isNil')
-const fs = merge(require('fs'), require('fs')
-	.promises)
+const { promises: fs } = require('fs')
 const path = require('path')
 // spellcheck: on
 
