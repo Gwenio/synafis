@@ -27,10 +27,8 @@
 // spellcheck: off
 const commandLineArgs = require('command-line-args')
 const commandLineUsage = require('command-line-usage')
-const jsonfile = require('jsonfile')
 const _ = require('lodash')
-const fs = _.merge(require('fs'), require('fs')
-	.promises)
+const fs = require('fs')
 const { struct } = require('superstruct')
 const EventEmitter = require('events')
 const path = require('path')
@@ -39,6 +37,7 @@ const { Pipeline } = require('./js/pipeline')
 const { Shadow, Variant } = require('./js/variants')
 const { Step, Source } = require('./js/project')
 const { Directory } = require('./js/directory')
+const read_json_file = require('./js/json_input')
 // spellcheck: on
 
 const VariantSchema = struct.dict(['string',
@@ -429,8 +428,8 @@ else
 
 	const driver = new Pipeline("driver", options.jobs,
 	{
-		Project: async () => jsonfile.readFile(options.project),
-		Config: async () => jsonfile.readFile(options.config),
+		Project: async () => read_json_file(options.project),
+		Config: async () => read_json_file(options.config),
 		NinjaCfg: ['Config', async ({ Config }) => Config.generator],
 		HasRegen: ['NinjaCfg', async ({ NinjaCfg }) =>
 			_.has(NinjaCfg, 'regenerate') && NinjaCfg.regenerate !== ''],
