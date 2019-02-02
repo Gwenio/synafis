@@ -1,28 +1,10 @@
 {
 	"$schema": "http://json-schema.org/draft-07/schema#",
-	"description": "Schema for Synafis's project description.",
+	"title": "Project Configuration",
+	"description": "The project description.",
 	"definitions":
 	{
-		"FilterList":
-		{
-			"type": "array",
-			"title": "Filters",
-			"uniqueItems": true,
-			"items":
-			{
-				"type": "object",
-				"title": "Filter",
-				"description": "A set of conditions paired with the option they must match.",
-				"additionalProperties":
-				{
-					"type": "string",
-					"title": "Selector",
-					"description": "A name-value pair of a condition ID and an option value, repectively."
-				},
-				"minProperties": 1
-			},
-			"default": []
-		},
+		"FilterList": { "$ref": "./filters.json" },
 		"Description":
 		{
 			"type": "string",
@@ -65,37 +47,7 @@
 			"title": "JSON Schema",
 			"description": "The path for the JSON schema."
 		},
-		"variants":
-		{
-			"type": "object",
-			"title": "Build Variations",
-			"description": "Used to define conditions for different builds.",
-			"additionalProperties":
-			{
-				"type": "object",
-				"title": "Build Condition",
-				"description": "A condition to filter by when generating different builds.",
-				"required": ["options"],
-				"properties":
-				{
-					"description": { "$ref": "#/definitions/Description" },
-					"options":
-					{
-						"type": "array",
-						"title": "Options",
-						"description": "The options for the condition.",
-						"uniqueItems": true,
-						"items":
-						{
-							"type": "string",
-							"title": "Option Value",
-							"description": "The identifier for an option.",
-							"minLength": 1
-						}
-					}
-				}
-			}
-		},
+		"variants": { "$ref": "./variants.json" },
 		"sources":
 		{
 			"type": "array",

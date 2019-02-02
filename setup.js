@@ -138,12 +138,12 @@ const cmd_args = [
 	description: 'The file containing build environment specific configurations. [config.json]'
 },
 {
-	name: 'output',
-	alias: 'o',
+	name: 'generate',
+	alias: 'g',
 	type: String,
-	typeLabel: '{underline build.ninja}',
-	defaultValue: './build.ninja',
-	description: 'The output Ninja file. Needs to be in the current directory. [./build.ninja]'
+	typeLabel: '{underline file.json}',
+	defaultValue: 'ninja.json',
+	description: 'The file containing configurations for the build generator. [ninja.json]'
 },
 {
 	name: 'root',
@@ -181,7 +181,7 @@ if (options.help)
 		content: [
 			'$ node -- setup.js --help',
 			'$ node -- setup.js -p path/project.json -c path/config.json',
-			'$ node -- setup.js -o path/build.ninja',
+			'$ node -- setup.js -r path',
 			'$ node -- setup.js -j 20'
 		]
 	},
@@ -194,15 +194,11 @@ if (options.help)
 }
 else
 {
-
-	if (path.dirname(options.output) !== '.')
-	{
-		throw new Error('The output should be located in the current directory.')
-	}
+	const output_filename = 'build.ninja'
 
 	const source_root = options.root
 
-	const temp_filename = `${options.output}.tmp`
+	const temp_filename = `${output_filename}.tmp`
 
 	let writer = new Ninja.Writer(temp_filename)
 
@@ -210,7 +206,7 @@ else
 	{
 		Project: async () => read_json_file(options.project),
 		Config: async () => read_json_file(options.config),
-		NinjaCfg: ['Config', async ({ Config }) => Config.generator],
+		NinjaCfg: async () => read_json_file(options.generate),
 		HasRegen: ['NinjaCfg', async ({ NinjaCfg }) =>
 			_.has(NinjaCfg, 'regenerate') && NinjaCfg.regenerate !== ''],
 		Variants: ['Project', 'Config',
@@ -553,14 +549,16 @@ else
 				const s = 'setup.js'
 				const p = options.project
 				const c = options.config
+				const g = options.generate
+				const r = options.root
 				writer.rule(
 				{
-					command: `node -- ${s} -p ${p} -c ${c} -j ${options.jobs}`,
+					command: `node -- ${s} -p ${p} -c ${c} -g ${g} -r ${r} -j ${options.jobs}`,
 					description: 'regen',
 					generator: 'true'
 				}, rule)
 				const builds = Ninja.Build.create(rule, { single: [], multiple: [] },
-					[{ path: 'build.ninja' }], [], _.map([p, c, s], (x) =>
+					[{ path: 'build.ninja' }], [], _.map([p, c, g, s], (x) =>
 					{
 						return { path: x }
 					}), [], {})
@@ -655,11 +653,11 @@ else
 			writer.close()
 			if (process.exitCode === 0)
 			{
-				if (fs.existsSync(options.output))
+				if (fs.existsSync(output_filename))
 				{
-					fs.renameSync(options.output, `${options.output}.bak`)
+					fs.renameSync(output_filename, `${output_filename}.bak`)
 				}
-				fs.renameSync(temp_filename, options.output)
+				fs.renameSync(temp_filename, output_filename)
 			}
 			else
 			{

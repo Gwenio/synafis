@@ -1,0 +1,21 @@
+{
+	"$schema": "http://json-schema.org/draft-07/schema#",
+	"type": "array",
+	"title": "Filters",
+	"description": "A list of filters to select which build variations an item applies to.",
+	"uniqueItems": true,
+	"items":
+	{
+		"type": "object",
+		"title": "Filter",
+		"description": "A set of conditions paired with the option they must match.",
+		"additionalProperties":
+		{
+			"type": "string",
+			"title": "Selector",
+			"description": "A name-value pair of a condition ID and an option value, respectively."
+		},
+		"minProperties": 1
+	},
+	"default": []
+}

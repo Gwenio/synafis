@@ -1,0 +1,126 @@
+{
+	"$schema": "http://json-schema.org/draft-07/schema#",
+	"title": "User Configuration",
+	"description": "The project user configuration description.",
+	"definitions":
+	{
+		"FilterList": { "$ref": "./filters.json" },
+		"Description":
+		{
+			"type": "string",
+			"title": "Description",
+			"description": "Optional descriptive text that does not affect the interpretation of the project."
+		},
+		"ModifierMap": { "$ref": "./modifiers.json" }
+	},
+	"type": "object",
+	"properties":
+	{
+		"$schema":
+		{
+			"type": "string",
+			"title": "JSON Schema",
+			"description": "The path for the JSON schema."
+		},
+		"variants": { "$ref": "./variants.json" },
+		"destinations":
+		{
+			"type": "object",
+			"title": "Output Directories",
+			"description": "Provides the directory paths in which to place output files.",
+			"additionalProperties":
+			{
+				"type": "object",
+				"title": "Location",
+				"description": "A named output location.",
+				"properties":
+				{
+					"root":
+					{
+						"type": "string",
+						"title": "Root Directory",
+						"description": "The path to prefix all variation specific paths with.",
+						"default": ""
+					},
+					"filters": { "$ref": "#/definitions/FilterList" },
+					"description": { "$ref": "#/definitions/Description" },
+					"folders":
+					{
+						"$ref": "#/definitions/ModifierMap",
+						"title": "Path Modifier Map",
+						"description": "Appends a folder to the end of root based on the value of each condition listed, in order."
+					}
+				}
+			}
+		},
+		"extensions":
+		{
+			"type": "object",
+			"title": "File Extensions",
+			"description": "Provides the extensions to append to files.",
+			"additionalProperties":
+			{
+				"type": "array",
+				"title": "Extension Category",
+				"description": "A named file extension category.",
+				"items":
+				{
+					"type": "object",
+					"title": "Extension",
+					"description": "The extension for matching build variations.",
+					"properties":
+					{
+						"filters": { "$ref": "#/definitions/FilterList" },
+						"description": { "$ref": "#/definitions/Description" },
+						"value":
+						{
+							"type": "string",
+							"title": "Extention Value",
+							"description": "The actual value for the extension.",
+							"default": ""
+						}
+					}
+				}
+			}
+		},
+		"products":
+		{
+			"type": "object",
+			"title": "Production Names",
+			"description": "Provides names for files created by the build.",
+			"additionalProperties":
+			{
+				"type": "array",
+				"title": "Production List",
+				"description": "A list of possible productions.",
+				"items":
+				{
+					"type": "object",
+					"title": "Production",
+					"description": "A named production used to generate output file names.",
+					"properties":
+					{
+						"filters": { "$ref": "#/definitions/FilterList" },
+						"description": { "$ref": "#/definitions/Description" },
+						"base":
+						{
+							"type": "string",
+							"title": "Base Name",
+							"description": "The base file name to add variation specific prefixes and suffixes on to.",
+							"default": ""
+						},
+						"separator":
+						{
+							"type": "string",
+							"title": "Separator",
+							"description": "Text to place between elements used to produce the end result.",
+							"default": ""
+						},
+						"prefix": { "$ref": "#/definitions/ModifierMap" },
+						"suffix": { "$ref": "#/definitions/ModifierMap" }
+					}
+				}
+			}
+		}
+	}
+}

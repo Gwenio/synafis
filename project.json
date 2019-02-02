@@ -7,7 +7,8 @@
 			"description": "The build target.",
 			"options": [
 				"synafis",
-				"unit"
+				"unit",
+				"schemas"
 			]
 		},
 		"platform":
@@ -33,6 +34,10 @@
 			"gc/hard_ptr",
 			"gc/soft_ptr",
 			"gc/impl"
+		],
+		"filters": [
+			{ "target": "synafis" },
+			{ "target": "unit" }
 		]
 	},
 	{
@@ -50,10 +55,17 @@
 			"gc/lock",
 			"gc/collector"
 		],
-		"filters": [
-		{
-			"target": "unit"
-		}]
+		"filters": [{ "target": "unit" }]
+	},
+	{
+		"group": "json_schemas",
+		"description": "The JSON Schema files for the project.",
+		"prefix": "templates/schemas/",
+		"suffix": ".json",
+		"files": [
+			"project"
+		],
+		"filters": [{ "target": "schemas" }]
 	}],
 	"steps":
 	{
@@ -61,6 +73,10 @@
 		{
 			"action": "cxx",
 			"description": "The step of compiling '.cpp' files to object files.",
+			"filters": [
+				{ "target": "synafis" },
+				{ "target": "unit" }
+			],
 			"sources": [
 			{
 				"description": "Use the sources in 'src' as input for building the 'obj' output group.",
@@ -104,6 +120,86 @@
 					"location": "tmp",
 					"extension": "exe",
 					"products": ["tester"]
+				}
+			}
+		},
+		"json_schemas":
+		{
+			"action": "compile_schema",
+			"description": "Compiles JSON Schemas to JavaScript code.",
+			"filters": [
+				{ "target": "schemas" }
+			],
+			"sources": [
+			{
+				"group": "json_schemas",
+				"description": "The source JSON Schema files.",
+				"implicit": false,
+				"produces": "js"
+			}],
+			"outputs":
+			{
+				"js":
+				{
+					"description": "The JavaScript files containing the compiled schemas.",
+					"implicit": false,
+					"extension": "js",
+					"location": "schemas_js",
+					"single": true
+				}
+			}
+		},
+		"bundle_schemas":
+		{
+			"action": "bundle_js",
+			"description": "Combines the schema code into a single JavaScript file.",
+			"filters": [
+				{ "target": "schemas" }
+			],
+			"inputs": [
+			{
+				"description": "The compiled schemas.",
+				"step": "json_schemas",
+				"group": "js",
+				"implicit": false,
+				"produces": "bundle"
+			}],
+			"outputs":
+			{
+				"bundle":
+				{
+					"description": "The combined schema JavaScript file.",
+					"extension": "js",
+					"location": "schemas_js",
+					"implicit": false,
+					"products": ["json_schema_bundle"]
+				}
+			}
+		},
+		"minify_schemas":
+		{
+			"action": "minify_js",
+			"description": "Minimizes the size of the combined schema code.",
+			"filters": [
+				{ "target": "schemas" }
+			],
+			"inputs": [
+			{
+				"description": "The combined schemas file.",
+				"step": "bundle_schemas",
+				"group": "bundle",
+				"implicit": false,
+				"produces": "mini"
+			}],
+			"outputs":
+			{
+				"mini":
+				{
+					"description": "The minified combined schema JavaScript file.",
+					"extension": "min_js",
+					"location": "js_dir",
+					"implicit": false,
+					"products": ["json_schema_bundle"]
 				}
 			}
 		}

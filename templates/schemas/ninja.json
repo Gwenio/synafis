@@ -1,0 +1,339 @@
+{
+	"$schema": "http://json-schema.org/draft-07/schema#",
+	"title": "Ninja Configuration",
+	"description": "The Ninja file generator configuration.",
+	"definitions":
+	{
+		"FilterList": { "$ref": "./filters.json" },
+		"Description":
+		{
+			"type": "string",
+			"title": "Description",
+			"description": "Optional descriptive text that does not affect the interpretation of the project."
+		},
+		"ModifierMap": { "$ref": "./modifiers.json" },
+		"OptString":
+		{
+			"oneOf": [
+				{
+					"type": "string",
+					"minLength": 1
+				},
+				{ "type": "null" }
+			],
+			"default": null
+		}
+	},
+	"type": "object",
+	"required": [
+		"generator",
+		"version"
+	],
+	"properties":
+	{
+		"$schema":
+		{
+			"type": "string",
+			"title": "JSON Schema",
+			"description": "The path for the JSON schema."
+		},
+		"generator":
+		{
+			"type": "string",
+			"title": "Generator",
+			"description": "The build generator being configured.",
+			"const": "ninja"
+		},
+		"version":
+		{
+			"type": "number",
+			"title": "Ninja Version",
+			"description": "The minimum required version of Ninja for the produced file.",
+			"const": 1.7
+		},
+		"directory":
+		{
+			"type": "string",
+			"title": "Build Directory",
+			"description": "The value for the 'builddir' variable, sets where Ninja will place it temporary files.",
+			"default": ""
+		},
+		"regenerate":
+		{
+			"$ref": "#/definitions/OptString",
+			"title": "Self Regeneration",
+			"description": "The name of the Ninja rule for recreating the ninja file or null to disable."
+		},
+		"pools":
+		{
+			"type": "object",
+			"title": "Ninja Pools",
+			"description": "Defines task categories and how many jobs of a type may run in parallel.",
+			"additionalProperties":
+			{
+				"type": "object",
+				"title": "Pool",
+				"description": "A pool definition, the key it is listed under is used as the pool name.",
+				"required": ["depth"],
+				"properties":
+				{
+					"description": { "$ref": "#/definitions/Description" },
+					"depth":
+					{
+						"type": "number",
+						"title": "Pool Depth",
+						"description": "The number of jobs from the pool may run in parallel.",
+						"minimum": 1
+					}
+				}
+			}
+		},
+		"variables":
+		{
+			"type": "object",
+			"title": "Ninja Variables",
+			"description": "Defines a variable for use in the generated Ninja file.",
+			"additionalProperties":
+			{
+				"type": "object",
+				"title": "Variable",
+				"description": "A variable definition.",
+				"properties":
+				{
+					"description": { "$ref": "#/definitions/Description" },
+					"default":
+					{
+						"$ref": "#/definitions/OptString",
+						"title": "Default Value",
+						"description": "The default value applied globally in the Ninja file."
+					},
+					"specific":
+					{
+						"type": "array",
+						"title": "Specific Values",
+						"description": "A list of values to use conditionally on specific build targets.",
+						"items":
+						{
+							"type": "object",
+							"title": "Possible Value",
+							"description": "A specific value to conditionally apply to build targets.",
+							"required": ["value"],
+							"properties":
+							{
+								"filters": { "$ref": "#/definitions/FilterList" },
+								"description": { "$ref": "#/definitions/Description" },
+								"value":
+								{
+									"type": "string",
+									"title": "Value",
+									"description": "The value to conditionally use instead of the default."
+								},
+								"rules":
+								{
+									"type": "array",
+									"title": "Rule Filter",
+									"description": "Limits the specific value to the listed rule if any are listed.",
+									"default": [],
+									"items":
+									{
+										"type": "string",
+										"title": "Rule ID",
+										"description": "A rule that the value may be applied to.",
+										"minLength": 1
+									}
+								}
+							}
+						},
+						"default": []
+					}
+				}
+			}
+		},
+		"rules":
+		{
+			"type": "object",
+			"title": "Ninja Rules",
+			"description": "The rules defining how to preform the projects actions.",
+			"additionalProperties":
+			{
+				"type": "object",
+				"title": "Rule",
+				"description": "The definition for a rule.",
+				"required": ["action", "vars"],
+				"properties":
+				{
+					"action":
+					{
+						"type": "string",
+						"title": "Action",
+						"description": "The action type of the build steps that may use the rule.",
+						"minLength": 1
+					},
+					"filters": { "$ref": "#/definitions/FilterList" },
+					"vars":
+					{
+						"type": "object",
+						"title": "Rule Variables",
+						"description": "Sets the rule variables.",
+						"required": ["command"],
+						"additionalProperties": false,
+						"properties":
+						{
+							"command":
+							{
+								"type": "string",
+								"title": "Command Line",
+								"description": "The command line to execute when running the rule.",
+								"minLength": 1
+							},
+							"pool":
+							{
+								"$ref": "#/definitions/OptString",
+								"title": "Pool",
+								"description": "The pool the rule belongs to."
+							},
+							"depfile":
+							{
+								"$ref": "#/definitions/OptString",
+								"title": "Pool",
+								"description": "The pool the rule belongs to."
+							},
+							"deps":
+							{
+								"title": "Dependency Style",
+								"description": "How Ninja should acquire additional dependencies from the rule.",
+								"oneOf": [
+									{ "type": "null" },
+									{
+										"type": "string",
+										"enum": ["gcc", "msvc"]
+									}
+								],
+								"default": null
+							},
+							"description":
+							{
+								"type": "string",
+								"title": "Description",
+								"description": "The pool the rule belongs to.",
+								"default": ""
+							},
+							"generator":
+							{
+								"type": "boolean",
+								"title": "Generator?",
+								"description": "If true, Ninja will recognize the rule as generating the Ninja file.",
+								"default": false
+							},
+							"restat":
+							{
+								"type": "boolean",
+								"title": "Re-Stat Outputs",
+								"description": "If true, Ninja will check if the outputs have actually changed rather than assuming so when the rule completes successfully.",
+								"default": false
+							},
+							"rspfile":
+							{
+								"$ref": "#/definitions/OptString",
+								"title": "Response File",
+								"description": "A temporary file to create while the rule is running to contain additional input for it."
+							},
+							"rspfile_content":
+							{
+								"type": "string",
+								"title": "Response File Content",
+								"description": "The content to place in the response file, if there is one.",
+								"default": ""
+							}
+						}
+					}
+				}
+			}
+		},
+		"aliases":
+		{
+			"type": "object",
+			"title": "Target Aliases",
+			"description": "Creates phony builds to use as an alternative name.",
+			"required": ["targets"],
+			"properties":
+			{
+				"targets":
+				{
+					"type": "object",
+					"title": "Target List",
+					"description": "Lists for targets to alias, the key will be used as the base alias.",
+					"additionalProperties":
+					{
+						"type": "object",
+						"title": "Target",
+						"description": "A filter for targets to alias.",
+						"required": ["step"],
+						"properties":
+						{
+							"filters": { "$ref": "#/definitions/FilterList" },
+							"description": { "$ref": "#/definitions/Description" },
+							"step":
+							{
+								"type": "string",
+								"title": "Project Step",
+								"description": "The step from the project description to apply the alias to.",
+								"minLength": 1
+							},
+							"prefix":
+							{
+								"type": "array",
+								"title": "Prefix Modifiers",
+								"description": "A list of modifiers to place before the alias.",
+								"default": [],
+								"items":
+								{
+									"type": "string",
+									"title": "Build Condition",
+									"description": "A build condition to use the value of for a prefix.",
+									"minLength": 1
+								}
+							},
+							"suffix":
+							{
+								"type": "array",
+								"title": "Suffix Modifiers",
+								"description": "A list of modifiers to place before the alias.",
+								"default": [],
+								"items":
+								{
+									"type": "string",
+									"title": "Suffix Modifiers",
+									"description": "A build condition to use the value of for a suffix.",
+									"minLength": 1
+								}
+							}
+						}
+					}
+				},
+				"separator":
+				{
+					"type": "string",
+					"title": "Separator",
+					"description": "Text to place between elements used to produce the end result.",
+					"default": ""
+				},
+				"modifiers": { "$ref": "#/definitions/ModifierMap" }
+			}
+		},
+		"defaults":
+		{
+			"type": "array",
+			"title": "Default Targets",
+			"description": "A list of targets to build when none are specified in the Ninja command line.",
+			"items":
+			{
+				"type": "string",
+				"title": "Target",
+				"description": "A build target to run by default.",
+				"minLength": 1
+			},
+			"default": []
+		}
+	}
+}

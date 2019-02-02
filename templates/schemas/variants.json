@@ -1,0 +1,40 @@
+{
+	"$schema": "http://json-schema.org/draft-07/schema#",
+	"definitions":
+	{
+		"Description":
+		{
+			"type": "string",
+			"title": "Description",
+			"description": "Optional descriptive text that does not affect the interpretation of the project."
+		}
+	},
+	"type": "object",
+	"title": "Build Variations",
+	"description": "Used to define conditions for different builds.",
+	"additionalProperties":
+	{
+		"type": "object",
+		"title": "Build Condition",
+		"description": "A condition to filter by when generating different builds.",
+		"required": ["options"],
+		"properties":
+		{
+			"description": { "$ref": "#/definitions/Description" },
+			"options":
+			{
+				"type": "array",
+				"title": "Options",
+				"description": "The options for the condition.",
+				"uniqueItems": true,
+				"items":
+				{
+					"type": "string",
+					"title": "Option Value",
+					"description": "The identifier for an option.",
+					"minLength": 1
+				}
+			}
+		}
+	}
+}
