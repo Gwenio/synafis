@@ -1,320 +1,224 @@
 {
-	"generator":
+	"$schema": "../schemas/ninja.json",
+	"generator": "ninja",
+	"version": 1.7,
+	"directory": "tmp",
+	"regenerate": "regen",
+	"pools":
 	{
-		"id": "ninja",
-		"version": 1.7,
-		"directory": "tmp",
-		"regenerate": "regen",
-		"pools": [
+		"link_pool":
 		{
-			"id": "link_pool",
-			"depth": 1,
+			"depth": 2,
 			"description": "Limit for linker actions."
 		},
+		"compile_pool":
 		{
-			"id": "compile_pool",
-			"depth": 4,
+			"depth": 6,
 			"description": "Limit for compile actions."
-		}],
-		"variables":
-		{
-			"msvc_version":
-			{
-				"default": "14.14.26428"
-			},
-			"msvc_path":
-			{
-				"default": "C:\\Program Files (x86)\\Microsoft Visual Studio\\2017\\Community\\VC\\Tools\\MSVC\\${msvc_version}"
-			},
-			"winsdk_version":
-			{
-				"default": "10.0.17763.0"
-			},
-			"winsdk_path":
-			{
-				"default": "C:\\Program Files (x86)\\Windows Kits\\10\\Include\\${winsdk_version}"
-			},
-			"winsdk_lib_path":
-			{
-				"default": "C:\\Program Files (x86)\\Windows Kits\\10\\Lib\\${winsdk_version}"
-			},
-			"cxx_flags":
-			{
-				"specific": [
-				{
-					"filters": [
-					{
-						"platform": "winapi",
-						"build": "debug"
-					}],
-					"rules": [
-						"msvc_cxx"
-					],
-					"value": "/Od /Z7 /RTC1 /analyze"
-				},
-				{
-					"filters": [
-					{
-						"platform": "winapi",
-						"build": "release"
-					}],
-					"rules": [
-						"msvc_cxx"
-					],
-					"value": "/O2 /GF /analyze"
-				}]
-			},
-			"cxx_ipaths":
-			{
-				"specific": [
-				{
-					"rules": [
-						"msvc_cxx"
-					],
-					"value": "\"/I${winsdk_path}\\ucrt\" \"/I${winsdk_path}\\um\" \"/I${winsdk_path}\\shared\" \"/I${msvc_path}\\include\""
-				}]
-			},
-			"cxx_build_defs":
-			{
-				"specific": [
-				{
-					"filters": [
-					{
-						"platform": "winapi",
-						"build": "debug"
-					}],
-					"rules": [
-						"msvc_cxx"
-					],
-					"value": "/D_DEBUG"
-				},
-				{
-					"filters": [
-					{
-						"platform": "winapi",
-						"build": "release"
-					}],
-					"rules": [
-						"msvc_cxx"
-					],
-					"value": "/DNDEBUG"
-				}]
-			},
-			"cxx_platform_defs":
-			{
-				"specific": [
-				{
-					"filters": [
-					{
-						"platform": "winapi"
-					}],
-					"rules": [
-						"msvc_cxx"
-					],
-					"value": "/DWIN32_LEAN_AND_MEAN /DUNICODE"
-				}]
-			},
-			"cxx_target_defs":
-			{
-				"specific": [
-				{
-					"filters": [
-					{
-						"target": "unit"
-					}],
-					"rules": [
-						"msvc_cxx"
-					],
-					"value": "\"/DSYNAFIS_UNIT_TEST=true\""
-				}]
-			},
-			"link_flags":
-			{
-				"specific": [
-				{
-					"filters": [
-					{
-						"platform": "winapi",
-						"build": "debug"
-					}],
-					"rules": [
-						"msvc_link"
-					],
-					"value": "/MTd /link /NODEFAULTLIB:libucrt.lib /DEBUG /OPT:NOREF"
-				},
-				{
-					"filters": [
-					{
-						"platform": "winapi",
-						"build": "release"
-					}],
-					"rules": [
-						"msvc_link"
-					],
-					"value": "/MT /link /NODEFAULTLIB:libucrt.lib /OPT:REF"
-				}]
-			},
-			"lib_paths":
-			{
-				"specific": [
-				{
-					"filters": [
-					{
-						"platform": "winapi"
-					}],
-					"rules": [
-						"msvc_link"
-					],
-					"value": "\"/LIBPATH:${msvc_path}\\lib\\x64\" \"/LIBPATH:${winsdk_lib_path}\\ucrt\\x64\" \"/LIBPATH:${winsdk_lib_path}\\um\\x64\""
-				}]
-			},
-			"libs":
-			{
-				"specific": [
-				{
-					"filters": [
-					{
-						"platform": "winapi",
-						"build": "debug"
-					}],
-					"rules": [
-						"msvc_link"
-					],
-					"value": "ucrtd.lib kernel32.lib"
-				},
-				{
-					"filters": [
-					{
-						"platform": "winapi",
-						"build": "release"
-					}],
-					"rules": [
-						"msvc_link"
-					],
-					"value": "ucrt.lib kernel32.lib"
-				}]
-			}
-		},
-		"rules":
-		{
-			"msvc_cxx":
-			{
-				"action": "cxx",
-				"filters": [
-				{
-					"platform": "winapi"
-				}],
-				"vars":
-				{
-					"command": "\"${msvc_path}\\bin\\Hostx64\\x64\\cl.exe\" /showIncludes /GR /EHa /std:c++latest ${cxx_flags} /c ${in} @${rspfile}",
-					"description": "msvcxx",
-					"pool": "compile_pool",
-					"deps": "msvc",
-					"rspfile": "${out}.rsp",
-					"rspfile_content": "\"/Fo${out}\" ${cxx_ipaths} ${cxx_build_defs} ${cxx_platform_defs} ${cxx_target_defs}"
-				}
-			},
-			"msvc_link":
-			{
-				"action": "link",
-				"filters": [
-				{
-					"platform": "winapi"
-				}],
-				"vars":
-				{
-					"command": "\"${msvc_path}\\bin\\Hostx64\\x64\\cl.exe\" @${rspfile}",
-					"description": "mslink",
-					"pool": "link_pool",
-					"rspfile": "${out}.rsp",
-					"rspfile_content": "\"/Fe${out}\" ${in} ${libs} ${link_flags} ${lib_paths}"
-				}
-			}
-		},
-		"aliases":
-		{
-			"separator": "_",
-			"targets":
-			{
-				"tester":
-				{
-					"step": "unit_exe",
-					"filters": [
-					{
-						"target": "unit"
-					}]
-				}
-			},
-			"prefix": {},
-			"suffix":
-			{
-				"build": {}
-			}
-		},
-		"defaults": [
-			"build.ninja",
-			"tester_debug"
-		]
-	},
-	"variants":
-	{
-		"build":
-		{
-			"description": "The build type.",
-			"options": [
-				"release",
-				"debug"
-			]
 		}
 	},
-	"destinations":
+	"variables":
 	{
-		"bin":
+		"msvc_version": { "default": "14.14.26428" },
+		"msvc_path":
 		{
-			"root": "bin"
+			"default": "C:\\Program Files (x86)\\Microsoft Visual Studio\\2017\\Community\\VC\\Tools\\MSVC\\${msvc_version}"
 		},
-		"tmp":
+		"winsdk_version": { "default": "10.0.17763.0" },
+		"winsdk_path":
 		{
-			"root": "tmp",
-			"folders":
+			"default": "C:\\Program Files (x86)\\Windows Kits\\10\\Include\\${winsdk_version}"
+		},
+		"winsdk_lib_path":
+		{
+			"default": "C:\\Program Files (x86)\\Windows Kits\\10\\Lib\\${winsdk_version}"
+		},
+		"cxx_flags":
+		{
+			"specific": [
 			{
-				"target": {},
-				"platform": {},
-				"build": {}
+				"filters": [
+				{
+					"platform": "winapi",
+					"build": "debug"
+				}],
+				"rules": ["msvc_cxx"],
+				"value": "/Od /Z7 /RTC1 /analyze"
+			},
+			{
+				"filters": [
+				{
+					"platform": "winapi",
+					"build": "release"
+				}],
+				"rules": ["msvc_cxx"],
+				"value": "/O2 /GF /analyze"
+			}]
+		},
+		"cxx_ipaths":
+		{
+			"specific": [
+			{
+				"rules": ["msvc_cxx"],
+				"value": "\"/I${winsdk_path}\\ucrt\" \"/I${winsdk_path}\\um\" \"/I${winsdk_path}\\shared\" \"/I${msvc_path}\\include\""
+			}]
+		},
+		"cxx_build_defs":
+		{
+			"specific": [
+			{
+				"filters": [
+				{
+					"platform": "winapi",
+					"build": "debug"
+				}],
+				"rules": ["msvc_cxx"],
+				"value": "/D_DEBUG"
+			},
+			{
+				"filters": [
+				{
+					"platform": "winapi",
+					"build": "release"
+				}],
+				"rules": ["msvc_cxx"],
+				"value": "/DNDEBUG"
+			}]
+		},
+		"cxx_platform_defs":
+		{
+			"specific": [
+			{
+				"filters": [{ "platform": "winapi" }],
+				"rules": ["msvc_cxx"],
+				"value": "/DWIN32_LEAN_AND_MEAN /DUNICODE"
+			}]
+		},
+		"cxx_target_defs":
+		{
+			"specific": [
+			{
+				"filters": [{ "target": "unit" }],
+				"rules": ["msvc_cxx"],
+				"value": "\"/DSYNAFIS_UNIT_TEST=true\""
+			}]
+		},
+		"link_flags":
+		{
+			"specific": [
+			{
+				"filters": [
+				{
+					"platform": "winapi",
+					"build": "debug"
+				}],
+				"rules": ["msvc_link"],
+				"value": "/MTd /link /NODEFAULTLIB:libucrt.lib /DEBUG /OPT:NOREF"
+			},
+			{
+				"filters": [
+				{
+					"platform": "winapi",
+					"build": "release"
+				}],
+				"rules": ["msvc_link"],
+				"value": "/MT /link /NODEFAULTLIB:libucrt.lib /OPT:REF"
+			}]
+		},
+		"lib_paths":
+		{
+			"specific": [
+			{
+				"filters": [{ "platform": "winapi" }],
+				"rules": ["msvc_link"],
+				"value": "\"/LIBPATH:${msvc_path}\\lib\\x64\" \"/LIBPATH:${winsdk_lib_path}\\ucrt\\x64\" \"/LIBPATH:${winsdk_lib_path}\\um\\x64\""
+			}]
+		},
+		"libs":
+		{
+			"specific": [
+			{
+				"filters": [
+				{
+					"platform": "winapi",
+					"build": "debug"
+				}],
+				"rules": ["msvc_link"],
+				"value": "ucrtd.lib kernel32.lib"
+			},
+			{
+				"filters": [
+				{
+					"platform": "winapi",
+					"build": "release"
+				}],
+				"rules": ["msvc_link"],
+				"value": "ucrt.lib kernel32.lib"
+			}]
+		}
+	},
+	"rules":
+	{
+		"msvc_cxx":
+		{
+			"action": "cxx",
+			"filters": [{ "platform": "winapi" }],
+			"vars":
+			{
+				"command": "\"${msvc_path}\\bin\\Hostx64\\x64\\cl.exe\" /showIncludes /GR /EHa /std:c++latest ${cxx_flags} /c ${in} @${rspfile}",
+				"description": "msvcxx",
+				"pool": "compile_pool",
+				"deps": "msvc",
+				"rspfile": "${out}.rsp",
+				"rspfile_content": "\"/Fo${out}\" ${cxx_ipaths} ${cxx_build_defs} ${cxx_platform_defs} ${cxx_target_defs}"
+			}
+		},
+		"msvc_link":
+		{
+			"action": "link",
+			"filters": [{ "platform": "winapi" }],
+			"vars":
+			{
+				"command": "\"${msvc_path}\\bin\\Hostx64\\x64\\cl.exe\" @${rspfile}",
+				"description": "mslink",
+				"pool": "link_pool",
+				"rspfile": "${out}.rsp",
+				"rspfile_content": "\"/Fe${out}\" ${in} ${libs} ${link_flags} ${lib_paths}"
+			}
+		},
+		"ajv_compile":
+		{
+			"action": "json_schemas",
+			"filters": [{ "target": "schemas" }],
+			"vars":
+			{
+				"command": "ajv compile -s \"${in}\" -o \"${out}\"",
+				"description": "ajv",
+				"pool": "compile_pool"
 			}
 		}
 	},
-	"extensions":
+	"aliases":
 	{
-		"obj": [
+		"separator": "_",
+		"targets":
 		{
-			"filters": [
+			"tester":
 			{
-				"platform": "winapi"
-			}],
-			"value": ".obj"
-		}],
-		"exe": [
+				"step": "unit_exe",
+				"filters": [{ "target": "unit" }],
+				"prefix": ["build"]
+			}
+		},
+		"modifiers":
 		{
-			"filters": [
-			{
-				"platform": "winapi"
-			}],
-			"value": ".exe"
-		}]
+			"target": {},
+			"platform": {},
+			"build": {}
+		}
 	},
-	"products":
-	{
-		"tester": [
-		{
-			"filters": [
-			{
-				"target": "unit"
-			}],
-			"base": "tester",
-			"separator": "_",
-			"prefix": {},
-			"suffix": {}
-		}]
-	}
+	"defaults": [
+		"build.ninja",
+		"tester_debug"
+	]
 }

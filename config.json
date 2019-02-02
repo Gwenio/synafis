@@ -1,0 +1,64 @@
+{
+	"$schema": "./templates/schemas/config.json",
+	"variants":
+	{
+		"build":
+		{
+			"description": "The build type.",
+			"options": [
+				"release",
+				"debug"
+			]
+		}
+	},
+	"destinations":
+	{
+		"bin": { "root": "bin" },
+		"tmp":
+		{
+			"root": "tmp",
+			"folders":
+			{
+				"target": {},
+				"platform": {},
+				"build": {}
+			}
+		},
+		"schemas_js": { "root": "tmp/json_schemas" },
+		"js_dir": { "root": "js" }
+	},
+	"extensions":
+	{
+		"obj": [
+		{
+			"filters": [{ "platform": "winapi" }],
+			"value": ".obj"
+		}],
+		"exe": [
+		{
+			"filters": [{ "platform": "winapi" }],
+			"value": ".exe"
+		}],
+		"js": [{ "value": ".js" }],
+		"min_js": [{ "value": ".min.js" }]
+	},
+	"products":
+	{
+		"tester": [
+		{
+			"filters": [{ "target": "unit" }],
+			"base": "tester",
+			"separator": "_",
+			"prefix": {},
+			"suffix": {}
+		}],
+		"json_schema_bundle": [
+		{
+			"filter": [{ "target": "schemas" }],
+			"base": "json_schemas",
+			"separator": "_",
+			"prefix": {},
+			"suffix": {}
+		}]
+	}
+}

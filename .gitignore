@@ -12,8 +12,6 @@ Doxyfile
 *.ninja.bak
 .ninja_deps
 .ninja_log
-config.json
-!templates/schemas/config.json
 ninja.json
 !templates/schemas/ninja.json
 node_modules
