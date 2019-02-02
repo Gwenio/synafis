@@ -25,8 +25,6 @@
 "use strict";
 
 // spellcheck: off
-const commandLineArgs = require('command-line-args')
-const commandLineUsage = require('command-line-usage')
 const _ = require('lodash')
 const fs = require('fs')
 const Ajv = require('ajv')
@@ -38,6 +36,7 @@ const { Shadow, Variant } = require('./js/variants')
 const { Step, Source } = require('./js/project')
 const { Directory } = require('./js/directory')
 const read_json_file = require('./js/json_input')
+const { displayUsage, processCommandLine } = require('./js/setup/cli')
 // spellcheck: on
 
 const ajv = new Ajv()
@@ -113,84 +112,11 @@ function partitioned(pick, func)
 	})
 }
 
-const cmd_args = [
-{
-	name: 'help',
-	alias: 'h',
-	type: Boolean,
-	defaultValue: false,
-	description: 'Displays this help message.'
-},
-{
-	name: 'project',
-	alias: 'p',
-	type: String,
-	typeLabel: '{underline file.json}',
-	defaultValue: 'project.json',
-	description: 'The file containing a build environment agnostic project description. [project.json]'
-},
-{
-	name: 'config',
-	alias: 'c',
-	type: String,
-	typeLabel: '{underline file.json}',
-	defaultValue: 'config.json',
-	description: 'The file containing build environment specific configurations. [config.json]'
-},
-{
-	name: 'generate',
-	alias: 'g',
-	type: String,
-	typeLabel: '{underline file.json}',
-	defaultValue: 'ninja.json',
-	description: 'The file containing configurations for the build generator. [ninja.json]'
-},
-{
-	name: 'root',
-	alias: 'r',
-	type: String,
-	typeLabel: '{underline path}',
-	defaultValue: '.',
-	description: 'The path to the root of the source code. [./]'
-},
-{
-	name: 'jobs',
-	alias: 'j',
-	type: Number,
-	defaultValue: 4,
-	description: 'The number of tasks to run in parallel. [4]'
-},
-{
-	name: 'verbose',
-	alias: 'v',
-	type: Number,
-	defaultValue: 0
-}]
-
-const options = commandLineArgs(cmd_args)
+const options = processCommandLine()
 
 if (options.help)
 {
-	const usage = [
-	{
-		header: 'setup.js',
-		content: 'A Node.js script to generate Ninja build files from JSON descriptions of the project.',
-	},
-	{
-		header: 'Synopsis',
-		content: [
-			'$ node -- setup.js --help',
-			'$ node -- setup.js -p path/project.json -c path/config.json',
-			'$ node -- setup.js -r path',
-			'$ node -- setup.js -j 20'
-		]
-	},
-	{
-		header: 'Options',
-		optionList: cmd_args,
-		hide: ['verbose']
-	}]
-	console.log(commandLineUsage(usage))
+	displayUsage()
 }
 else
 {
