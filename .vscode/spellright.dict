@@ -16,3 +16,4 @@ init
 func
 alloc
 decltype
+lodash
