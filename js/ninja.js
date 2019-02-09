@@ -168,7 +168,7 @@ class Writer
 	 */
 	buildList(pre, items)
 	{
-		if (items !== [])
+		if (items.length !== 0)
 		{
 			this.write(pre)
 			_.each(items, (val) => this.write(` ${val}`))
@@ -202,7 +202,7 @@ class Writer
 	 */
 	defs(targets)
 	{
-		if (targets !== [])
+		if (targets.length !== 0)
 		{
 			this.write(`default ${_.join(targets, ' ')}\n`)
 		}
@@ -335,7 +335,7 @@ class Build
 	 */
 	static create(action, { single, multiple }, implicit, inputs, depends, after, vars = {})
 	{
-		if (single === [])
+		if (single.length === 0)
 		{
 			return [new Build(action, multiple, implicit, inputs, depends, after, vars)]
 		}
