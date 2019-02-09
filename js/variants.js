@@ -109,8 +109,8 @@ class Variant
 	 */
 	match(item)
 	{
-		const filters = item.filters
-		return filters === [] || _.some(filters, x =>
+		const filters = _.get(item, 'filters', [])
+		return filters.length === 0 || _.some(filters, x =>
 			_.every(this.data, (y, key) => !_.has(x, key) || _.get(x, key) === y))
 	}
 
