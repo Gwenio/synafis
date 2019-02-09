@@ -160,6 +160,20 @@ class Stage
 	{
 		return func(this, ...args)
 	}
+
+	/**
+	 * Addes a Stage that waits until after a set of Promises complete to continue.
+	 * @param  {...Promise} after The Promises to wait on.
+	 * @returns {Stage<Result, Result>}
+	 */
+	wait(...after)
+	{
+		return this.stage(async (previous) =>
+		{
+			await Promise.all(after)
+			return previous
+		})
+	}
 }
 
 /**
@@ -275,6 +289,20 @@ class Task
 	apply(func, ...args)
 	{
 		return func(this, ...args)
+	}
+
+	/**
+	 * Addes a Stage that waits until after a set of Promises complete to continue.
+	 * @param  {...Promise} after The Promises to wait on.
+	 * @returns {Stage<Result, Result>}
+	 */
+	wait(...after)
+	{
+		return this.stage(async (previous) =>
+		{
+			await Promise.all(after)
+			return previous
+		})
 	}
 }
 
@@ -400,6 +428,21 @@ class Pipeline
 			return _.map(parts, spread)
 		}
 		return this.task(id, p_action, ...inputs)
+	}
+
+	/**
+	 * Create a Task that first wait on Promises to complete.
+	 * @param {string} id
+	 * @param  {...Promise} after The Promises to wait on.
+	 * @returns {Task<null>}
+	 */
+	wait(id, ...after)
+	{
+		return this.task(id, async (previous) =>
+		{
+			await Promise.all(after)
+			return null
+		})
 	}
 
 	async run()
