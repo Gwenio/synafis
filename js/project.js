@@ -92,9 +92,8 @@ class Step
 		/** @type {{ [id:string]: string[] }} */
 		const tree = _.reduce(steps, (acc, item) =>
 			_.set(acc, item.id, item.get_deps()), {})
-		let [temp, remaining] = _.partition(steps, (x) => tree[x.id] === [])
-		let sorted = [temp]
-		while (remaining !== [])
+		let [sorted, remaining] = _.partition(steps, (x) => tree[x.id] === [])
+		while (remaining.length !== 0)
 		{
 			/** @type {Step[]} */
 			let removed; // this semicolon is important
@@ -103,16 +102,16 @@ class Step
 				const deps = tree[x.id]
 				return _.some(remaining, (y) => _.includes(deps, y.id))
 			})
-			if (removed === [])
+			if (removed.length === 0)
 			{
 				throw new Error("Circular dependency detected in steps.")
 			}
 			else
 			{
-				sorted.push(removed)
+				sorted.concat(removed)
 			}
 		}
-		return _.flatten(sorted)
+		return sorted
 	}
 
 	/**
