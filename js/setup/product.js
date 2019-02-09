@@ -26,8 +26,9 @@
 const _ = {}
 _.flatMap = require('lodash/flatMap')
 _.map = require('lodash/map')
-_.reduce = require('lodash/reduce')
 _.get = require('lodash/get')
+_.join = require('lodash/join')
+_.concat = require('lodash/concat')
 // spellcheck: on
 
 /**
@@ -67,21 +68,18 @@ class Product
 	partition(variant)
 	{
 		/**
-		 *
-		 * @param {string} acc
 		 * @param {{ [x:string]: string }} val
 		 * @param {string} key
 		 * @returns {string}
 		 */
-		const reduction = (acc, val, key) =>
+		const convert = (val, key) =>
 		{
 			const x = variant.get(key)
-			const y = _.get(val, x, x)
-			return `${acc}${y}${this.separator}`
+			return _.get(val, x, x)
 		}
-		const pre = _.reduce(this.prefix, reduction, '')
-		const post = _.reduce(this.suffix, reduction, '')
-		return `${pre}${this.base}${post}`
+		const pre = _.map(this.prefix, convert)
+		const post = _.map(this.suffix, convert)
+		return _.join(_.concat(pre, this.base, post), this.separator)
 	}
 }
 
