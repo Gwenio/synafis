@@ -23,19 +23,21 @@
 "use strict";
 
 // spellcheck: off
-const map = require('lodash/map')
-const reduce = require('lodash/reduce')
-const some = require('lodash/some')
-const partition = require('lodash/partition')
-const set = require('lodash/set')
-const get = require('lodash/get')
-const size = require('lodash/size')
-const union = require('lodash/union')
-const replace = require('lodash/replace')
-const flatten = require('lodash/flatten')
-const includes = require('lodash/includes')
-const filter = require('lodash/filter')
-const uniq = require('lodash/uniq')
+const _ = {}
+_.map = require('lodash/map')
+_.reduce = require('lodash/reduce')
+_.some = require('lodash/some')
+_.partition = require('lodash/partition')
+_.set = require('lodash/set')
+_.get = require('lodash/get')
+_.union = require('lodash/union')
+_.replace = require('lodash/replace')
+_.flatten = require('lodash/flatten')
+_.includes = require('lodash/includes')
+_.mapValues = require('lodash/mapValues')
+_.groupBy = require('lodash/groupBy')
+_.pick = require('lodash/pick')
+_.pickBy = require('lodash/pickBy')
 const path = require('path')
 // spellcheck: on
 
@@ -51,51 +53,57 @@ class Step
 	 */
 	constructor(id, data)
 	{
+		/** @type {string} */
 		this.action = data.action
 		this.id = id
-		this.filters = get(data, 'filters', [])
-		this.inputs = get(data, 'inputs', [])
-		this.outputs = map(get(data, 'outputs', {}),
-			(val, key) => set(val, 'id', key))
-		this.after = get(data, 'after', [])
-		this.sources = get(data, 'sources', [])
+		/** @type {{ [id:string]: string }[]} */
+		this.filters = _.get(data, 'filters', [])
+		/** @type {{ step: string, [id:string]: any }[]} */
+		this.inputs = _.get(data, 'inputs', [])
+		this.outputs = _.map(_.get(data, 'outputs', {}),
+			(val, key) => _.set(val, 'id', key))
+		/** @type {string[]} */
+		this.after = _.get(data, 'after', [])
+		this.sources = _.get(data, 'sources', [])
 	}
 
 	/**
 	 * Creates an array of Step objects from a raw JSON object.
 	 * @param {Object} raw
-	 * @returns {Array<Step>}
+	 * @returns {Step[]}
 	 */
 	static process(raw)
 	{
-		return map(raw, (step, key) => new Step(key, step))
+		return _.map(raw, (step, key) => new Step(key, step))
 	}
 
 	get_deps()
 	{
-		return union(this.after, map(this.inputs, 'step'))
+		return _.union(this.after, _.map(this.inputs, 'step'))
 	}
 
 	/**
 	 * Sorts an array of Step objects so they will come later than those they depend on.
-	 * @param {Array<Step>} steps
-	 * @returns {Array<Step>}
+	 * @param {Step[]} steps
+	 * @returns {Step[]}
 	 */
 	static sort(steps)
 	{
-		const tree = reduce(steps, (acc, item) =>
-			set(acc, item.id, item.get_deps()), {})
-		let [temp, remaining] = partition(steps, (x) => tree[x.id] === [])
+		/** @type {{ [id:string]: string[] }} */
+		const tree = _.reduce(steps, (acc, item) =>
+			_.set(acc, item.id, item.get_deps()), {})
+		let [temp, remaining] = _.partition(steps, (x) => tree[x.id] === [])
 		let sorted = [temp]
-		while (size(remaining) > 0)
+		while (remaining !== [])
 		{
+			/** @type {Step[]} */
 			let removed; // this semicolon is important
-			[remaining, removed] = partition(remaining, (x) =>
+			[remaining, removed] = _.partition(remaining, (x) =>
 			{
 				const deps = tree[x.id]
-				return some(remaining, (y) => includes(deps, y.id))
+				return _.some(remaining, (y) => _.includes(deps, y.id))
 			})
-			if (size(removed) === 0)
+			if (removed === [])
 			{
 				throw new Error("Circular dependency detected in steps.")
 			}
@@ -104,7 +112,19 @@ class Step
 				sorted.push(removed)
 			}
 		}
-		return flatten(sorted)
+		return _.flatten(sorted)
+	}
+
+	/**
+	 * Prepares the steps for future processing by removing unneeded properties.
+	 * @param {Step[]} steps
+	 * @returns {{ [id:string]: { action:string, sources:any[], inputs:any[], outputs:any[], after:string[] } }}
+	 */
+	static cleanup(steps)
+	{
+		return _.reduce(steps, (acc, x) =>
+			_.set(acc, x.id, _.pick(x,
+				['action', 'sources', 'inputs', 'outputs', 'after'])), {})
 	}
 }
 
@@ -115,42 +135,40 @@ class Source
 {
 	constructor(src)
 	{
-		const prefix = get(src, 'prefix', "")
-		const suffix = get(src, 'suffix', "")
-		const files = get(src, 'files', [])
-		this.filters = get(src, 'filters', [])
-		this.group = get(src, 'group', "")
-		this.files = map(files, (f) =>
-			replace(prefix + f + suffix, '/', path.sep))
+		/** @type {string} */
+		const prefix = _.get(src, 'prefix', "")
+		/** @type {string} */
+		const suffix = _.get(src, 'suffix', "")
+		/** @type {string[]} */
+		const files = _.get(src, 'files', [])
+		/** @type {{ [id:string]: string }[]} */
+		this.filters = _.get(src, 'filters', [])
+		/** @type {string} */
+		this.group = _.get(src, 'group', "")
+		this.files = _.map(files, (f) =>
+			_.replace(`${prefix}${f}${suffix}`, '/', path.sep))
 	}
 
 	/**
-	 * @param {Array<Object>} raw
-	 * @returns {Array<Source>}
+	 * @param {object[]} raw
+	 * @returns {Source[]}
 	 */
 	static process(raw)
 	{
-		return map(raw, (src) => new Source(src))
+		return _.map(raw, (src) => new Source(src))
 	}
 
 	/**
-	 * @param {Array<Source>} sources
-	 * @returns {Object}
+	 * @param {Source[]} sources
+	 * @returns {{ [group:string]: string[] }}
 	 */
 	static merge(sources)
 	{
-		const groups = uniq(map(sources, 'group'))
-		const result = reduce(groups, (acc, x) =>
-		{
-			const members = filter(sources, ['group', x])
-			const files = union.apply(null, map(members, 'files'))
-			return (size(files) < 1) ? acc : set(acc, x, files)
-		}, {})
-		return result
+		const groups = _.mapValues(_.groupBy(sources, 'group'),
+			(members) => _.union(..._.map(members, 'files')))
+		return _.pickBy(groups, (value) => value !== [])
 	}
 }
 
-module.exports = {
-	Step: Step,
-	Source: Source
-}
+module.exports.Step = Step
+module.exports.Source = Source
