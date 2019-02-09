@@ -81,6 +81,9 @@ const cmd_args = [
 	defaultValue: 0
 }]
 
+/**
+ * @returns {{ [props:string]: string | number | boolean }}
+ */
 function processCommandLine()
 {
 	return commandLineArgs(cmd_args)
@@ -98,14 +101,13 @@ function displayUsage()
 		content: [
 			'$ node -- setup.js --help',
 			'$ node -- setup.js -p path/project.json -c path/config.json',
-			'$ node -- setup.js -r path',
-			'$ node -- setup.js -j 20'
+			'$ node -- setup.js -r path'
 		]
 	},
 	{
 		header: 'Options',
 		optionList: cmd_args,
-		hide: ['verbose']
+		hide: ['verbose', 'jobs']
 	}]
 	console.log(commandLineUsage(usage))
 }
