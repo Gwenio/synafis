@@ -137,7 +137,7 @@ class Writer
 
 	/**
 	 * Outputs a pool definition to the Ninja file.
-	 * @param {Number} depth The 'depth' of the pool.
+	 * @param {number} depth The 'depth' of the pool.
 	 * @param {string} key The name of the pool.
 	 * @returns {Writer} this
 	 */
