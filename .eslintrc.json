@@ -48,7 +48,8 @@
 		"node/no-extraneous-require": "off",
 		"promise/catch-or-return": "off",
 		"lodash/import-scope": "off",
-		"lodash/preferred-alias": "off"
+		"lodash/preferred-alias": "off",
+		"unicorn/filename-case": ["error", { "case": "snakeCase" }]
 	},
 	"settings":
 	{
