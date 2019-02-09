@@ -92,7 +92,7 @@ class Step
 		/** @type {{ [id:string]: string[] }} */
 		const tree = _.reduce(steps, (acc, item) =>
 			_.set(acc, item.id, item.get_deps()), {})
-		let [sorted, remaining] = _.partition(steps, (x) => tree[x.id] === [])
+		let [sorted, remaining] = _.partition(steps, (x) => tree[x.id].length === 0)
 		while (remaining.length !== 0)
 		{
 			/** @type {Step[]} */
@@ -108,7 +108,7 @@ class Step
 			}
 			else
 			{
-				sorted.concat(removed)
+				sorted = sorted.concat(removed)
 			}
 		}
 		return sorted
