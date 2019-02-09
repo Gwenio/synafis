@@ -28,7 +28,6 @@ const path = require('path')
 const _ = {}
 _.map = require('lodash/map')
 _.get = require('lodash/get')
-_.concat = require('lodash/concat')
 _.merge = require('lodash/merge')
 // spellcheck: on
 
@@ -45,17 +44,17 @@ class Directory
 	 * @param {{ [tag:string]: string }[]} input.filters The filters.
 	 * @param {{ [key:string]: { [x:string]: string } }} input.folders The build variation specific sub-folders.
 	 */
-	constructor(id, { root, filters, folders })
+	constructor(id, input)
 	{
 		this.id = id
-		this.root = root
-		this.filters = filters
-		this.folders = folders
+		this.root = input.root
+		this.filters = _.get(input, 'filters', [])
+		this.folders = _.get(input, 'folders', {})
 	}
 
 	/**
 	 * Processes the directory entries from JSON.
-	 * @param {object} raw
+	 * @param {{ [key:string]: object }} raw
 	 * @returns {Directory[]}
 	 */
 	static process(raw)
@@ -75,7 +74,7 @@ class Directory
 			const x = variant.get(key)
 			return _.get(val, x, x)
 		})
-		return path.join(..._.concat(this.root, temp))
+		return path.join(this.root, ...temp)
 	}
 
 	/**
