@@ -23,80 +23,107 @@
 "use strict";
 
 // spellcheck: off
-const reduce = require('lodash/reduce')
-const set = require('lodash/set')
-const get = require('lodash/get')
-const size = require('lodash/size')
-const merge = require('lodash/merge')
-const map = require('lodash/map')
-const flatMap = require('lodash/flatMap')
-const some = require('lodash/some')
-const concat = require('lodash/concat')
-const partition = require('lodash/partition')
-const has = require('lodash/has')
-const every = require('lodash/every')
+const _ = {}
+_.reduce = require('lodash/reduce')
+_.set = require('lodash/set')
+_.get = require('lodash/get')
+_.merge = require('lodash/merge')
+_.map = require('lodash/map')
+_.flatMap = require('lodash/flatMap')
+_.some = require('lodash/some')
+_.concat = require('lodash/concat')
+_.partition = require('lodash/partition')
+_.has = require('lodash/has')
+_.every = require('lodash/every')
 // spellcheck: on
 
 class Shadow
 {
-	constructor()
+	constructor(input)
 	{
-		this.shadows = {}
+		this.shadows = input
 	}
 
 	static process(raw)
 	{
-		return new Shadow()
+		return new Shadow(raw)
 	}
 
+	/**
+	 * @template T
+	 * @param {T & { filters: any[] }} item
+	 * @returns {T & { filters: any[] }}
+	 */
 	apply(item)
 	{
-		return set(item, 'filters', reduce(this.shadows, (acc, val, key) =>
+		return _.set(item, 'filters', _.reduce(this.shadows, (acc, val, key) =>
 		{
-			const [y, z] = partition(acc, (a) => has(a, key))
-			const b = flatMap(y, (c) =>
-				map(val, (d) => set(merge({}, c), key, d)))
-			return concat(b, z)
-		}, item.filters))
+			const [y, z] = _.partition(acc, (a) => _.has(a, key))
+			const b = _.flatMap(y, (c) =>
+				_.map(val, (d) => _.set(_.merge({}, c), key, d)))
+			return _.concat(b, z)
+		}, _.get(item, 'filters', [])))
 	}
 }
 
 class Variant
 {
+	/**
+	 *
+	 * @param {{ [id:string]: string }} data
+	 */
 	constructor(data)
 	{
 		this.data = data
 	}
 
+	/**
+	 * Processes raw input into a form ready to be passed to Variant.merge().
+	 * @param {*} raw Raw input.
+	 * @returns {{ [id:string]: string[] }}
+	 */
 	static process(raw)
 	{
-		return reduce(raw, (acc, val, key) =>
-			set(acc, key, get(val, 'options', [])), {})
+		return _.reduce(raw, (acc, val, key) =>
+			_.set(acc, key, _.get(val, 'options', [])), {})
 	}
 
+	/**
+	 *
+	 * @param {{ [id:string]: string[] }} base
+	 * @param {{ [id:string]: string[] }} extra
+	 * @returns {Variant[]}
+	 */
 	static merge(base, extra)
 	{
-		let temp = merge({}, base, extra)
-		temp = reduce(temp, (acc, val, key) =>
-			flatMap(val, (x) => map(acc, (y) =>
-				merge(set({}, key, x), y))), [{}])
-		return map(temp, (x) => new Variant(x))
+		const merged = _.merge({}, base, extra)
+		const temp = _.reduce(merged, (acc, val, key) =>
+			_.flatMap(val, (x) => _.map(acc, (y) =>
+				_.merge(_.set({}, key, x), y))), [{}])
+		return _.map(temp, (x) => new Variant(x))
 	}
 
+	/**
+	 * @param {{ filters: { [key:string]: string }[] }} item
+	 * @returns {boolean}
+	 */
 	match(item)
 	{
-		const filters = get(item, 'filters', [])
-		return size(filters) === 0 || some(filters, x =>
-			every(this.data, (y, key) => !has(x, key) || get(x, key) === y))
+		const filters = item.filters
+		return filters === [] || _.some(filters, x =>
+			_.every(this.data, (y, key) => !_.has(x, key) || _.get(x, key) === y))
 	}
 
+	/**
+	 * Gets the value for a condition.
+	 * @param {string} tag The tag of the condition.
+	 * @returns {string}
+	 */
 	get(tag)
 	{
 		return this.data[tag]
 	}
 }
 
-module.exports = {
-	Shadow: Shadow,
-	Variant: Variant
-}
+module.exports.Shadow = Shadow
+module.exports.Variant = Variant
