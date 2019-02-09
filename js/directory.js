@@ -23,28 +23,27 @@
 "use strict";
 
 // spellcheck: off
+const fs = require('fs')
 const path = require('path')
-const map = require('lodash/map')
-const get = require('lodash/get')
-const spread = require('lodash/spread')
-const concat = require('lodash/concat')
-const merge = require('lodash/merge')
-const fs = merge(require('fs'), require('fs')
-	.promises)
+const _ = {}
+_.map = require('lodash/map')
+_.get = require('lodash/get')
+_.concat = require('lodash/concat')
+_.merge = require('lodash/merge')
 // spellcheck: on
 
 /**
- * @type Directory
+ * @typedef {import('./variants').Variant} Variant
  */
+
 class Directory
 {
 	/**
-	 *
 	 * @param {string} id The ID for the Directory.
-	 * @param {Object} param1
-	 * @param {string} param1.root The constant prefix for the Directory.
-	 * @param {Array<any>} param1.filters The filters.
-	 * @param {Object} param1.folders The build variation specific sub-folders.
+	 * @param {object} input
+	 * @param {string} input.root The constant prefix for the Directory.
+	 * @param {{ [tag:string]: string }[]} input.filters The filters.
+	 * @param {{ [key:string]: { [x:string]: string } }} input.folders The build variation specific sub-folders.
 	 */
 	constructor(id, { root, filters, folders })
 	{
@@ -56,28 +55,27 @@ class Directory
 
 	/**
 	 * Processes the directory entries from JSON.
-	 * @param {Object} raw
-	 * @returns {Array<Directory>}
+	 * @param {object} raw
+	 * @returns {Directory[]}
 	 */
 	static process(raw)
 	{
-		return map(raw, (val, key) => new Directory(key, val))
+		return _.map(raw, (val, key) => new Directory(key, val))
 	}
 
 	/**
 	 * Generates a build variation specific path.
-	 * @typedef {Object} Variant
 	 * @param {Variant} variant The variant to generate a path for.
 	 * @returns {string}
 	 */
 	location(variant)
 	{
-		const temp = map(this.folders, (val, key) =>
+		const temp = _.map(this.folders, (val, key) =>
 		{
 			const x = variant.get(key)
-			return get(val, x, x)
+			return _.get(val, x, x)
 		})
-		return spread(path.join)(concat(this.root, temp))
+		return path.join(..._.concat(this.root, temp))
 	}
 
 	/**
@@ -98,6 +96,4 @@ class Directory
 	}
 }
 
-module.exports = {
-	Directory: Directory
-}
+module.exports = Directory

@@ -23,15 +23,15 @@
 "use strict";
 
 // spellcheck: off
-const { open, readFile } = require('fs')
-	.promises
+const { promises: { open, readFile } } = require('fs')
+/** @type {(text: string) => object} */
 const parse = require('json5/lib/parse')
 // spellcheck: on
 
 /**
  * Reads and parses a JSON file.
- * @param {String} path The path to the JSON file to read.
- * @returns {Promise<Object>}
+ * @param {string} path The path to the JSON file to read.
+ * @returns {Promise<object>}
  */
 async function read(path)
 {
