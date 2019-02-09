@@ -24,8 +24,7 @@
 				"build": {}
 			}
 		},
-		"schemas_js": { "root": "tmp/json_schemas" },
-		"js_dir": { "root": "js" }
+		"schemas_js": { "root": "tmp/json_schemas" }
 	},
 	"extensions":
 	{
@@ -39,8 +38,7 @@
 			"filters": [{ "platform": "winapi" }],
 			"value": ".exe"
 		}],
-		"js": [{ "value": ".js" }],
-		"min_js": [{ "value": ".min.js" }]
+		"js": [{ "value": ".js" }]
 	},
 	"products":
 	{

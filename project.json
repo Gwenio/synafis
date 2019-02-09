@@ -125,7 +125,7 @@
 		},
 		"json_schemas":
 		{
-			"action": "compile_schema",
+			"action": "compile_json_schemas",
 			"description": "Compiles JSON Schemas to JavaScript code.",
 			"filters": [
 				{ "target": "schemas" }
@@ -146,60 +146,6 @@
 					"extension": "js",
 					"location": "schemas_js",
 					"single": true
-				}
-			}
-		},
-		"bundle_schemas":
-		{
-			"action": "bundle_js",
-			"description": "Combines the schema code into a single JavaScript file.",
-			"filters": [
-				{ "target": "schemas" }
-			],
-			"inputs": [
-			{
-				"description": "The compiled schemas.",
-				"step": "json_schemas",
-				"group": "js",
-				"implicit": false,
-				"produces": "bundle"
-			}],
-			"outputs":
-			{
-				"bundle":
-				{
-					"description": "The combined schema JavaScript file.",
-					"extension": "js",
-					"location": "schemas_js",
-					"implicit": false,
-					"products": ["json_schema_bundle"]
-				}
-			}
-		},
-		"minify_schemas":
-		{
-			"action": "minify_js",
-			"description": "Minimizes the size of the combined schema code.",
-			"filters": [
-				{ "target": "schemas" }
-			],
-			"inputs": [
-			{
-				"description": "The combined schemas file.",
-				"step": "bundle_schemas",
-				"group": "bundle",
-				"implicit": false,
-				"produces": "mini"
-			}],
-			"outputs":
-			{
-				"mini":
-				{
-					"description": "The minified combined schema JavaScript file.",
-					"extension": "min_js",
-					"location": "js_dir",
-					"implicit": false,
-					"products": ["json_schema_bundle"]
 				}
 			}
 		}
