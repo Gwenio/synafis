@@ -50,6 +50,13 @@
 		"lodash/import-scope": "off",
 		"lodash/preferred-alias": "off"
 	},
+	"settings":
+	{
+		"lodash":
+		{
+			"pragma": "_"
+		}
+	},
 	"globals":
 	{
 		"Promise": true
