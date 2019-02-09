@@ -24,225 +24,380 @@
 
 // spellcheck: off
 const EventEmitter = require('events')
-const max = require('lodash/max')
-const reduce = require('lodash/reduce')
-const includes = require('lodash/includes')
-const set = require('lodash/set')
-const get = require('lodash/get')
-const at = require('lodash/at')
-const forOwn = require('lodash/forOwn')
-const keys = require('lodash/keys')
-const each = require('lodash/forEach')
-const size = require('lodash/size')
-const head = require('lodash/head')
-const initial = require('lodash/initial')
-const last = require('lodash/last')
-const unset = require('lodash/unset')
-const bind = require('lodash/bind')
-const identity = require('lodash/identity')
-const isArray = require('lodash/isArray')
-const async_queue = require('neo-async/queue')
+const _ = {}
+_.map = require('lodash/map')
+_.includes = require('lodash/includes')
+_.concat = require('lodash/concat')
+_.spread = require('lodash/spread')
+_.zip = require('lodash/zip')
 const { machine } = require('asyncmachine')
 // spellcheck: on
 
+class Callbacks
+{
+	/**
+	 *
+	 * @param {(result: Promise<any | null>) => Promise<any | null>} done
+	 * @param {() => boolean} aborted
+	 */
+	constructor(done, aborted)
+	{
+		this.done = done
+		this.aborted = aborted
+	}
+}
+
 /**
- * @type Pipeline
+ * Type for a Stage of a Task.
+ * @template Result, Previous
+ */
+class Stage
+{
+	/**
+	 * Constructs a Stage.
+	 * @public
+	 * @param {Callbacks} cb
+	 * @param {(previous: Previous, ...args: any[]) => Promise<Result> | Result} action
+	 * @param {Promise<Previous>} previous
+	 * @param {any[]} inputs
+	 */
+	constructor(cb, action, previous, inputs)
+	{
+		/** @private */
+		this.cb = cb
+		/** @private */
+		this.result = this.bind(action, Promise.all(_.concat(previous, inputs)))
+	}
+
+	/**
+	 * @private
+	 * @param {(previous: Previous, ...args: any[]) => Promise<Result> | Result} action
+	 * @param {Promise<any[]>} inputs
+	 * @returns {Promise<Result | null>}
+	 */
+	async bind(action, inputs)
+	{
+		const results = await inputs
+		return this.cb.aborted() ? null : action.apply(null, results)
+	}
+
+	/**
+	 * @public
+	 * @returns {Promise<Result | null>}
+	 */
+	complete()
+	{
+		return this.cb.done(this.result)
+	}
+
+	/**
+	 * @public
+	 * @template Next
+	 * @template Args...
+	 * @param {(previous: Result, ...args: Args[]) => Promise<Next> | Next} action
+	 * @param {...(Promise<Args> | Args)} [inputs]
+	 * @returns {Stage<Next, Result>}
+	 */
+	stage(action, ...inputs)
+	{
+		return new Stage(this.cb, action, this.result, inputs)
+	}
+
+	/**
+	 * @public
+	 * @template T
+	 * @param {Promise<T[]>} by
+	 * @param {(by: T, from: Result) => Result} select
+	 * @returns {Stage<Result[], Result>}
+	 */
+	partition(by, select)
+	{
+		/**
+		 * @param {Result} from
+		 * @param {T[]} parts
+		 * @returns {Result[]}
+		 */
+		function action(from, parts)
+		{
+			return _.map(parts, (x) => select(x, from))
+		}
+		return this.stage(action, by)
+	}
+
+	/**
+	 * @public
+	 * @template Next, Part
+	 * @template Args...
+	 * @param {(previous: Part, ...args: Args[]) => Next} action
+	 * @param {...(Promise<Args[]> | Args[])} [inputs]
+	 * @returns {Stage<Next[], Result>}
+	 */
+	partitioned(action, ...inputs)
+	{
+		/**
+		 * @param {Result & ArrayLike} previous
+		 * @param  {...(Args[])} [temp]
+		 * @returns {Next[]}
+		 */
+		function p_action(previous, ...temp)
+		{
+			return _.map(_.zip(previous, ...temp), _.spread(action))
+		}
+		return this.stage(p_action, ...inputs)
+	}
+
+	/**
+	 * @template Next
+	 * @param {(current: Stage<Result, Previous>, ...args: any[]) => Stage<Next, any>} func
+	 * @param {...any} args
+	 * @returns {Stage<Next, any>}
+	 */
+	apply(func, ...args)
+	{
+		return func(this, ...args)
+	}
+}
+
+/**
+ * Type for a Task in a Pipeline.
+ * @template Result
+ */
+class Task
+{
+
+	/**
+	 * Constructs a Task.
+	 * @public
+	 * @param {Callbacks} cb
+	 * @param {(...args: any[]) => Promise<Result> | Result} action
+	 * @param {any[]} inputs
+	 */
+	constructor(cb, action, inputs)
+	{
+		/** @private */
+		this.cb = cb
+		/** @private */
+		this.result = this.bind(action, Promise.all(inputs))
+	}
+
+	/**
+	 * @private
+	 * @param {(...args: any[]) => Promise<Result> | Result} action
+	 * @param {Promise<any[]>} inputs
+	 * @returns {Promise<Result | null>}
+	 */
+	async bind(action, inputs)
+	{
+		const results = await inputs
+		return this.cb.aborted() ? null : action.apply(null, results)
+	}
+
+	/**
+	 * @public
+	 * @returns {Promise<Result | null>}
+	 */
+	complete()
+	{
+		return this.cb.done(this.result)
+	}
+
+	/**
+	 * @public
+	 * @template Next
+	 * @template Args...
+	 * @param {(previous: Result, ...args: Args[]) => Promise<Next> | Next} action
+	 * @param {...(Promise<Args> | Args)} inputs
+	 * @returns {Stage<Next, Result>}
+	 */
+	stage(action, ...inputs)
+	{
+		return new Stage(this.cb, action, this.result, inputs)
+	}
+
+	/**
+	 * @public
+	 * @template T
+	 * @param {Promise<T[]>} by
+	 * @param {(by: T, from: Result) => Result} select
+	 * @returns {Stage<Result[], Result>}
+	 */
+	partition(by, select)
+	{
+		/**
+		 * @param {Result} from
+		 * @param {T[]} parts
+		 * @returns {Result[]}
+		 */
+		function action(from, parts)
+		{
+			return _.map(parts, (x) => select(x, from))
+		}
+		return this.stage(action, by)
+	}
+
+	/**
+	 * @public
+	 * @template Next, Part
+	 * @template Args...
+	 * @param {(previous: Part, ...args: Args[]) => Next} action
+	 * @param {...(Promise<Args[]> | Args[])} [inputs]
+	 * @returns {Stage<Next[], Result>}
+	 */
+	partitioned(action, ...inputs)
+	{
+		/**
+		 * @param {Result & ArrayLike} previous
+		 * @param  {...(Args[])} [temp]
+		 * @returns {Next[]}
+		 */
+		function p_action(previous, ...temp)
+		{
+			return _.map(_.zip(previous, ...temp), _.spread(action))
+		}
+		return this.stage(p_action, ...inputs)
+	}
+
+	/**
+	 * @template Next
+	 * @param {(current: Task<Result>, ...args: any[]) => Stage<Next, any>} func
+	 * @param {...any} args
+	 * @returns {Stage<Next, any>}
+	 */
+	apply(func, ...args)
+	{
+		return func(this, ...args)
+	}
+}
+
+/**
+ * A Pipeline runs Tasks in the needed order in parallel up to a specified maximum.
  */
 class Pipeline
 {
 	/**
 	 *
-	 * @param {string | symbol} id
-	 * @param {Number} concurrency
-	 * @param {Object} tasks
+	 * @param {string} id
 	 */
-	constructor(id, concurrency, tasks)
+	constructor(id)
 	{
-		const name = String(id)
-		this.filters = {}
-		this.stages = keys(tasks)
+		this.count = 0
+		/**
+		 * @member this.stages
+		 * @type {string[]}
+		 */
+		this.stages = []
 		this.emitter = new EventEmitter()
-		this.emitter.on('error', bind(this.abort, this))
-		this.inputs = reduce(this.stages, (acc, x) => set(acc, x, {}), {})
-		this.automata = machine(reduce(this.stages,
-				(acc, x) => set(acc, x, {}), {}))
-			.id(`Pipeline.${name}.automata`)
-		this.guard = machine(
-			{
-				Ready: {},
-				Abort: {},
-				Complete: {}
-			})
-			.id(`Pipeline.${name}.guard`)
-		each([this.automata, this.guard], (x) => x.set([]))
-		this.queue = async_queue(bind(this.worker, this), max([1, Math.round(concurrency)]))
-		this.prepare(tasks)
+		this.emitter.on('error', (err) => this.abort(null, err))
+		this.automata = machine(
+		{
+			Ready: {},
+			Abort: {},
+			Complete: {}
+		})
+		this.automata.id(`Pipeline.${id}`)
+			.set([])
+		this.ready = this.automata.when(['Ready'])
 	}
 
 	/**
-	 * @param {string | symbol} stage
+	 * @param {string} stage
 	 * @param {Error} error
 	 */
 	abort(stage, error)
 	{
-		this.guard.add('Abort')
+		this.automata.add('Abort')
 		this.emitter.emit('failure', stage, error)
 	}
 
 	/**
-	 * @param {Array<string | symbol>} states
-	 * @returns {Promise}
-	 */
-	condition(states)
-	{
-		return Promise.race([this.guard.when('Abort'),
-			this.automata.when(states)
-		])
-	}
-
-	/**
-	 * Applies the filter for the stage if there is one and emits the event for the stage.
-	 * @param {string | symbol} id The ID of the stage to forward the result of.
-	 * @param {*} result
-	 */
-	forward(id, result)
-	{
-		const filter = get(this.filters, id, identity)
-		this.emitter.emit(id, filter(result))
-	}
-
-	/**
+	 * @template T
 	 * Signals that a stage is complete and calls the worker exit callback.
-	 * @param {string | symbol} id The ID of the stage that completed.
-	 * @param {() => void} cb The completion callback for th worker.
+	 * @param {string} id The ID of the stage that completed.
+	 * @param {Promise<T | null>} task
+	 * @returns {Promise<T | null>}
+	 * @private
 	 */
-	complete(id, cb)
+	completion(id, task)
 	{
-		this.automata.add(id)
-		unset(this.inputs, id)
-		cb()
-	}
-
-	/**
-	 * The queue worker implementation.
-	 * @param {Object} param0
-	 * @param {string | symbol} param0.id The ID of the stage to run.
-	 * @param {() => any} param0.task The ID of the stage to run.
-	 * @param {() => void} cb The completion callback for th worker.
-	 */
-	worker({ id, task }, cb)
-	{
-		if (this.guard.is('Abort'))
+		if (this.automata.is('Ready'))
 		{
-			this.complete(id, cb)
+			throw new Error('The Pipeline cannot add a new task after it is ready to run.')
 		}
-		else
+		this.stages.push(id)
+		this.count++
+		return task.then((result) =>
+				{
+					this.emitter.emit(id, result)
+					this.emitter.emit('log', id, result)
+					return result
+				},
+				(error) => { throw error })
+			.catch((error) =>
+			{
+				this.abort(id, error)
+				return null
+			})
+			.finally(() =>
+			{
+				if (--this.count === 0)
+				{
+					this.automata.add('Complete')
+				}
+			})
+	}
+
+	/**
+	 * @public
+	 * @template Result
+	 * @template Args...
+	 * @param {string} id
+	 * @param {(...args: Args[]) => Promise<Result> | Result} action
+	 * @param {...(Promise<Args> | Args)} [inputs]
+	 * @returns {Task<Result>}
+	 */
+	task(id, action, ...inputs)
+	{
+		/**
+		 * @param {Promise<any>} result
+		 * @returns {Promise<any | null>}
+		 */
+		const done = (result) => this.completion(id, result)
+		const cb = new Callbacks(done, () => this.automata.is('Abort'))
+		return new Task(cb, action, _.concat(inputs, [this.ready]))
+	}
+
+	/**
+	 * @public
+	 * @template Result
+	 * @template Args...
+	 * @param {string} id
+	 * @param {(...args: Args[]) => Result} action
+	 * @param {...(Promise<Args[]> | Args[])} [inputs]
+	 * @returns {Task<Result[]>}
+	 */
+	partitioned(id, action, ...inputs)
+	{
+		/**
+		 * @param  {...(Args[])} [temp]
+		 * @returns {Result[]}
+		 */
+		function p_action(...temp)
 		{
-			task()
-				.then((result) => this.forward(id, result),
-					(err) => { throw err })
-				.catch((err) => this.abort(id, err))
-				.finally(() => this.complete(id, cb))
+			/** @const {Result} x */
+			const x = this
+			return _.map(_.zip(x, ...temp), _.spread(action))
 		}
-	}
-
-	/**
-	 * Sets an event to add the result of a task to the input set for all tasks that depend on it.
-	 * @param {string | symbol} from
-	 * @param {Array<string | symbol>} depends
-	 */
-	setReport(from, depends)
-	{
-		this.emitter.once(from, (result) =>
-		{
-			each(depends, (to) => set(this.inputs[to], from, result))
-		})
-	}
-
-	/**
-	 * Sets an event to generate a log event when a task completes.
-	 * @param {string | symbol} id The ID of the stage to set an event for.
-	 */
-	setLogEvent(id)
-	{
-		this.emitter.once(id, (result) => this.emitter.emit('log', id, result))
-	}
-
-	standalone(id, task)
-	{
-		unset(this.inputs, id)
-		this.setLogEvent(id)
-		this.guard.when('Ready')
-			.then(this.queue.push({ id, task }))
-	}
-
-	dependent(id, task, deps)
-	{
-		this.setLogEvent(id)
-		this.condition(deps)
-			.then(() =>
-				this.queue.push({ id, task: () => task(this.inputs[id]) }))
-	}
-
-	/**
-	 *
-	 * @param {*} tasks
-	 */
-	prepare(tasks)
-	{
-		let deps = reduce(this.stages, (acc, x) => set(acc, x, []), {})
-		// Queue independent tasks and set others to be queued once dependencies complete.
-		each(tasks, (val, key) =>
-		{
-			if (isArray(val))
-			{
-				const len = size(val)
-				if (len === 1)
-				{
-					this.standalone(key, head(val))
-				}
-				else if (len > 1)
-				{
-					const inputs = initial(val)
-					each(at(deps, inputs), (from) => from.push(key))
-					this.dependent(key, last(val), inputs)
-				}
-				else
-				{
-					this.guard.add('Abort',
-						Error('A task must have a function at the end of the array.'))
-					this.automata.add(key)
-				}
-			}
-			else
-			{
-				this.standalone(key, val)
-			}
-		})
-		forOwn(deps, (to, from) => this.setReport(from, to))
+		return this.task(id, p_action, ...inputs)
 	}
 
 	async run()
 	{
-		if (!this.guard.is('Complete'))
+		if (!this.automata.is('Complete'))
 		{
-			this.guard.set('Ready')
+			this.automata.set('Ready')
 			// Wait for all tasks to complete.
-			await this.condition(this.stages)
-			this.guard.set('Complete')
+			await this.automata.when(['Complete'])
 			this.emitter.emit('complete')
-		}
-	}
-
-	applyFilter(id, filter)
-	{
-		if (includes(this.stages, id))
-		{
-			set(this.filters, id, filter)
-		}
-		else
-		{
-			throw Error('Attempted to apply a filter for a stage that was not in the Pipeline.')
 		}
 	}
 
@@ -252,23 +407,23 @@ class Pipeline
 	 */
 	applyListener(id, listener)
 	{
-		if (includes(this.stages, id))
+		if (_.includes(this.stages, id))
 		{
 			this.emitter.once(id, listener)
 		}
 		else
 		{
-			throw Error('Attempted to apply a listener for a stage that was not in the Pipeline.')
+			throw new Error('Attempted to apply a listener for a stage that was not in the Pipeline.')
 		}
 	}
 
 	/**
-	 * @param {(stage: string | symbol | null, result: any) => void} logger
+	 * @param {(stage: string | null, result: any) => void} logger
 	 */
 	applyLogger(logger) { this.emitter.on('log', logger) }
 
 	/**
-	 * @param {(stage: string | symbol | null, err: Error) => void} logger
+	 * @param {(stage: string | null, err: Error) => void} logger
 	 */
 	onFailure(logger) { this.emitter.on('failure', logger) }
 
@@ -278,6 +433,6 @@ class Pipeline
 	onComplete(listener) { this.emitter.once('complete', listener) }
 }
 
-module.exports = {
-	Pipeline: Pipeline
-}
+module.exports.Pipeline = Pipeline
+module.exports.Task = Task
+module.exports.Stage = Stage
