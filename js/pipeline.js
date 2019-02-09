@@ -28,7 +28,6 @@ const _ = {}
 _.map = require('lodash/map')
 _.includes = require('lodash/includes')
 _.concat = require('lodash/concat')
-_.spread = require('lodash/spread')
 _.zip = require('lodash/zip')
 const { machine } = require('asyncmachine')
 // spellcheck: on
@@ -77,8 +76,8 @@ class Stage
 	 */
 	async bind(action, inputs)
 	{
-		const results = await inputs
-		return this.cb.aborted() ? null : action.apply(null, results)
+		const [previous, ...results] = await inputs
+		return this.cb.aborted() ? null : action(previous, ...results)
 	}
 
 	/**
@@ -141,7 +140,12 @@ class Stage
 		 */
 		function p_action(previous, ...temp)
 		{
-			return _.map(_.zip(previous, ...temp), _.spread(action))
+			const parts = _.zip(previous, ...temp)
+			/**
+			 * @param {[Part, ...Args[]]} zipped
+			 */
+			const spread = ([p, ...args]) => action(p, ...args)
+			return _.map(parts, spread)
 		}
 		return this.stage(p_action, ...inputs)
 	}
@@ -188,8 +192,8 @@ class Task
 	 */
 	async bind(action, inputs)
 	{
-		const results = await inputs
-		return this.cb.aborted() ? null : action.apply(null, results)
+		const [...results] = await inputs
+		return this.cb.aborted() ? null : action(...results)
 	}
 
 	/**
@@ -252,7 +256,12 @@ class Task
 		 */
 		function p_action(previous, ...temp)
 		{
-			return _.map(_.zip(previous, ...temp), _.spread(action))
+			const parts = _.zip(previous, ...temp)
+			/**
+			 * @param {[Part, ...Args[]]} zipped
+			 */
+			const spread = ([p, ...args]) => action(p, ...args)
+			return _.map(parts, spread)
 		}
 		return this.stage(p_action, ...inputs)
 	}
@@ -383,9 +392,12 @@ class Pipeline
 		 */
 		function p_action(...temp)
 		{
-			/** @const {Result} x */
-			const x = this
-			return _.map(_.zip(x, ...temp), _.spread(action))
+			const parts = _.zip(...temp)
+			/**
+			 * @param {[...Args[]]} zipped
+			 */
+			const spread = ([...args]) => action(...args)
+			return _.map(parts, spread)
 		}
 		return this.task(id, p_action, ...inputs)
 	}
