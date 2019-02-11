@@ -26,9 +26,14 @@
 const EventEmitter = require('events')
 const _ = {}
 _.map = require('lodash/map')
+_.reduce = require('lodash/reduce')
 _.includes = require('lodash/includes')
+_.keys = require('lodash/keys')
+_.set = require('lodash/set')
 _.concat = require('lodash/concat')
 _.zip = require('lodash/zip')
+_.union = require('lodash/union')
+_.unionWith = require('lodash/unionWith')
 const { machine } = require('asyncmachine')
 // spellcheck: on
 
@@ -148,6 +153,54 @@ class Stage
 			return _.map(parts, spread)
 		}
 		return this.stage(p_action, ...inputs)
+	}
+
+	/**
+	 * @public
+	 * @template Next
+	 * @param {(lhs: Next, rhs: Next) => boolean} compare
+	 * @returns {Stage<Next[], Result>}
+	 */
+	union(compare)
+	{
+		/**
+		 * @param {Next[][] & Result} previous
+		 * @returns {Next[]}
+		 */
+		function u_action([...previous])
+		{
+			// At this time Lodash unionWith only has typed overloads for upto 3 arrays.
+			// Thus giving it a variable number causes a type error.
+			// However, unionWith does support any number of arrays to union.
+			// @ts-ignore
+			return _.unionWith(...previous, compare)
+		}
+		return this.stage(u_action)
+	}
+
+	/**
+	 * @public
+	 * @param {(key: string, ...values: any) => { [key:string]: any }} action
+	 * @returns {Stage<{ [key:string]: any }, Result>}
+	 */
+	merge(action)
+	{
+		/**
+		 * @param {{ [key:string]: any }[] & Result} previous
+		 * @returns {{ [key:string]: any }}
+		 */
+		function m_action([...previous])
+		{
+			const k = _.union(..._.map(previous, _.keys))
+			return _.reduce(k,
+				/**
+				 * @param {{ [key:string]: any } | {}} acc
+				 * @param {string} key
+				 * @returns {{ [key:string]: any }}
+				 */
+				(acc, key) => _.set(acc, key, action(key, ..._.map(previous, key))), {})
+		}
+		return this.stage(m_action)
 	}
 
 	/**
@@ -278,6 +331,54 @@ class Task
 			return _.map(parts, spread)
 		}
 		return this.stage(p_action, ...inputs)
+	}
+
+	/**
+	 * @public
+	 * @template Next
+	 * @param {(lhs: Next, rhs: Next) => boolean} compare
+	 * @returns {Stage<Next[], Result>}
+	 */
+	union(compare)
+	{
+		/**
+		 * @param {Next[][] & Result} previous
+		 * @returns {Next[]}
+		 */
+		function u_action([...previous])
+		{
+			// At this time Lodash unionWith only has typed overloads for upto 3 arrays.
+			// Thus giving it a variable number causes a type error.
+			// However, unionWith does support any number of arrays to union.
+			// @ts-ignore
+			return _.unionWith(...previous, compare)
+		}
+		return this.stage(u_action)
+	}
+
+	/**
+	 * @public
+	 * @param {(key: string, ...values: any) => { [key:string]: any }} action
+	 * @returns {Stage<{ [key:string]: any }, Result>}
+	 */
+	merge(action)
+	{
+		/**
+		 * @param {{ [key:string]: any }[] & Result} previous
+		 * @returns {{ [key:string]: any }}
+		 */
+		function m_action([...previous])
+		{
+			const k = _.union(..._.map(previous, _.keys))
+			return _.reduce(k,
+				/**
+				 * @param {{ [key:string]: any } | {}} acc
+				 * @param {string} key
+				 * @returns {{ [key:string]: any }}
+				 */
+				(acc, key) => _.set(acc, key, action(key, ..._.map(previous, key))), {})
+		}
+		return this.stage(m_action)
 	}
 
 	/**
@@ -438,7 +539,7 @@ class Pipeline
 	 */
 	wait(id, ...after)
 	{
-		return this.task(id, async (previous) =>
+		return this.task(id, async () =>
 		{
 			await Promise.all(after)
 			return null

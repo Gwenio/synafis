@@ -39,11 +39,13 @@ _.values = require('lodash/values')
 _.update = require('lodash/update')
 _.filter = require('lodash/filter')
 _.isNil = require('lodash/isNil')
+_.isArray = require('lodash/isArray')
 _.some = require('lodash/some')
 _.size = require('lodash/size')
 _.find = require('lodash/find')
 _.each = require('lodash/forEach')
 _.union = require('lodash/union')
+_.unionBy = require('lodash/unionBy')
 _.partial = require('lodash/partial')
 _.bind = require('lodash/bind')
 _.uniq = require('lodash/uniq')
@@ -611,10 +613,16 @@ const prepare_tasks = (driver, options, writer) =>
 			return builds
 		}, HasRegen, Gen)
 		.partitioned((builds) => _.filter(builds, (x) => !_.isNil(x.action)))
-		.stage(function(parts)
+		.union(
+			/**
+			 * @param {Ninja.Build} lhs
+			 * @param {Ninja.Build} rhs
+			 */
+			(lhs, rhs) => lhs.compare(rhs))
+		.stage(function(builds)
 		{
-			_.each(parts, (builds) => { _.each(builds, (val) => writer.build(val)) })
-			return parts
+			_.each(builds, (val) => { writer.build(val) })
+			return builds
 		}, NinjaRules)
 		.complete()
 	const NinjaAliases = driver.task('NinjaAliases',
@@ -640,19 +648,38 @@ const prepare_tasks = (driver, options, writer) =>
 				(acc, item) => _.set(acc, item['partition'](variant), _.get(item, 'id')), {}
 			), Variants)
 		.partitioned(
+			/** @returns {{ [key:string]: ProductPath[] }} */
 			(parts, outs) => _.reduce(parts, (acc, val, key) =>
 			{
 				const x = _.get(outs, val, { single: [], multiple: [], implicit: [] })
 				return _.set(acc, key, _.union(x.implicit, x.single, x.multiple))
 			}, {}), BuildOutputs)
-		.stage(function(parts)
-		{
-			_.each(parts, (part) =>
+		.merge(
+			/**
+			 * @param {string} _key
+			 * @param {...(ProductPath[] | null | undefined)} values
+			 * @returns {ProductPath[]}
+			 */
+			(_key, ...values) => _.reduce(values, (acc, x) =>
 			{
-				_.each(part, (val, key) =>
-					writer.build(Ninja.Build.alias(key, val)))
-			})
-			return parts
+				if (_.isNil(x))
+				{
+					return acc
+				}
+				else if (_.isArray(x))
+				{
+					return _.unionBy(acc, x, path.format)
+				}
+				else
+				{
+					throw new TypeError('Expected parameter \'x\' to be null or an array.')
+				}
+			}, []))
+		.stage(function(aliases)
+		{
+			_.each(aliases, (val, key) =>
+				writer.build(Ninja.Build.alias(key, val)))
+			return aliases
 		}, NinjaBuilds)
 		.complete()
 	driver.task('NinjaDefaults', function(ninja)

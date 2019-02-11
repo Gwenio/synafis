@@ -30,6 +30,7 @@ _.reduce = require('lodash/reduce')
 _.find = require('lodash/find')
 _.reject = require('lodash/reject')
 _.some = require('lodash/some')
+_.includes = require('lodash/includes')
 _.concat = require('lodash/concat')
 _.partition = require('lodash/partition')
 _.set = require('lodash/set')
@@ -39,6 +40,8 @@ _.size = require('lodash/size')
 _.pick = require('lodash/pick')
 _.isNil = require('lodash/isNil')
 _.join = require('lodash/join')
+_.difference = require('lodash/difference')
+_.isEqual = require('lodash/isEqual')
 const { promises: fs } = require('fs')
 const path = require('path')
 // spellcheck: on
@@ -233,9 +236,9 @@ class Build
 	{
 		this.action = action
 		this.outputs = _.map(outputs, 'path')
-		this.implicit = _.map(implicit, 'path')
+		this.implicit = _.difference(_.map(implicit, 'path'), this.outputs)
 		this.inputs = _.map(inputs, 'path')
-		this.depends = _.map(depends, 'path')
+		this.depends = _.difference(_.map(depends, 'path'), this.inputs)
 		this.after = _.map(after, 'path')
 		this.vars = vars
 	}
@@ -309,6 +312,49 @@ class Build
 				}), {})
 			return _.size(temp) < 1 ? outer : _.set(outer, key, temp)
 		}, {})
+	}
+
+	/**
+	 *
+	 * @param {Build} other
+	 * @returns {boolean}
+	 */
+	compare(other)
+	{
+		const o = _.difference(this.outputs, other.outputs, other.implicit)
+		const i = _.difference(this.implicit, other.implicit, other.outputs)
+		if (o.length === this.outputs.length && i.length === this.implicit.length)
+		{
+			return false
+		}
+		else
+		{
+			if (this.action !== other.action)
+			{
+				throw new Error('Builds with any shared outputs must have the same action.')
+			}
+			else if (o.length !== 0 || i.length !== 0)
+			{
+				throw new Error('Builds with any shared outputs must have all in common.')
+			}
+			else if (_.some(this.inputs, (x) => !_.includes(other.inputs, x)))
+			{
+				throw new Error('Builds with any shared outputs must have the same inputs.')
+			}
+			else if (_.some(this.depends, (x) => !_.includes(other.depends, x)))
+			{
+				throw new Error('Builds with any shared outputs must have the same implicit inputs.')
+			}
+			else if (_.some(this.after, (x) => !_.includes(other.after, x)))
+			{
+				throw new Error('Builds with any shared outputs must come after the same builds.')
+			}
+			else if (_.some(this.vars, (value, key) => _.get(other.vars, key, null) !== value))
+			{
+				throw new Error('Builds with any shared outputs must have the same variables.')
+			}
+			else return true
+		}
 	}
 
 	/**
