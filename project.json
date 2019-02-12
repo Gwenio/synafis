@@ -7,8 +7,7 @@
 			"description": "The build target.",
 			"options": [
 				"synafis",
-				"unit",
-				"schemas"
+				"unit"
 			]
 		},
 		"platform":
@@ -56,16 +55,6 @@
 			"gc/collector"
 		],
 		"filters": [{ "target": "unit" }]
-	},
-	{
-		"group": "json_schemas",
-		"description": "The JSON Schema files for the project.",
-		"prefix": "templates/schemas/",
-		"suffix": ".json",
-		"files": [
-			"project"
-		],
-		"filters": [{ "target": "schemas" }]
 	}],
 	"steps":
 	{
@@ -120,32 +109,6 @@
 					"location": "tmp",
 					"extension": "exe",
 					"products": ["tester"]
-				}
-			}
-		},
-		"json_schemas":
-		{
-			"action": "compile_json_schemas",
-			"description": "Compiles JSON Schemas to JavaScript code.",
-			"filters": [
-				{ "target": "schemas" }
-			],
-			"sources": [
-			{
-				"group": "json_schemas",
-				"description": "The source JSON Schema files.",
-				"implicit": false,
-				"produces": "js"
-			}],
-			"outputs":
-			{
-				"js":
-				{
-					"description": "The JavaScript files containing the compiled schemas.",
-					"implicit": false,
-					"extension": "js",
-					"location": "schemas_js",
-					"single": true
 				}
 			}
 		}

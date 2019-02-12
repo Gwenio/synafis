@@ -23,8 +23,7 @@
 				"platform": {},
 				"build": {}
 			}
-		},
-		"schemas_js": { "root": "tmp/json_schemas" }
+		}
 	},
 	"extensions":
 	{
@@ -37,8 +36,7 @@
 		{
 			"filters": [{ "platform": "winapi" }],
 			"value": ".exe"
-		}],
-		"js": [{ "value": ".js" }]
+		}]
 	},
 	"products":
 	{
@@ -46,14 +44,6 @@
 		{
 			"filters": [{ "target": "unit" }],
 			"base": "tester",
-			"separator": "_",
-			"prefix": {},
-			"suffix": {}
-		}],
-		"json_schema_bundle": [
-		{
-			"filter": [{ "target": "schemas" }],
-			"base": "json_schemas",
 			"separator": "_",
 			"prefix": {},
 			"suffix": {}
