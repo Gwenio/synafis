@@ -4,14 +4,54 @@
 	"description": "The Ninja file generator configuration.",
 	"definitions":
 	{
-		"FilterList": { "$ref": "./filters.json" },
+		"FilterList":
+		{
+			"type": "array",
+			"title": "Filters",
+			"description": "A list of filters to select which build variations an item applies to.",
+			"uniqueItems": true,
+			"items":
+			{
+				"type": "object",
+				"title": "Filter",
+				"description": "A set of conditions paired with the option they must match.",
+				"additionalProperties":
+				{
+					"type": "string",
+					"title": "Selector",
+					"description": "A name-value pair of a condition ID and an option value, respectively."
+				},
+				"minProperties": 1
+			},
+			"default": []
+		},
 		"Description":
 		{
 			"type": "string",
 			"title": "Description",
 			"description": "Optional descriptive text that does not affect the interpretation of the project."
 		},
-		"ModifierMap": { "$ref": "./modifiers.json" },
+		"ModifierMap":
+		{
+			"type": "object",
+			"title": "Modifier Map",
+			"description": "Lists Build Conditions to modify a result based on, applied in the order they appear.",
+			"additionalProperties":
+			{
+				"type": "object",
+				"title": "Build Condition",
+				"description": "A Build Condition to modify the result by.",
+				"additionalProperties":
+				{
+					"type": "string",
+					"title": "Selection Map",
+					"description": "Pairs Option IDs with resulting text. Unlisted Options are paired with their own name.",
+					"minLength": 1
+				},
+				"default": {}
+			},
+			"default": {}
+		},
 		"OptString":
 		{
 			"oneOf": [

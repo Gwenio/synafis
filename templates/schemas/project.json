@@ -4,7 +4,27 @@
 	"description": "The project description.",
 	"definitions":
 	{
-		"FilterList": { "$ref": "./filters.json" },
+		"FilterList":
+		{
+			"type": "array",
+			"title": "Filters",
+			"description": "A list of filters to select which build variations an item applies to.",
+			"uniqueItems": true,
+			"items":
+			{
+				"type": "object",
+				"title": "Filter",
+				"description": "A set of conditions paired with the option they must match.",
+				"additionalProperties":
+				{
+					"type": "string",
+					"title": "Selector",
+					"description": "A name-value pair of a condition ID and an option value, respectively."
+				},
+				"minProperties": 1
+			},
+			"default": []
+		},
 		"Description":
 		{
 			"type": "string",
@@ -36,6 +56,37 @@
 				}
 			],
 			"default": null
+		},
+		"Variants":
+		{
+			"type": "object",
+			"title": "Build Variations",
+			"description": "Used to define conditions for different builds.",
+			"additionalProperties":
+			{
+				"type": "object",
+				"title": "Build Condition",
+				"description": "A condition to filter by when generating different builds.",
+				"required": ["options"],
+				"properties":
+				{
+					"description": { "$ref": "#/definitions/Description" },
+					"options":
+					{
+						"type": "array",
+						"title": "Options",
+						"description": "The options for the condition.",
+						"uniqueItems": true,
+						"items":
+						{
+							"type": "string",
+							"title": "Option Value",
+							"description": "The identifier for an option.",
+							"minLength": 1
+						}
+					}
+				}
+			}
 		}
 	},
 	"type": "object",
@@ -47,7 +98,7 @@
 			"title": "JSON Schema",
 			"description": "The path for the JSON schema."
 		},
-		"variants": { "$ref": "./variants.json" },
+		"variants": { "$ref": "#/definitions/Variants" },
 		"sources":
 		{
 			"type": "array",
