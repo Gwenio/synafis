@@ -668,7 +668,7 @@ const prepare_tasks = (driver, options, writer) =>
 				}
 				else if (_.isArray(x))
 				{
-					return _.unionBy(acc, x, path.format)
+					return _.unionBy(acc, x, 'path')
 				}
 				else
 				{
