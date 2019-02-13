@@ -75,6 +75,12 @@ const cmd_args = [
 	description: 'The number of tasks to run in parallel. [4]'
 },
 {
+	name: 'no-backup',
+	type: Boolean,
+	defaultValue: false,
+	description: 'Prevents the previous build from being backed up. [false]'
+},
+{
 	name: 'verbose',
 	alias: 'v',
 	type: Number,

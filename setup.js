@@ -77,7 +77,7 @@ else
 			writer.close()
 			if (process.exitCode === 0)
 			{
-				if (fs.existsSync(output_filename))
+				if (!options['no-backup'] && fs.existsSync(output_filename))
 				{
 					fs.renameSync(output_filename, `${output_filename}.bak`)
 				}
