@@ -33,8 +33,6 @@ _.set = require('lodash/set')
 _.has = require('lodash/has')
 _.pick = require('lodash/pick')
 _.omit = require('lodash/omit')
-_.merge = require('lodash/merge')
-_.keys = require('lodash/keys')
 _.values = require('lodash/values')
 _.update = require('lodash/update')
 _.filter = require('lodash/filter')
@@ -46,11 +44,8 @@ _.find = require('lodash/find')
 _.each = require('lodash/forEach')
 _.union = require('lodash/union')
 _.unionBy = require('lodash/unionBy')
-_.partial = require('lodash/partial')
-_.bind = require('lodash/bind')
 _.uniq = require('lodash/uniq')
 _.uniqBy = require('lodash/uniqBy')
-const EventEmitter = require('events')
 const path = require('path')
 const { Shadow, Variant } = require('../variants')
 const { Step, Source } = require('../project')
@@ -59,6 +54,7 @@ const read_json_file = require('../json_input')
 const Ninja = require('../ninja')
 /** @kind class */
 const Product = require('./product')
+const process_build = require('./process_build')
 // spellcheck: on
 
 /** @typedef {import('../pipeline').Pipeline} Pipeline */
@@ -284,141 +280,7 @@ const prepare_tasks = (driver, options, writer) =>
 			}, StepOutputs, StepInputs, Sources)
 		.complete()
 	const ProcessBuild = driver.partitioned('ProcessBuild',
-			/**
-			 * @param {any} sources
-			 * @param {{ [id: string]: any; }} products
-			 * @param {any} i
-			 * @param {{ [id: string]: { [key:string]: any } }} o
-			 */
-			(sources, products, i, o) =>
-			{
-				/** @typedef {import('events')} EventEmitter */
-				const inputs = {}
-				/**
-				 * @typedef {{implicit: boolean, single: boolean, files: ProductPath[]}} Target
-				 * @type {{ [id:string]: { [key:string]: Target } }}
-				 */
-				const outputs = {}
-				/** @type {{ [id:string]: EventEmitter }} */
-				const oports = {}
-				/** @type {EventEmitter} */
-				const iport = new EventEmitter()
-				_.each(_.union(_.keys(products), _.keys(o)), (id) =>
-				{
-					_.set(outputs, id, {})
-					_.set(oports, id, new EventEmitter())
-				})
-				/**
-				 * @param {{ [key: string]: {implicit: boolean, single: boolean}}} step
-				 * @param {string} id
-				 */
-				function olink(step, id)
-				{
-					const target = outputs[id]
-					const port = oports[id]
-					_.each(step, ({ implicit, single }, key) =>
-					{
-						if (!_.has(target, key))
-						{
-							_.set(target, key, { implicit, single, files: [] })
-							port.on(key, _.partial(
-								/**
-								 * @param {{ path: string; origin: any; }[]} list
-								 * @param {import("path").FormatInputPathObject & {origin: string}} file
-								 */
-								(list, file) =>
-								{
-									list.push(
-									{
-										path: path.format(file),
-										origin: file.origin
-									})
-								}, target[key].files))
-						}
-					})
-				}
-				_.each(products, olink)
-				_.each(o, olink)
-				_.each(_.union(_.keys(sources), _.keys(i)), (id) =>
-				{
-					/**
-					 * @const {}
-					 */
-					const step = _.set(inputs, id, [])[id]
-					iport.on(id, (index, file) =>
-					{
-						step[index].files.push(
-						{
-							path: path.format(file),
-							origin: file.origin
-						})
-					})
-					_.each(_.concat(_.get(sources, id, []), _.get(i, id, [])),
-						/**
-						 * @param {Object} src
-						 * @param {number} index
-						 */
-						(src, index) =>
-						{
-							step.push({ implicit: src.implicit, files: [] })
-							if (_.has(src, 'produces'))
-							{
-								const group = src.produces
-								const { location, extension } =
-								_.merge(_.get(products[id], group, {}),
-									_.get(o[id], group, {}))
-								/**
-								 * @param {string} dir
-								 * @param {string} ext
-								 * @param {number} select
-								 * @param {{name:string, origin: string}} file
-								 * @this {EventEmitter}
-								 */
-								const rename_file = function(dir, ext, select, { name, origin })
-								{
-									if (select === index)
-									{
-										this.emit(group,
-										{
-											dir: path.dirname(path.join(dir, origin)),
-											ext,
-											name,
-											origin
-										})
-									}
-								}
-								iport.on(id, _.bind(rename_file, oports[id], location, extension))
-							}
-							if (_.has(src, 'step') && _.has(src, 'group'))
-							{
-								oports[src.step].on(src.group,
-									/**
-									 * @param {any} file
-									 */
-									(file) =>
-									{
-										iport.emit(id, index, file)
-									})
-							}
-						})
-				})
-				_.each(products, (step, id) =>
-				{
-					const port = oports[id]
-					_.each(step, ({ files }, group) =>
-					{
-						_.each(files, (x) => port.emit(group, x))
-					})
-				})
-				_.each(sources, (step, id) =>
-				{
-					_.each(step, ({ files }, index) =>
-					{
-						_.each(files, (x) => iport.emit(id, index, x))
-					})
-				})
-				return { inputs, outputs }
-			}, Sources, Products, StepInputs, StepOutFilt)
+			process_build, Sources, Products, StepInputs, StepOutFilt)
 		.complete()
 	const BuildOutputs = driver.partitioned('BuildOutputs',
 			/**
