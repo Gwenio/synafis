@@ -31,19 +31,7 @@ Finally run Ninja in the directory containing the generated files.
 
 ## Requirements
 
-### Setup.js Requirements
-
-- Node 10.0 or higher.
-- command-line-args 5.0.2
-- command-line-usage 5.0.5
-- jsonfile 5.0.0
-- lodash 4.17.10
-- asyncmachine 3.4.1
-- superstruct 0.6.0
-- neo-async 2.6.0 (async can be substituted if the require line is changed.)
-
-### Build Requirements
-
+- See 'setup.md' for the requirements for the setup script.
 - Ninja version 1.7 or higher.
 - C++ Compiler (MSVC 2017 is the current baseline for expected standard support).
 
@@ -62,7 +50,7 @@ The documentation is written to be generated from the source files by Doxygen.
 - setup.md: Documents setup.js and the associated json files.
 - setup.js: Script for generating build files.
 - project.json: Describes the project for setup.js.
-- config.json: Configuration for setup.js (this file is for the user to create).
+- config.json: Additional configuration for setup.js.
 - build.ninja: The Ninja build file.
 
 ## Developers
