@@ -287,7 +287,8 @@ class Build
 
 	/**
 	 * @param {any} names
-	 * @param {any} steps
+	 * @param {{ [key:string]: { [id:string]: object } }} steps
+	 * @returns {{[key:string]: {[id:string]: {implicit: boolean, files: {[x:string]:string}[]}}}}
 	 */
 	static process_products(names, steps)
 	{
