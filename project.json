@@ -33,7 +33,8 @@
 			"gc/hard_ptr",
 			"gc/soft_ptr",
 			"gc/impl",
-			"gc/impl/root"
+			"gc/impl/root",
+			"gc/impl/identity"
 		],
 		"filters": [
 			{ "target": "synafis" },

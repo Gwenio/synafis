@@ -24,25 +24,9 @@ PERFORMANCE OF THIS SOFTWARE.
  */
 
 #include "gc/soft_ptr_data.hpp"
-#include "gc/allocator.hpp"
 #include "gc/impl.hpp"
 
 namespace gc {
-
-identity::~identity()
-{
-	if (alloc) { collector::erase_alloc(*dynamic_cast<collector::iallocator *>(alloc)); }
-}
-
-identity::iallocator *identity::select_alloc(
-	identity const &id, std::size_t unit, traits::flag_type flags)
-{
-	auto *ptr = collector::insert_alloc(collector::alloc_ptr{
-		dynamic_cast<collector::iallocator *>(new allocator(id, unit, flags))});
-	return dynamic_cast<iallocator *>(ptr);
-}
-
-identity const *identity::fetch_impl(void *obj) noexcept { return collector::get_type(obj); }
 
 std::tuple<void *, identity const *> hard_ptr::get_hard(soft_ptr const &other)
 {
