@@ -29,6 +29,10 @@ PERFORMANCE OF THIS SOFTWARE.
  *	\brief Contains the headers included by 'gc.hpp'.
  */
 
+/**	\dir src/gc/impl
+ *	\brief Contains implementation details of the garbage collector.
+ */
+
 #include <type_traits>
 #include <utility>
 #include <bitset>

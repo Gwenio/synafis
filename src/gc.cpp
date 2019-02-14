@@ -2,7 +2,7 @@
 /*
 ISC License (ISC)
 
-Copyright 2018 Adam Armstrong
+Copyright 2018-2019 Adam Armstrong
 
 Permission to use, copy, modify, and/or distribute this software for any
 purpose with or without fee is hereby granted, provided that the above copyright
@@ -57,20 +57,6 @@ std::tuple<void *, identity const *> hard_ptr::get_hard(soft_ptr const &other)
 void *hard_ptr::base_ptr(void *source) noexcept
 {
 	return source ? collector::base_ptr(source) : static_cast<void *>(nullptr);
-}
-
-void root::register_impl(void *obj, traverse_cb tcb, root_cb rcb)
-{
-	SYNAFIS_ASSERT(obj != nullptr);
-	SYNAFIS_ASSERT(tcb != nullptr);
-	SYNAFIS_ASSERT(rcb != nullptr);
-	collector::register_root(obj, tcb, rcb);
-}
-
-void root::unregister_impl(void *obj) noexcept
-{
-	SYNAFIS_ASSERT(obj != nullptr);
-	collector::unregister_root(obj);
 }
 
 void initialize() { collector::init(); }

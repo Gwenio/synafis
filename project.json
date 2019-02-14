@@ -32,7 +32,8 @@
 			"gc/allocator",
 			"gc/hard_ptr",
 			"gc/soft_ptr",
-			"gc/impl"
+			"gc/impl",
+			"gc/impl/root"
 		],
 		"filters": [
 			{ "target": "synafis" },
