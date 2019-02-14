@@ -30,15 +30,15 @@ const _ = {}
 _.isNil = require('lodash/isNil')
 const Ninja = require('./js/ninja')
 const { Pipeline } = require('./js/pipeline')
-const { displayUsage, processCommandLine } = require('./js/setup/cli')
+const CLI = require('./js/setup/cli')
 const tasks = require('./js/setup/tasks')
 // spellcheck: on
 
-const options = processCommandLine()
+const options = new CLI()
 
 if (options.help)
 {
-	displayUsage()
+	CLI.displayUsage()
 }
 else
 {
@@ -77,7 +77,7 @@ else
 			writer.close()
 			if (process.exitCode === 0)
 			{
-				if (!options['no-backup'] && fs.existsSync(output_filename))
+				if (options.backup && fs.existsSync(output_filename))
 				{
 					fs.renameSync(output_filename, `${output_filename}.bak`)
 				}

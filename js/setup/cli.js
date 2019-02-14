@@ -87,38 +87,53 @@ const cmd_args = [
 	defaultValue: 0
 }]
 
-/**
- * @returns {{ [props:string]: string | number | boolean }}
- */
-function processCommandLine()
+const usage = [
 {
-	return commandLineArgs(cmd_args)
+	header: 'setup.js',
+	content: 'A Node.js script to generate Ninja build files from JSON descriptions of the project.',
+},
+{
+	header: 'Synopsis',
+	content: [
+		'$ node -- setup.js --help',
+		'$ node -- setup.js -p path/project.json -c path/config.json',
+		'$ node -- setup.js -r path'
+	]
+},
+{
+	header: 'Options',
+	optionList: cmd_args,
+	hide: ['verbose', 'jobs']
+}]
+
+class CLI
+{
+	constructor()
+	{
+		const options = commandLineArgs(cmd_args)
+		/** @type {boolean} */
+		this.help = options.help
+		/** @type {boolean} */
+		this.backup = !options['no-backup']
+		/** @type {string} */
+		this.project = options.project
+		/** @type {string} */
+		this.config = options.config
+		/** @type {string} */
+		this.generate = options.generate
+		/** @type {string} */
+		this.root = options.root
+		/** @type {number} */
+		this.jobs = Math.max(Math.round(options.jobs), 1)
+		/** @type {number} */
+		this.verbose = Math.round(options.verbose)
+
+	}
+
+	static displayUsage()
+	{
+		console.log(commandLineUsage(usage))
+	}
 }
 
-function displayUsage()
-{
-	const usage = [
-	{
-		header: 'setup.js',
-		content: 'A Node.js script to generate Ninja build files from JSON descriptions of the project.',
-	},
-	{
-		header: 'Synopsis',
-		content: [
-			'$ node -- setup.js --help',
-			'$ node -- setup.js -p path/project.json -c path/config.json',
-			'$ node -- setup.js -r path'
-		]
-	},
-	{
-		header: 'Options',
-		optionList: cmd_args,
-		hide: ['verbose', 'jobs']
-	}]
-	console.log(commandLineUsage(usage))
-}
-
-module.exports = {
-	displayUsage: displayUsage,
-	processCommandLine: processCommandLine,
-}
+module.exports = CLI

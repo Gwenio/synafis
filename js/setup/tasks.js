@@ -68,11 +68,11 @@ const process_build = require('./process_build')
  */
 
 /**
- * @typedef {Object} Options
+ * @typedef {import('./cli')} Options
  * @typedef {{ [id: string]: {options: string[]}}} RawVariants
  * @typedef {{variants: RawVariants, sources: any, steps: any}} ProjectInput
- * @typedef {Object} ConfigInput
- * @typedef {Object} NinjaInput
+ * @typedef {object} ConfigInput
+ * @typedef {object} NinjaInput
  * @typedef {{ path: string, origin: string }} ProductPath
  */
 
