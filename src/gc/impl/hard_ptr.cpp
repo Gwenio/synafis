@@ -2,7 +2,7 @@
 /*
 ISC License (ISC)
 
-Copyright 2018-2019 Adam Armstrong
+Copyright 2019 Adam Armstrong
 
 Permission to use, copy, modify, and/or distribute this software for any
 purpose with or without fee is hereby granted, provided that the above copyright
@@ -17,14 +17,14 @@ OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
 PERFORMANCE OF THIS SOFTWARE.
 */
 
-#include "gc.hpp"
-
-/**	\file src/gc.cpp
- *	\brief Defines the implementation for parts of the GC API.
+/**	\file src/gc/impl/hard_ptr.cpp
+ *	\brief Implements portions of gc::hard_ptr that need access to the GC's internals.
  */
 
-#include "gc/soft_ptr_data.hpp"
-#include "gc/impl.hpp"
+#include "../hard_ptr.hpp"
+#include "../identity.hpp"
+#include "../soft_ptr_data.hpp"
+#include "../impl.hpp"
 
 namespace gc {
 

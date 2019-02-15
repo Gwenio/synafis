@@ -25,7 +25,6 @@
 		"prefix": "src/",
 		"suffix": ".cpp",
 		"files": [
-			"gc",
 			"gc/vmem",
 			"gc/lock",
 			"gc/pool",
@@ -35,7 +34,8 @@
 			"gc/impl",
 			"gc/impl/root",
 			"gc/impl/identity",
-			"gc/impl/collector"
+			"gc/impl/collector",
+			"gc/impl/hard_ptr"
 		],
 		"filters": [
 			{ "target": "synafis" },
