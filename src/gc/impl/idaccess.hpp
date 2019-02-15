@@ -21,11 +21,9 @@ PERFORMANCE OF THIS SOFTWARE.
 #define SYNAFIS_GC_IDACCESS_HPP
 #pragma once
 
-#ifndef SYNAFIS_GC_HPP
-#include "../gc.hpp"
-#endif
+#include "../identity.hpp"
 
-/**	\file src/gc/idaccess.hpp
+/**	\file src/gc/impl/idaccess.hpp
  *	\brief Implements identity::access.
  *	\warning Should only be included where the more access to identity
  *	\warning is appropriate.
@@ -109,7 +107,7 @@ public:
 /**	\typedef idaccess
  *	\brief Shorthand for identity::access.
  */
-typedef identity::access idaccess;
+using idaccess = typename identity::access;
 
 }
 

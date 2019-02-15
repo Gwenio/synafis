@@ -23,7 +23,7 @@ PERFORMANCE OF THIS SOFTWARE.
  *	\brief Defines the implementation of gc::pool.
  */
 
-#include "idaccess.hpp"
+#include "impl/idaccess.hpp"
 #include "soft_ptr_data.hpp"
 #include "impl.hpp"
 
