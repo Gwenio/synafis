@@ -34,7 +34,8 @@
 			"gc/soft_ptr",
 			"gc/impl",
 			"gc/impl/root",
-			"gc/impl/identity"
+			"gc/impl/identity",
+			"gc/impl/collector"
 		],
 		"filters": [
 			{ "target": "synafis" },

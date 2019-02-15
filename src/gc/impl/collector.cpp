@@ -2,7 +2,7 @@
 /*
 ISC License (ISC)
 
-Copyright 2018-2019 Adam Armstrong
+Copyright 2019 Adam Armstrong
 
 Permission to use, copy, modify, and/or distribute this software for any
 purpose with or without fee is hereby granted, provided that the above copyright
@@ -17,30 +17,35 @@ OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
 PERFORMANCE OF THIS SOFTWARE.
 */
 
-#include "gc.hpp"
-
-/**	\file src/gc.cpp
- *	\brief Defines the implementation for parts of the GC API.
+/**	\file src/gc/impl/collector.cpp
+ *	\brief Implements the interface for the garbage collector.
  */
 
-#include "gc/soft_ptr_data.hpp"
-#include "gc/impl.hpp"
+#include "../collector.hpp"
+#include "../impl.hpp"
 
 namespace gc {
 
-std::tuple<void *, identity const *> hard_ptr::get_hard(soft_ptr const &other)
+void initialize() { collector::init(); }
+
+void collect(bool wait) noexcept
 {
-	using rtype = std::tuple<void *, identity const *>;
-	if (other.ptr && other.ptr->get()) {
-		return rtype{other.ptr->get(), identity::fetch(other.ptr->get(), std::nothrow)};
+	if (wait) {
+		if (mutex::locked()) {
+			collector::wait();
+		} else {
+			mutex m;
+			lock_guard l{m};
+			collector::wait();
+		}
 	} else {
-		return rtype{nullptr, nullptr};
+		collector::collect();
 	}
 }
 
-void *hard_ptr::base_ptr(void *source) noexcept
+void set_period(std::chrono::steady_clock::duration value) noexcept
 {
-	return source ? collector::base_ptr(source) : static_cast<void *>(nullptr);
+	collector::set_period(value);
 }
 
 }
