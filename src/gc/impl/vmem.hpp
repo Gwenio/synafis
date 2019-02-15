@@ -21,6 +21,10 @@ PERFORMANCE OF THIS SOFTWARE.
  *	\brief Defines an abstraction layer for the host's virtual memory system.
  */
 
+/**	\dir src/gc/impl/vmem
+ *	\brief Contains the platform specific implementation of gc::vmem.
+ */
+
 //!	TODO Implement gc::vmem for platforms other than Windows.
 
 #ifndef SYNAFIS_GC_VMEM_HPP

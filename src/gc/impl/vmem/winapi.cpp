@@ -63,26 +63,6 @@ void vmem::deallocate(void *ptr) noexcept
 	VirtualFree(ptr, 0, MEM_RELEASE);
 }
 
-void *vmem::operator[](std::size_t offset) const noexcept
-{
-	SYNAFIS_ASSERT(ptr != nullptr);
-	SYNAFIS_ASSERT(offset < len);
-	return add_offset(ptr, offset);
-}
-
-void *vmem::at(std::size_t offset) const
-{
-	if (ptr) {
-		if (offset < len) {
-			return add_offset(ptr, offset);
-		} else {
-			throw std::out_of_range{"Precondition (offset < len) violated."};
-		}
-	} else {
-		throw std::logic_error{"Precondition (ptr != nullptr) violated."};
-	}
-}
-
 bool vmem::forbid(std::size_t offset, std::size_t length)
 {
 	void *temp{(*this)[offset]};

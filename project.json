@@ -25,6 +25,7 @@
 		"prefix": "src/",
 		"suffix": ".cpp",
 		"files": [
+			"gc/impl/vmem",
 			"gc/impl/lock",
 			"gc/impl/pool",
 			"gc/impl/allocator",
