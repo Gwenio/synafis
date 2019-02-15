@@ -17,13 +17,13 @@ OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
 PERFORMANCE OF THIS SOFTWARE.
 */
 
-#ifndef SYNAFIS_GC_HPP
-#define SYNAFIS_GC_HPP
-#pragma once
-
 /**	\file src/gc.hpp
  *	\brief The primary header for garbage collector code.
  */
+
+#ifndef SYNAFIS_GC_HPP
+#define SYNAFIS_GC_HPP
+#pragma once
 
 /**	\dir src/gc
  *	\brief Contains the headers included by 'gc.hpp'.
@@ -59,7 +59,7 @@ PERFORMANCE OF THIS SOFTWARE.
 /**	\page gc_main Garbage Collector
  *	\tableofcontents
  *	\section gc_overview Overview
- *	The garbage collector is split into an interface visable to the program
+ *	The garbage collector is split into an interface visible to the program
  *	and the implementation that is to be hidden in a separate compilation unit.
  *
  *	The provided interface is for a tracing collector with exact knowledge of
