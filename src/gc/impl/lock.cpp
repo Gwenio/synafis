@@ -17,8 +17,12 @@ OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
 PERFORMANCE OF THIS SOFTWARE.
 */
 
-#include "lock.hpp"
-#include "impl.hpp"
+/**	/file src/gc/impl/lock.cpp
+ *	/brief Implements gc::basic_mutex.
+ */
+
+#include "../lock.hpp"
+#include "../impl.hpp"
 
 #if defined(SYNAFIS_UNIT_TEST) || !defined(NDEBUG)
 #include <limits>

@@ -26,7 +26,7 @@
 		"suffix": ".cpp",
 		"files": [
 			"gc/vmem",
-			"gc/lock",
+			"gc/impl/lock",
 			"gc/pool",
 			"gc/allocator",
 			"gc/hard_ptr",
