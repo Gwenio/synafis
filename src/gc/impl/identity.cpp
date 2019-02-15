@@ -22,8 +22,8 @@ PERFORMANCE OF THIS SOFTWARE.
  */
 
 #include "../identity.hpp"
-#include "../impl.hpp"
-#include "../allocator.hpp"
+#include "core.hpp"
+#include "allocator.hpp"
 
 namespace gc {
 

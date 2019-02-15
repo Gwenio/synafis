@@ -18,10 +18,10 @@ PERFORMANCE OF THIS SOFTWARE.
 */
 
 #include "allocator.hpp"
-#include "impl.hpp"
-#include "impl/idaccess.hpp"
+#include "core.hpp"
+#include "idaccess.hpp"
 
-/**	\file src/gc/allocator.cpp
+/**	\file src/gc/impl/allocator.cpp
  *	\brief Defines the implementation of gc::allocator.
  */
 

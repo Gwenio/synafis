@@ -22,7 +22,7 @@ PERFORMANCE OF THIS SOFTWARE.
  */
 
 #include "../root.hpp"
-#include "../impl.hpp"
+#include "core.hpp"
 
 namespace gc {
 

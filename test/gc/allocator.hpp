@@ -21,7 +21,7 @@ PERFORMANCE OF THIS SOFTWARE.
  *	\brief Declares test cases for gc::allocator.
  */
 
-#include "../../src/gc/allocator.hpp"
+#include "../../src/gc/impl/allocator.hpp"
 #include "../master.hpp"
 
 namespace unit_test {

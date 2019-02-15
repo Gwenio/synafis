@@ -22,7 +22,7 @@ PERFORMANCE OF THIS SOFTWARE.
  */
 
 #include "../master.hpp"
-#include "../../src/gc/impl.hpp"
+#include "../../src/gc/impl/core.hpp"
 
 namespace unit_test {
 

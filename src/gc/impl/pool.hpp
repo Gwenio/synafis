@@ -17,6 +17,10 @@ OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
 PERFORMANCE OF THIS SOFTWARE.
 */
 
+/**	\file src/gc/pool.hpp
+ *	\brief Defines the type for managing a memory pool.
+ */
+
 #include "vmem.hpp"
 #include "source.hpp"
 
@@ -25,10 +29,6 @@ PERFORMANCE OF THIS SOFTWARE.
 #pragma once
 
 #include <list>
-
-/**	\file src/gc/pool.hpp
- *	\brief Defines the type for managing a memory pool.
- */
 
 namespace gc {
 

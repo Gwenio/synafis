@@ -17,17 +17,17 @@ OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
 PERFORMANCE OF THIS SOFTWARE.
 */
 
-#ifndef SYNAFIS_GC_IDACCESS_HPP
-#define SYNAFIS_GC_IDACCESS_HPP
-#pragma once
-
-#include "../identity.hpp"
-
 /**	\file src/gc/impl/idaccess.hpp
  *	\brief Implements identity::access.
  *	\warning Should only be included where the more access to identity
  *	\warning is appropriate.
  */
+
+#ifndef SYNAFIS_GC_IDACCESS_HPP
+#define SYNAFIS_GC_IDACCESS_HPP
+#pragma once
+
+#include "../identity.hpp"
 
 namespace gc {
 

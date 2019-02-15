@@ -19,11 +19,8 @@ PERFORMANCE OF THIS SOFTWARE.
 
 #include "soft_ptr.hpp"
 #include "hard_ptr.hpp"
-#include "soft_ptr_data.hpp"
-
-#ifndef SYNAFIS_GC_IMPL_HPP
-#include "impl.hpp"
-#endif
+#include "impl/soft_ptr_data.hpp"
+#include "impl/core.hpp"
 
 namespace gc {
 

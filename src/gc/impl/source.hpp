@@ -17,13 +17,12 @@ OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
 PERFORMANCE OF THIS SOFTWARE.
 */
 
-#ifndef SYNAFIS_GC_IDENTITY_HPP
-#include "identity.hpp"
-#endif
+/**	\file src/gc/impl/source.hpp
+ *	\brief Defines an interface for allocation sources.
+ */
 
-#ifndef SYNAFIS_GC_SOFT_PTR_HPP
-#include "soft_ptr.hpp"
-#endif
+#include "../identity.hpp"
+#include "../soft_ptr.hpp"
 
 #ifndef SYNAFIS_GC_SOURCE_HPP
 #define SYNAFIS_GC_SOURCE_HPP

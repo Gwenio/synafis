@@ -22,7 +22,7 @@ PERFORMANCE OF THIS SOFTWARE.
  */
 
 #include "../master.hpp"
-#include "../../src/gc/vmem.hpp"
+#include "../../src/gc/impl/vmem.hpp"
 
 namespace unit_test {
 

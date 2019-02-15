@@ -17,15 +17,15 @@ OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
 PERFORMANCE OF THIS SOFTWARE.
 */
 
-#include "pool.hpp"
-
 /**	\file src/gc/pool.cpp
  *	\brief Defines the implementation of gc::pool.
  */
 
-#include "impl/idaccess.hpp"
+#include "pool.hpp"
+
+#include "idaccess.hpp"
 #include "soft_ptr_data.hpp"
-#include "impl.hpp"
+#include "core.hpp"
 
 #include <algorithm>
 

@@ -22,7 +22,7 @@ PERFORMANCE OF THIS SOFTWARE.
  */
 
 #include "gc.hpp"
-#include "../../src/gc/ptr_math.hpp"
+#include "../../src/gc/impl/ptr_math.hpp"
 
 namespace {
 

@@ -2,7 +2,7 @@
 /*
 ISC License (ISC)
 
-Copyright 2018 Adam Armstrong
+Copyright 2018-2019 Adam Armstrong
 
 Permission to use, copy, modify, and/or distribute this software for any
 purpose with or without fee is hereby granted, provided that the above copyright
@@ -17,30 +17,28 @@ OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
 PERFORMANCE OF THIS SOFTWARE.
 */
 
+/**	\file src/gc/impl/vmem.hpp
+ *	\brief Defines an abstraction layer for the host's virtual memory system.
+ */
+
+//!	TODO Implement gc::vmem for platforms other than Windows.
+
 #ifndef SYNAFIS_GC_VMEM_HPP
 #define SYNAFIS_GC_VMEM_HPP
 #pragma once
 
 #include <utility>
 
-#ifndef SYNAFIS_UNIT_TEST_HPP
-#include "../unit_test.hpp"
-#endif
-
-#ifndef SYNAFIS_GC_PTR_MATH_HPP
+#include "../../unit_test.hpp"
 #include "ptr_math.hpp"
-#endif
-
-/**	\file src/gc/vmem.hpp
- *	\brief Defines an abstraction layer for the host's virtual memory system.
- */
 
 namespace gc {
 
+//!	TODO Investigate supporting huge pages to reduce page map size in the kernel.
+
 /**	\class vmem
  *	\brief Abstracts the host system's virtual memory.
- *	\todo Investigate supporting huge pages to reduce page map size in the kernel.
- *	\note Execute privalage is considered unneeded at this time.
+ *	\note Execute privilege is considered unneeded at this time.
  */
 class vmem
 {
@@ -69,7 +67,7 @@ private:
 	static void *allocate(std::size_t size, bool access) noexcept;
 
 	/**	\fn deallocate(void *ptr) noexcept
-	 *	\brief Dellocates virtual memory.
+	 *	\brief Deallocates virtual memory.
 	 *	\param ptr The virtual memory to deallocate.
 	 *	\pre 'ptr' must be a block of virtual memory returned by allocate.
 	 */
@@ -207,7 +205,7 @@ public:
 	void *at(std::size_t offset) const;
 
 	/**	\fn forbid(std::size_t offset, std::size_t length) noexcept
-	 *	\brief Makes part of a previously allocated block unaccessible.
+	 *	\brief Makes part of a previously allocated block inaccessible.
 	 *	\param offset The starting point in the virtual memory block.
 	 *	\param length The size of area to forbid.
 	 *	\returns Returns a boolean value indicated whether the change succeeded.

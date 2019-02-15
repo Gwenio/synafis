@@ -18,7 +18,7 @@ PERFORMANCE OF THIS SOFTWARE.
 */
 
 #include "pool.hpp"
-#include "impl.hpp"
+#include "core.hpp"
 
 #ifndef SYNAFIS_GC_ALLOCATOR_HPP
 #define SYNAFIS_GC_ALLOCATOR_HPP

@@ -17,11 +17,7 @@ OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
 PERFORMANCE OF THIS SOFTWARE.
 */
 
-#include "vmem.hpp"
-
-/**	\file src/gc/vmem.cpp
- *	\todo For now only a Windows implementation will be provided.
- *	\todo Eventually it should be possible to select other systems.
+/**	\file src/gc/impl/vmem/winapi.cpp
  *	\note "WIN32_LEAN_AND_MEAN" might need to be defined if there are errors
  *	\note in the Windows system headers.
  *	\note
@@ -29,6 +25,8 @@ PERFORMANCE OF THIS SOFTWARE.
  *	\note preprocessor definitions the compiler is expected to provide might
  *	\note not be present.
  */
+
+#include "../vmem.hpp"
 
 #include <stdexcept>
 #include <windows.h>

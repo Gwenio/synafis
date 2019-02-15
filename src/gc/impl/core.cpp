@@ -17,7 +17,11 @@ OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
 PERFORMANCE OF THIS SOFTWARE.
 */
 
-#include "impl.hpp"
+/**	\file src/gc/impl/core.cpp
+ *	\brief Implements the GC core.
+ */
+
+#include "core.hpp"
 
 #include "soft_ptr_data.hpp"
 

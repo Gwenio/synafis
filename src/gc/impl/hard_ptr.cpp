@@ -23,8 +23,8 @@ PERFORMANCE OF THIS SOFTWARE.
 
 #include "../hard_ptr.hpp"
 #include "../identity.hpp"
-#include "../soft_ptr_data.hpp"
-#include "../impl.hpp"
+#include "soft_ptr_data.hpp"
+#include "core.hpp"
 
 namespace gc {
 

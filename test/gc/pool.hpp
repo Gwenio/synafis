@@ -21,7 +21,7 @@ PERFORMANCE OF THIS SOFTWARE.
  *	\brief Declares test cases for gc::pool.
  */
 
-#include "../../src/gc/pool.hpp"
+#include "../../src/gc/impl/pool.hpp"
 #include "../master.hpp"
 
 namespace unit_test {

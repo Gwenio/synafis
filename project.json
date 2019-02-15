@@ -25,13 +25,12 @@
 		"prefix": "src/",
 		"suffix": ".cpp",
 		"files": [
-			"gc/vmem",
 			"gc/impl/lock",
-			"gc/pool",
-			"gc/allocator",
+			"gc/impl/pool",
+			"gc/impl/allocator",
 			"gc/hard_ptr",
 			"gc/soft_ptr",
-			"gc/impl",
+			"gc/impl/core",
 			"gc/impl/root",
 			"gc/impl/identity",
 			"gc/impl/collector",
@@ -41,6 +40,24 @@
 			{ "target": "synafis" },
 			{ "target": "unit" }
 		]
+	},
+	{
+		"group": "src",
+		"description": "Adds Windows specific '.cpp' files to the 'src' group.",
+		"prefix": "src/",
+		"suffix": ".cpp",
+		"files": [
+			"gc/impl/vmem/winapi"
+		],
+		"filters": [
+		{
+			"target": "synafis",
+			"platform": "winapi"
+		},
+		{
+			"target": "unit",
+			"platform": "winapi"
+		}]
 	},
 	{
 		"group": "src",

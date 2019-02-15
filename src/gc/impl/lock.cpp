@@ -22,7 +22,7 @@ PERFORMANCE OF THIS SOFTWARE.
  */
 
 #include "../lock.hpp"
-#include "../impl.hpp"
+#include "core.hpp"
 
 #if defined(SYNAFIS_UNIT_TEST) || !defined(NDEBUG)
 #include <limits>

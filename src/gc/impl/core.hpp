@@ -17,16 +17,14 @@ OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
 PERFORMANCE OF THIS SOFTWARE.
 */
 
-#ifndef SYNAFIS_GC_HPP
-#include "../gc.hpp"
-#endif
+/**	\file src/gc/impl/core.hpp
+ *	\brief Defines the garbage collector implementation.
+ */
 
-#ifndef SYNAFIS_GC_SOURCE_HPP
 #include "source.hpp"
-#endif
 
-#ifndef SYNAFIS_GC_IMPL_HPP
-#define SYNAFIS_GC_IMPL_HPP
+#ifndef SYNAFIS_GC_CORE_HPP
+#define SYNAFIS_GC_CORE_HPP
 #pragma once
 
 #include <algorithm>
@@ -35,10 +33,6 @@ PERFORMANCE OF THIS SOFTWARE.
 #include <mutex>
 #include <thread>
 #include <vector>
-
-/**	\file src/gc/impl.hpp
- *	\brief Defines the garbage collector implementation.
- */
 
 namespace gc {
 

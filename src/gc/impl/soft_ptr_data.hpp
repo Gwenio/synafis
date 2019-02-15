@@ -17,41 +17,21 @@ OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
 PERFORMANCE OF THIS SOFTWARE.
 */
 
-#ifndef SYNAFIS_GC_HPP
-#include "../gc.hpp"
-#endif
+/**	\file src/gc/soft_ptr_data.hpp
+ *	\brief Defines the implementation for parts of the GC API.
+ */
 
-#ifndef SYNAFIS_GC_SOURCE_HPP
+#include "../soft_ptr.hpp"
 #include "source.hpp"
-#endif
 
 #ifndef SYNAFIS_GC_SOFT_PTR_DATA_HPP
 #define SYNAFIS_GC_SOFT_PTR_DATA_HPP
 #pragma once
 
-/**	\file src/gc/soft_ptr_data.hpp
- *	\brief Defines the implementation for parts of the GC API.
- */
-
-#ifndef SYNAFIS_STDINC_ATOMIC
 #include <atomic>
-#define SYNAFIS_STDINC_ATOMIC
-#endif
-
-#ifndef SYNAFIS_STDINC_MEMORY
 #include <memory>
-#define SYNAFIS_STDINC_MEMORY
-#endif
-
-#ifndef SYNAFIS_STDINC_MUTEX
 #include <mutex>
-#define SYNAFIS_STDINC_MUTEX
-#endif
-
-#ifndef SYNAFIS_STDINC_VECTOR
 #include <vector>
-#define SYNAFIS_STDINC_VECTOR
-#endif
 
 namespace gc {
 
