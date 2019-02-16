@@ -19,6 +19,7 @@ PERFORMANCE OF THIS SOFTWARE.
 
 /**	\file src/gc/pool.hpp
  *	\brief Defines the type for managing a memory pool.
+ *	\ingroup gc_impl
  */
 
 #include "vmem.hpp"
@@ -34,6 +35,7 @@ namespace gc {
 
 /**	\class pool
  *	\brief Type to manage a pool of fixed size memory slots.
+ *	\ingroup gc_impl
  */
 class pool : public isource
 {
@@ -74,6 +76,7 @@ public:
 
 	/**	\class handle
 	 *	\brief Manages the ownership and lifetime of a pool.
+	 *	\ingroup gc_impl
 	 */
 	class handle
 	{

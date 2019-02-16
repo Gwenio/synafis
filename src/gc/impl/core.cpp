@@ -19,6 +19,7 @@ PERFORMANCE OF THIS SOFTWARE.
 
 /**	\file src/gc/impl/core.cpp
  *	\brief Implements the GC core.
+ *	\ingroup gc_impl
  */
 
 #include "core.hpp"

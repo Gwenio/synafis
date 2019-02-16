@@ -23,6 +23,7 @@ PERFORMANCE OF THIS SOFTWARE.
 
 /**	\file src/gc/impl/allocator.cpp
  *	\brief Defines the implementation of gc::allocator.
+ *	\ingroup gc_impl
  */
 
 namespace {

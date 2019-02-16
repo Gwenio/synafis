@@ -17,16 +17,17 @@ OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
 PERFORMANCE OF THIS SOFTWARE.
 */
 
+/**	\file src/gc/impl/allocator.hpp
+ *	\brief Defines the type that manages the pools for a type of object.
+ *	\ingroup gc_impl
+ */
+
 #include "pool.hpp"
 #include "core.hpp"
 
 #ifndef SYNAFIS_GC_ALLOCATOR_HPP
 #define SYNAFIS_GC_ALLOCATOR_HPP
 #pragma once
-
-/**	\file src/gc/allocator.hpp
- *	\brief Defines the type that manages the pools for a type of object.
- */
 
 #include <list>
 #include <mutex>
@@ -35,6 +36,7 @@ namespace gc {
 
 /**	\class allocator
  *	\brief Type to manage pools for a type of object.
+ *	\ingroup gc_impl
  */
 class allocator : public collector::iallocator
 {

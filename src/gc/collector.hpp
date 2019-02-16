@@ -17,18 +17,18 @@ OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
 PERFORMANCE OF THIS SOFTWARE.
 */
 
-#ifndef SYNAFIS_GC_HPP
-#include "../gc.hpp"
-#endif
+/**	\file src/gc/collector.hpp
+ *	\brief Defines functions for interacting with the collector.
+ *	\ingroup gc_interface
+ */
 
 #ifndef SYNAFIS_GC_COLLECTOR_HPP
 #define SYNAFIS_GC_COLLECTOR_HPP
 #pragma once
 
-/**	\file src/gc/collector.hpp
- *	\brief Defines functions for interacting with the collector.
- *	\todo Add functions for getting collector statistics.
- */
+#include <chrono>
+
+//! TODO Add functions for getting GC statistics.
 
 namespace gc {
 
@@ -38,6 +38,7 @@ namespace gc {
  *	\details Prior to this call, the collector is only setup to handle
  *	\details some operations that are expected to occur before main().
  *	\warning This must be called for the collector to begin operation.
+ *	\ingroup gc_interface
  */
 void initialize();
 
@@ -47,6 +48,7 @@ void initialize();
  *	\details If the period is set to the special value zero, then collection cycles will only
  *	\details occur when forced with collect() or by running out of memory.
  *	\note The default value for the period is set by config::gc_period.
+ *	\ingroup gc_interface
  */
 void set_period(std::chrono::steady_clock::duration value) noexcept;
 
@@ -54,6 +56,7 @@ void set_period(std::chrono::steady_clock::duration value) noexcept;
  *	\brief Causes the collector to run a collection cycle as soon as possible.
  *	\param wait If true will cause the call to block until a collection cycle has run.
  *	\pre initialize() has been called.
+ *	\ingroup gc_interface
  */
 void collect(bool wait) noexcept;
 

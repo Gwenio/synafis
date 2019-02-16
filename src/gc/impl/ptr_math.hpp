@@ -17,13 +17,14 @@ OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
 PERFORMANCE OF THIS SOFTWARE.
 */
 
+/**	\file src/gc/impl/ptr_math.hpp
+ *	\brief Provides helpers for working with void pointers.
+ *	\ingroup gc_impl
+ */
+
 #ifndef SYNAFIS_GC_PTR_MATH_HPP
 #define SYNAFIS_GC_PTR_MATH_HPP
 #pragma once
-
-/**	\file src/gc/ptr_math.hpp
- *	\brief Provides helpers for working with void pointers.
- */
 
 #include <cstdint>
 
@@ -39,6 +40,7 @@ namespace gc {
  *	\details Therefore casting pointers to and from that type is safe when
  *	\details using a standard compliant compiler and standard library combo.
  *	\warning Does not checked for overflow.
+ *	\ingroup gc_impl
  */
 inline constexpr void *add_offset(void *addr, std::uintptr_t offset) noexcept
 {
@@ -56,6 +58,7 @@ inline constexpr void *add_offset(void *addr, std::uintptr_t offset) noexcept
  *	\details Therefore casting pointers to and from that type is safe when
  *	\details using a standard compliant compiler and standard library combo.
  *	\warning Does not checked for overflow.
+ *	\ingroup gc_impl
  */
 inline constexpr void *sub_offset(void *addr, std::uintptr_t offset) noexcept
 {
@@ -69,6 +72,7 @@ inline constexpr void *sub_offset(void *addr, std::uintptr_t offset) noexcept
  *	\returns Returns addr - sub.
  *	\details The type ptrdiff_t is meant for holding the difference between pointers.
  *	\warning Does not checked for overflow.
+ *	\ingroup gc_impl
  */
 inline constexpr std::ptrdiff_t sub_addr(void *addr, void *sub) noexcept
 {

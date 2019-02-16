@@ -24,6 +24,7 @@ PERFORMANCE OF THIS SOFTWARE.
  *	\note Or for errors in an editor rather than a compiler, the architecture
  *	\note preprocessor definitions the compiler is expected to provide might
  *	\note not be present.
+ *	\ingroup gc_impl
  */
 
 #include "../vmem.hpp"

@@ -19,6 +19,7 @@ PERFORMANCE OF THIS SOFTWARE.
 
 /**	\file src/gc/impl/source.hpp
  *	\brief Defines an interface for allocation sources.
+ *	\ingroup gc_impl
  */
 
 #include "../identity.hpp"
@@ -33,6 +34,7 @@ namespace gc {
 /**	\class isource
  *	\brief Represents a source of memory allocation.
  *	\details Used for bookkeeping that needs to know where an object was allocated from.
+ *	\ingroup gc_impl
  */
 class isource
 {

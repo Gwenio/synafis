@@ -19,9 +19,11 @@ PERFORMANCE OF THIS SOFTWARE.
 
 /**	\file src/gc/impl/collector.cpp
  *	\brief Implements the interface for the garbage collector.
+ *	\ingroup gc_impl
  */
 
 #include "../collector.hpp"
+#include "../lock.hpp"
 #include "core.hpp"
 
 namespace gc {

@@ -17,17 +17,19 @@ OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
 PERFORMANCE OF THIS SOFTWARE.
 */
 
-#ifndef SYNAFIS_GC_HPP
-#include "../gc.hpp"
-#endif
+/**	\file src/gc/identity.hpp
+ *	\brief Defines tools for identifying types to the garbage collector.
+ *	\ingroup gc_interface
+ */
+
+#include "../config/gc.hpp"
+#include "../unit_test.hpp"
+#include "callbacks.hpp"
+#include "traits.hpp"
 
 #ifndef SYNAFIS_GC_IDENTITY_HPP
 #define SYNAFIS_GC_IDENTITY_HPP
 #pragma once
-
-/**	\file src/gc/identity.hpp
- *	\brief Defines tools for identifying types to the garbage collector.
- */
 
 namespace gc {
 
@@ -37,15 +39,16 @@ namespace gc {
  *	\details way it needs to without knowing their type.
  *	\invariant acb != nullptr
  *	\note This could be done with a base class with virtual methods,
- *	\note but the collector has nothing to do with the class heirachy.
+ *	\note but the collector has nothing to do with the class hierarchy.
  *	\note
  *	\note In particular, having all types used with the collector
  *	\note inherit from a common base class means that if multiple
  *	\note inheritance is used it may lead to messy diamond inheritance.
  *	\note
- *	\note Also, separating the identity from the class heirachy means
+ *	\note Also, separating the identity from the class hierarchy means
  *	\note a type can have additional identities for the presence of
  *	\note const and/or volatile as qualifiers.
+ *	\ingroup gc_interface
  */
 class identity
 {
@@ -57,6 +60,7 @@ public:
 	 *	\brief Type to access restricted parts of the identity class.
 	 *	\note Should be defined where only the garbage collector has access
 	 *	\note to the members of this class.
+	 *	\ingroup gc_interface
 	 */
 	class access;
 
@@ -371,6 +375,7 @@ public:
  *	\note A type may have separate identities for the presence of const or volatile
  *	\note as qualifies.
  *	\todo Work out the best way for providing the identities for types.
+ *	\ingroup gc_interface
  */
 template<typename T>
 identity const &get_id() noexcept;

@@ -17,6 +17,11 @@ OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
 PERFORMANCE OF THIS SOFTWARE.
 */
 
+/**	\file src/gc/lock.hpp
+ *	\brief Defines tools for preventing garbage collection during mutation.
+ *	\ingroup gc_interface
+ */
+
 #include "../config/gc.hpp"
 #include "../unit_test.hpp"
 
@@ -27,15 +32,12 @@ PERFORMANCE OF THIS SOFTWARE.
 #include <mutex>
 #include <thread>
 
-/**	\file src/gc/lock.hpp
- *	\brief Defines tools for preventing garbage collection during mutation.
- */
-
 namespace gc {
 
 /**	\class basic_mutex
  *	\brief Class to ensure the garbage collector does not run.
  *	\note The constructor and destructor are to be implemented inside the collector.
+ *	\ingroup gc_interface
  */
 class basic_mutex
 {
@@ -106,6 +108,7 @@ public:
 /**	\class debug_mutex
  *	\brief Class to ensure the garbage collector does not run.
  *	\note The constructor and destructor are to be implemented inside the collector.
+ *	\ingroup gc_interface
  */
 class debug_mutex : public basic_mutex
 {
@@ -170,23 +173,27 @@ public:
  *	\see config::gc_debug_mutex
  *	\see debug_mutex
  *	\see basic_mutex
+ *	\ingroup gc_interface
  */
 using mutex = typename std::conditional_t<config::gc_debug_mutex, debug_mutex, basic_mutex>;
 
 /**	\typedef lock_guard
  *	\brief Alias for std::lock_guard<mutex>.
+ *	\ingroup gc_interface
  */
 using lock_guard = std::lock_guard<mutex>;
 
 /**	\typedef scoped_lock
  *	\brief Alias for std::scoped_lock<mutex>.
  *	\warning Ownership of the lock must not be transferred to another thread.
+ *	\ingroup gc_interface
  */
 using scoped_lock = std::scoped_lock<mutex>;
 
 /**	\typedef unique_lock
  *	\brief Alias for std::unique_lock<mutex>.
  *	\warning Ownership of the lock must not be transferred to another thread.
+ *	\ingroup gc_interface
  */
 using unique_lock = std::unique_lock<mutex>;
 

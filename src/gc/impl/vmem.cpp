@@ -19,6 +19,7 @@ PERFORMANCE OF THIS SOFTWARE.
 
 /**	\file src/gc/impl/vmem.cpp
  *	\brief Implements the platform independent portions of gc::vmem.
+ *	\ingroup gc_impl
  */
 
 #include "vmem.hpp"

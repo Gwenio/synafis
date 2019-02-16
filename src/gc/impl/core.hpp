@@ -19,6 +19,7 @@ PERFORMANCE OF THIS SOFTWARE.
 
 /**	\file src/gc/impl/core.hpp
  *	\brief Defines the garbage collector implementation.
+ *	\ingroup gc_impl
  */
 
 #include "source.hpp"
@@ -38,6 +39,7 @@ namespace gc {
 
 /**	\class collector
  *	\brief The main class implementing the garbage collector.
+ *	\ingroup gc_impl
  */
 class collector
 {

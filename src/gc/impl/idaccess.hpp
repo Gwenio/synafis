@@ -21,6 +21,7 @@ PERFORMANCE OF THIS SOFTWARE.
  *	\brief Implements identity::access.
  *	\warning Should only be included where the more access to identity
  *	\warning is appropriate.
+ *	\ingroup gc_impl
  */
 
 #ifndef SYNAFIS_GC_IDACCESS_HPP

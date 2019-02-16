@@ -19,6 +19,7 @@ PERFORMANCE OF THIS SOFTWARE.
 
 /**	/file src/gc/impl/lock.cpp
  *	/brief Implements gc::basic_mutex.
+ *	\ingroup gc_impl
  */
 
 #include "../lock.hpp"
@@ -32,6 +33,7 @@ namespace gc {
 
 /**	\var lock_count
  *	\brief Count how many times a thread has acquired the collector's lock.
+ *	\ingroup gc_impl
  */
 thread_local std::size_t lock_count{0};
 

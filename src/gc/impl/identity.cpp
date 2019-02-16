@@ -19,6 +19,7 @@ PERFORMANCE OF THIS SOFTWARE.
 
 /**	\file src/gc/impl/identity.cpp
  *	\brief Implements portions of gc::identity that need access to the GC's internals.
+ *	\ingroup gc_impl
  */
 
 #include "../identity.hpp"

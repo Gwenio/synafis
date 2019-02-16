@@ -17,8 +17,9 @@ OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
 PERFORMANCE OF THIS SOFTWARE.
 */
 
-/**	\file src/gc/soft_ptr_data.hpp
+/**	\file src/gc/impl/soft_ptr_data.hpp
  *	\brief Defines the implementation for parts of the GC API.
+ *	\ingroup gc_impl
  */
 
 #include "../soft_ptr.hpp"

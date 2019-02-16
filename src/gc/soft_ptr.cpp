@@ -17,6 +17,11 @@ OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
 PERFORMANCE OF THIS SOFTWARE.
 */
 
+/**	\file src/gc/soft_ptr.cpp
+ *	\brief Implements gc::soft_ptr.
+ *	\ingroup gc_interface
+ */
+
 #include "soft_ptr.hpp"
 #include "hard_ptr.hpp"
 #include "impl/soft_ptr_data.hpp"

@@ -17,25 +17,37 @@ OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
 PERFORMANCE OF THIS SOFTWARE.
 */
 
-#ifndef SYNAFIS_GC_HPP
-#include "../gc.hpp"
-#endif
+/**	\defgroup gc_traits Traits
+ *	\brief Group containing type traits for types allocated by the GC.
+ *	\ingroup gc_interface
+ */
+
+/**	\file src/gc/traits.hpp
+ *	\brief Type traits for types that the garbage collector will interact with.
+ *	\ingroup gc_traits
+ */
+
+/**	\namespace gc::traits
+ *	\brief Defines garbage collector type traits.
+ *	\ingroup gc_traits
+ */
+
+#include "callbacks.hpp"
 
 #ifndef SYNAFIS_GC_TRAITS_HPP
 #define SYNAFIS_GC_TRAITS_HPP
 #pragma once
 
-/**	\file src/gc/traits.hpp
- *	\brief Type traits for types that the garbage collector will interact with.
- */
-
-/**	\namespace gc::traits
- *	\brief Defines garbage collector type traits.
- */
+#include <bitset>
+#include <type_traits>
 
 namespace gc {
 
 namespace traits {
+
+/** \addtogroup gc_traits Traits
+ *	@{
+ */
 
 /**	\typedef flag_type
  *	\brief The type for holding flags summarizing various traits to inform the collector about.
@@ -560,6 +572,7 @@ constexpr inline flag_type get_flags() noexcept
 					 (pointers<T> ? 0x4u : 0u) | (relocator<T> != nullptr ? 0x8u : 0u) |
 					 (readonly<T> ? 0x10u : 0u)};
 }
+//!	@}
 }
 }
 

@@ -17,17 +17,16 @@ OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
 PERFORMANCE OF THIS SOFTWARE.
 */
 
-#ifndef SYNAFIS_GC_HPP
-#include "../gc.hpp"
-#endif
+/**	\file src/gc/soft_ptr.hpp
+ *	\brief Defines the type for soft garbage collector pointers.
+ *	\ingroup gc_interface
+ */
+
+#include "../unit_test.hpp"
 
 #ifndef SYNAFIS_GC_SOFT_PTR_HPP
 #define SYNAFIS_GC_SOFT_PTR_HPP
 #pragma once
-
-/**	\file src/gc/soft_ptr.hpp
- *	\brief Defines the type for soft garbage collector pointers.
- */
 
 namespace gc {
 
@@ -35,11 +34,11 @@ class hard_ptr;
 
 /**	\class soft_ptr
  *	\brief Type for managing soft or weak pointers.
+ *	\ingroup gc_interface
  */
 class soft_ptr
 {
 	//!	\cond friends
-	friend soft_ptr;
 	friend hard_ptr;
 	friend unit_test::tester<soft_ptr>;
 	//!	\endcond
@@ -63,7 +62,7 @@ private:
 	static data *get_soft(hard_ptr const &other);
 
 	/**	\fn copy(data *other) noexcept
-	 *	\brief Increase the refernce count on the data and returns it.
+	 *	\brief Increase the reference count on the data and returns it.
 	 *	\param other The data to increase the reference count of.
 	 *	\returns Returns the data.
 	 *	\details If applicable, cleans up a stale data as update() would.

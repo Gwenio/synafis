@@ -17,8 +17,9 @@ OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
 PERFORMANCE OF THIS SOFTWARE.
 */
 
-/**	\file src/gc/pool.cpp
+/**	\file src/gc/impl/pool.cpp
  *	\brief Defines the implementation of gc::pool.
+ *	\ingroup gc_impl
  */
 
 #include "pool.hpp"

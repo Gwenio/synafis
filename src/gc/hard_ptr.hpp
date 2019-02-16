@@ -17,17 +17,18 @@ OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
 PERFORMANCE OF THIS SOFTWARE.
 */
 
-#ifndef SYNAFIS_GC_HPP
-#include "../gc.hpp"
-#endif
+/**	\file src/gc/hard_ptr.hpp
+ *	\brief Defines the type for hard garbage collector pointers.
+ *	\ingroup gc_interface
+ */
+
+#include "../unit_test.hpp"
+#include "identity.hpp"
+#include "traits.hpp"
 
 #ifndef SYNAFIS_GC_HARD_PTR_HPP
 #define SYNAFIS_GC_HARD_PTR_HPP
 #pragma once
-
-/**	\file src/gc/hard_ptr.hpp
- *	\brief Defines the type for hard garbage collector pointers.
- */
 
 namespace gc {
 
@@ -37,12 +38,12 @@ class soft_ptr;
  *	\brief Type for managing hard pointers.
  *	\invariant If ptr == nullptr then type must also be nullptr.
  *	\invariant If ptr != nullptr then type must not be nullptr.
+ *	\ingroup gc_interface
  */
 class hard_ptr
 {
 	//!	\cond friends
 	friend soft_ptr;
-	friend hard_ptr;
 	friend unit_test::tester<hard_ptr>;
 	//!	\endcond
 private:

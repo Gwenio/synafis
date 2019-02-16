@@ -19,10 +19,12 @@ PERFORMANCE OF THIS SOFTWARE.
 
 /**	\file src/gc/impl/vmem.hpp
  *	\brief Defines an abstraction layer for the host's virtual memory system.
+ *	\ingroup gc_impl
  */
 
 /**	\dir src/gc/impl/vmem
  *	\brief Contains the platform specific implementation of gc::vmem.
+ *	\ingroup gc_impl
  */
 
 //!	TODO Implement gc::vmem for platforms other than Windows.
@@ -43,6 +45,7 @@ namespace gc {
 /**	\class vmem
  *	\brief Abstracts the host system's virtual memory.
  *	\note Execute privilege is considered unneeded at this time.
+ *	\ingroup gc_impl
  */
 class vmem
 {

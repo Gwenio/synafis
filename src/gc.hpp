@@ -2,7 +2,7 @@
 /*
 ISC License (ISC)
 
-Copyright 2018 Adam Armstrong
+Copyright 2018-2019 Adam Armstrong
 
 Permission to use, copy, modify, and/or distribute this software for any
 purpose with or without fee is hereby granted, provided that the above copyright
@@ -17,8 +17,23 @@ OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
 PERFORMANCE OF THIS SOFTWARE.
 */
 
+/**	\defgroup gc_group GC
+ *	\brief Contains garbage collector components.
+ */
+
+/**	\defgroup gc_interface Interface
+ *	\brief Group containing implementation details of the garbage collector.
+ *	\ingroup gc_group
+ */
+
+/**	\defgroup gc_impl Implementation
+ *	\brief Group containing implementation details of the garbage collector.
+ *	\ingroup gc_group
+ */
+
 /**	\file src/gc.hpp
  *	\brief The primary header for garbage collector code.
+ *	\ingroup gc_interface
  */
 
 #ifndef SYNAFIS_GC_HPP
@@ -27,23 +42,17 @@ PERFORMANCE OF THIS SOFTWARE.
 
 /**	\dir src/gc
  *	\brief Contains the headers included by 'gc.hpp'.
+ *	\ingroup gc_interface
  */
 
 /**	\dir src/gc/impl
  *	\brief Contains implementation details of the garbage collector.
+ *	\ingroup gc_impl
  */
-
-#include <type_traits>
-#include <utility>
-#include <bitset>
-#include <new>
-#include <stdexcept>
-#include <chrono>
-
-#include "unit_test.hpp"
 
 /**	\namespace gc
  *	\brief Contains garbage collector utilities.
+ *	\ingroup gc_group
  */
 
 #include "config/gc.hpp"
@@ -75,6 +84,7 @@ PERFORMANCE OF THIS SOFTWARE.
  *	into hard pointers that keep the object alive and soft pointer which
  *	do not. Soft pointers instead allow a hard pointer to be retrieve if
  *	the object still exists.
+ *	\ingroup gc_group
  */
 
 #endif

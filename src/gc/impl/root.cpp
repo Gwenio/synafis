@@ -19,6 +19,7 @@ PERFORMANCE OF THIS SOFTWARE.
 
 /**	\file src/gc/impl/root.cpp
  *	\brief Implements the registering and unregistering of root objects.
+ *	\ingroup gc_impl
  */
 
 #include "../root.hpp"

@@ -19,6 +19,7 @@ PERFORMANCE OF THIS SOFTWARE.
 
 /**	\file src/gc/impl/hard_ptr.cpp
  *	\brief Implements portions of gc::hard_ptr that need access to the GC's internals.
+ *	\ingroup gc_impl
  */
 
 #include "../hard_ptr.hpp"

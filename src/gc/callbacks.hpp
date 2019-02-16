@@ -17,24 +17,30 @@ OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
 PERFORMANCE OF THIS SOFTWARE.
 */
 
-#ifndef SYNAFIS_GC_HPP
-#include "../gc.hpp"
-#endif
+/**	\defgroup gc_callbacks Callbacks
+ *	\brief Group containing callbacks used by the GC.
+ *	\ingroup gc_interface
+ */
+
+/**	\file src/gc/callbacks.hpp
+ *	\brief Defines typedefs for callback function pointers.
+ *	\ingroup gc_callbacks
+ */
 
 #ifndef SYNAFIS_GC_CALLBACKS_HPP
 #define SYNAFIS_GC_CALLBACKS_HPP
 #pragma once
 
-/**	\file src/gc/callbacks.hpp
- *	\brief Defines typedefs for callback function pointers.
- */
-
 namespace gc {
+
+/** \addtogroup gc_callbacks Callbacks
+ *	@{
+ */
 
 /**	\typedef finalize_cb
  *	\brief The callback type for cleaning objects owned by the garbage collector.
  */
-typedef void (*finalize_cb)(void *) noexcept;
+using finalize_cb = typename void (*)(void *) noexcept;
 
 /**	\typedef enumerate_cb
  *	\brief The callback type for adding a pointer to the reachable set.
@@ -42,36 +48,38 @@ typedef void (*finalize_cb)(void *) noexcept;
  *	\details The first parameter must be the data provided by the collector.
  *	\details The second parameter must be the pointer being enumerated.
  */
-typedef void (*enumerate_cb)(void *, void *) noexcept;
+using enumerate_cb = typename void (*)(void *, void *) noexcept;
 
 /**	\typedef traverse_cb
  *	\brief The callback type for enumerating the pointers to garbage collected objects.
  *	\details The enumerate_cb expects the second parameter as its first.
  */
-typedef void (*traverse_cb)(void const *, void *, enumerate_cb) noexcept;
+using traverse_cb = typename void (*)(void const *, void *, enumerate_cb) noexcept;
 
 /**	\typedef remap_cb
  *	\brief The callback type for updating pointers to relocated or merged objects.
  *	\details Provided as a parameter to other callbacks.
  */
-typedef void *(*remap_cb)(void *, void *)noexcept;
+using remap_cb = typename void *(*)(void *, void *)noexcept;
 
 /**	\typedef root_cb
  *	\brief The callback type for remapping the pointers in root objects.
  *	\details The remap_cb expects the second parameter as its first.
  */
-typedef void (*root_cb)(void *, void *, remap_cb) noexcept;
+using root_cb = typename void (*)(void *, void *, remap_cb) noexcept;
 
 /**	\typedef relocate_cb
  *	\brief The callback type for relocating objects.
  *	\details The remap_cb expects the third parameter as its first.
  */
-typedef void (*relocate_cb)(void *, void *, void *, remap_cb) noexcept;
+using relocate_cb = typename void (*)(void *, void *, void *, remap_cb) noexcept;
 
 /**	\typedef equality_cb
  *	\brief The callback type for checking if two objects will always be equal.
  */
-typedef bool (*equality_cb)(void const *, void const *) noexcept;
+using equality_cb = typename bool (*)(void const *, void const *) noexcept;
+
+//!	@}
 
 }
 

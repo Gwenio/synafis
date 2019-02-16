@@ -17,17 +17,18 @@ OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
 PERFORMANCE OF THIS SOFTWARE.
 */
 
-#ifndef SYNAFIS_GC_HPP
-#include "../gc.hpp"
-#endif
+/**	\file src/gc/root.hpp
+ *	\brief Defines tools for (un)registering root objects with the collector.
+ *	\ingroup gc_interface
+ */
+
+#include "../unit_test.hpp"
+#include "callbacks.hpp"
+#include "traits.hpp"
 
 #ifndef SYNAFIS_GC_ROOT_HPP
 #define SYNAFIS_GC_ROOT_HPP
 #pragma once
-
-/**	\file src/gc/root.hpp
- *	\brief Defines tools for (un)registering root objects with the collector.
- */
 
 namespace gc {
 
@@ -38,11 +39,11 @@ namespace gc {
  *	\details
  *	\details For types that are always roots, static members are provides
  *	\details so they can manage themselves.
+ *	\ingroup gc_interface
  */
 class root
 {
 	//!	\cond friends
-	friend root;
 	friend unit_test::tester<root>;
 	//!	\endcond
 private:
