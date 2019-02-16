@@ -18,7 +18,7 @@ PERFORMANCE OF THIS SOFTWARE.
 */
 
 /**	\file src/gc/impl/pool/free_list.hpp
- *	\brief Defines the type for managing a memory pool.
+ *	\brief Defines type implementing the free slot list for gc::pool.
  *	\ingroup gc_pool
  */
 
