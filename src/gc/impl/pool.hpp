@@ -17,11 +17,12 @@ OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
 PERFORMANCE OF THIS SOFTWARE.
 */
 
-/**	\file src/gc/pool.hpp
+/**	\file src/gc/impl/pool.hpp
  *	\brief Defines the type for managing a memory pool.
  *	\ingroup gc_impl
  */
 
+#include "../../unit_test.hpp"
 #include "vmem.hpp"
 #include "source.hpp"
 
