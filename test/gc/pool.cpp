@@ -59,8 +59,8 @@ void t::invariants(pool const &obj) noexcept
 	using node = free_list::node;
 	SYNAFIS_ASSERT(obj.free.space <= obj.capacity);
 	SYNAFIS_ASSERT((obj.slots <= obj.free.head && obj.free.head < obj.end) || obj.free.space == 0);
-	SYNAFIS_ASSERT(obj.sentinel <= obj.gray);
-	SYNAFIS_ASSERT(obj.gray - obj.sentinel <= obj.used());
+	SYNAFIS_ASSERT(obj.gray.sentinel <= obj.gray.current);
+	SYNAFIS_ASSERT(obj.gray.current - obj.gray.sentinel <= obj.used());
 	std::size_t count{0};
 	bool flag{true};
 	for (node const *cur = obj.free.head; cur != nullptr; cur = cur->next) {

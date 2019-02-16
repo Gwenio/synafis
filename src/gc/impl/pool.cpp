@@ -108,8 +108,8 @@ namespace gc {
 pool::pool(vmem &&mem, identity const &id, std::size_t cap, std::size_t u, void **g,
 	void *start) noexcept :
 	isource(),
-	region(std::forward<vmem>(mem)), type(id), tracking(), capacity(cap), unit(u), sentinel(g),
-	gray(g), slots(start), end(add_offset(start, cap * u)), free(start, cap, u)
+	region(std::forward<vmem>(mem)), type(id), tracking(), capacity(cap), unit(u), gray(g),
+	slots(start), end(add_offset(start, cap * u)), free(start, cap, u)
 {
 	// The bitmap is always located bitmap_offset from the start of the virtual memory.
 	bitmap = reinterpret_cast<bit_group *>(
@@ -279,10 +279,9 @@ void pool::mark(void *ptr) noexcept
 	// Assert that the slot is initialized.
 	SYNAFIS_ASSERT(bitmap[group].test(bit));
 	auto &ref = colors[group];
-	if (gray && !ref[bit]) {
-		SYNAFIS_ASSERT(sub_addr(gray, const_cast<void **>(sentinel)) < capacity);
-		*gray = ptr;
-		gray++;
+	if (static_cast<bool>(gray) && !ref[bit]) {
+		SYNAFIS_ASSERT(pending() < capacity);
+		gray.push(ptr);
 	}
 	ref.set(bit);
 }
@@ -291,8 +290,7 @@ bool pool::traverse(void *data, enumerate_cb cb) noexcept
 {
 	if (has_pending()) {
 		do {
-			gray--;
-			void *obj{*gray};
+			void *obj{gray.pop()};
 			idaccess::traverse(type, obj, data, cb);
 		} while (has_pending());
 		return true;

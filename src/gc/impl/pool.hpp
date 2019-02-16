@@ -41,6 +41,7 @@ PERFORMANCE OF THIS SOFTWARE.
 #pragma once
 
 #include "pool/free_list.hpp"
+#include "pool/gray_list.hpp"
 
 #include <list>
 
@@ -429,15 +430,10 @@ private:
 	 */
 	bit_group *colors;
 
-	/**	\var sentinel
-	 *	\brief Points to the bottom of the gray stack.
-	 */
-	void **const sentinel;
-
 	/**	\var gray
-	 *	\brief Points to the position beyond the top of the gray stack.
+	 *	\brief The list of gray slots pending traversal.
 	 */
-	void **gray;
+	gray_list gray;
 
 	/**	\var slots
 	 *	\brief The start of the address range to allocate objects from.
@@ -605,9 +601,9 @@ public:
 
 	/**	\fn pending() const noexcept
 	 *	\brief Gets the number of objects pending traversal.
-	 *	\returns gray - sentinel
+	 *	\returns gray.pending()
 	 */
-	std::size_t pending() const noexcept { return static_cast<std::size_t>(gray - sentinel); }
+	std::size_t pending() const noexcept { return gray.pending(); }
 
 	/**	\fn empty() const noexcept
 	 *	\brief Checks if the pool is empty.
@@ -623,9 +619,9 @@ public:
 
 	/**	\fn has_pending() const noexcept
 	 *	\brief Checks if the pool has objects pending traversal.
-	 *	\returns sentinel < gray
+	 *	\returns gray.has_pending()
 	 */
-	bool has_pending() const noexcept { return sentinel < gray; }
+	bool has_pending() const noexcept { return gray.has_pending(); }
 };
 
 }
