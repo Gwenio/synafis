@@ -109,7 +109,7 @@ pool::pool(vmem &&mem, identity const &id, std::size_t cap, std::size_t u, void 
 	void *start) noexcept :
 	isource(),
 	region(std::forward<vmem>(mem)), type(id), tracking(), capacity(cap), unit(u), sentinel(g),
-	gray(g), slots(start), end(add_offset(start, cap * u)), free(start, end, cap, u)
+	gray(g), slots(start), end(add_offset(start, cap * u)), free(start, cap, u)
 {
 	// The bitmap is always located bitmap_offset from the start of the virtual memory.
 	bitmap = reinterpret_cast<bit_group *>(

@@ -102,14 +102,13 @@ private:
 	std::size_t space;
 
 public:
-	/**	\fn free_list(void *begin, void *end, std::size_t capacity, std::size_t unit) noexcept
+	/**	\fn free_list(void *begin, std::size_t capacity, std::size_t unit) noexcept
 	 *	\brief Constructor.
 	 *	\param begin The first slot.
-	 *	\param end Passed the last slot.
 	 *	\param capacity The maximum value for space.
 	 *	\param unit The size of a slot in bytes.
 	 */
-	free_list(void *begin, void *end, std::size_t capacity, std::size_t unit) noexcept;
+	free_list(void *begin, std::size_t capacity, std::size_t unit) noexcept;
 
 	/**	\fn ~free_list() noexcept
 	 *	\brief Default destructor.

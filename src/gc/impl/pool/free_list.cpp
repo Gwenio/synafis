@@ -28,9 +28,10 @@ PERFORMANCE OF THIS SOFTWARE.
 
 namespace gc {
 
-free_list::free_list(void *begin, void *end, std::size_t capacity, std::size_t unit) noexcept :
+free_list::free_list(void *begin, std::size_t capacity, std::size_t unit) noexcept :
 	head(static_cast<node *>(begin)), space(capacity)
 {
+	void *const end{add_offset(begin, capacity * unit)};
 	node *current{head};
 	do {
 		// Advance the address.
