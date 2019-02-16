@@ -56,22 +56,22 @@ namespace unit_test {
 
 void t::invariants(pool const &obj) noexcept
 {
-	using node = pool::node;
-	SYNAFIS_ASSERT(obj.space <= obj.capacity);
-	SYNAFIS_ASSERT((obj.slots <= obj.free && obj.free < obj.end) || obj.space == 0);
+	using node = free_list::node;
+	SYNAFIS_ASSERT(obj.free.space <= obj.capacity);
+	SYNAFIS_ASSERT((obj.slots <= obj.free.head && obj.free.head < obj.end) || obj.free.space == 0);
 	SYNAFIS_ASSERT(obj.sentinel <= obj.gray);
-	SYNAFIS_ASSERT(obj.gray - obj.sentinel <= obj.capacity - obj.space);
+	SYNAFIS_ASSERT(obj.gray - obj.sentinel <= obj.used());
 	std::size_t count{0};
 	bool flag{true};
-	for (node const *cur = obj.free; cur != nullptr; cur = cur->next) {
+	for (node const *cur = obj.free.head; cur != nullptr; cur = cur->next) {
 		count++;
 		std::size_t bit, group;
 		std::tie(group, bit) = obj.bit_locate(const_cast<node *>(cur));
 		flag |= !obj.bitmap[group].test(bit);
 	}
-	if (count < obj.space) {
+	if (count < obj.free.space) {
 		SYNAFIS_FAILURE("The number of nodes in the free list was less than the free space count.");
-	} else if (count > obj.space) {
+	} else if (count > obj.free.space) {
 		SYNAFIS_FAILURE(
 			"The number of nodes in the free list was greater than the free space count.");
 	}

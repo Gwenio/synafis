@@ -17,9 +17,19 @@ OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
 PERFORMANCE OF THIS SOFTWARE.
 */
 
+/**	\defgroup gc_pool Pool
+ *	\brief Group for gc::pool and its sub-components.
+ *	\ingroup gc_impl
+ */
+
+/**	\dir src/gc/impl/pool
+ *	\brief Contains sub-components of gc::pool.
+ *	\ingroup gc_pool
+ */
+
 /**	\file src/gc/impl/pool.hpp
  *	\brief Defines the type for managing a memory pool.
- *	\ingroup gc_impl
+ *	\ingroup gc_pool
  */
 
 #include "../../unit_test.hpp"
@@ -30,13 +40,15 @@ PERFORMANCE OF THIS SOFTWARE.
 #define SYNAFIS_GC_POOL_HPP
 #pragma once
 
+#include "pool/free_list.hpp"
+
 #include <list>
 
 namespace gc {
 
 /**	\class pool
  *	\brief Type to manage a pool of fixed size memory slots.
- *	\ingroup gc_impl
+ *	\ingroup gc_pool
  */
 class pool : public isource
 {
@@ -77,7 +89,7 @@ public:
 
 	/**	\class handle
 	 *	\brief Manages the ownership and lifetime of a pool.
-	 *	\ingroup gc_impl
+	 *	\ingroup gc_pool
 	 */
 	class handle
 	{
@@ -364,26 +376,6 @@ public:
 	friend handle;
 	//!	\endcond
 private:
-	/**	\class node
-	 *	\brief Used to form a stack of free locations.
-	 *	\details A node is located at the start of the corresponding free locations;
-	 *	\details thus, the location can be retrieve casting a pointer to the node to
-	 *	\details a void pointer.
-	 *	\details
-	 *	\details This method of tracking free objects makes all allocations and
-	 *	\details deallocations take O(1) time.
-	 *	\details This does not mean it is the most effiecint; rather, it means
-	 *	\details times are reliable.
-	 */
-	struct node
-	{
-	public:
-		/**	\var next
-		 *	\brief The next free location.
-		 */
-		node *next;
-	};
-
 	/**	\var region
 	 *	\brief The memory region of the pool.
 	 *	\note The intent is for the pool to be allocated in the block of region.
@@ -413,17 +405,10 @@ private:
 	std::list<soft_ptr::data *> tracking;
 
 	/**	\var free
-	 *	\brief The next free object to allocate. Acts as a stack.
-	 *	\note If free == nullptr, there is no free memory to allocate.
+	 *	\brief The list of free slots.
+	 *	\invariant free.space <= capacity
 	 */
-	node *free;
-
-	/**	\var space
-	 *	\brief The number of free slots.
-	 *	\invariant If and only if free == nullptr then space == 0.
-	 *	\invariant space <= capacity
-	 */
-	std::size_t space;
+	free_list free;
 
 	/**	\var bitmap
 	 *	\brief Tracks allocated slots. Is a pointer to an array.
@@ -508,17 +493,14 @@ private:
 public:
 	/**	\var min_unit
 	 *	\brief The minimum unit size for pool allocations.
-	 *	\invariant Must be a multiple of alignof(node *).
 	 */
-	static constexpr std::size_t const min_unit{sizeof(node *)};
-	static_assert(
-		min_unit % alignof(node *) == 0, "pool::min_unit must be a multiple of alignof(node *).");
+	static constexpr std::size_t const min_unit{free_list::node_size()};
 
-	/**	\fn ~pool() noexcept
+	/**	\fn ~pool() noexcept final
 	 *	\brief Finalizes all objects and frees region.
 	 *	\note Pools are to have their destructor called directly.
 	 */
-	virtual ~pool() noexcept;
+	virtual ~pool() noexcept final;
 
 	/**	\fn select_capacity(std::size_t unit) noexcept
 	 *	\brief Determines a good capacity for a pool with a given allocation unit.
@@ -526,7 +508,7 @@ public:
 	 *	\returns Returns the selected capacity.
 	 *	\pre Must be at least min unit.
 	 *	\todo Currently does not consider if the bitmap and colors array make
-	 *	\todo inefficent use of the last page they occupy.
+	 *	\todo inefficient use of the last page they occupy.
 	 *	\todo However, that consideration only applies if the arrays can pass
 	 *	\todo the end of the page they start on.
 	 *	\see config::min_pool
@@ -611,15 +593,15 @@ public:
 
 	/**	\fn used() const noexcept
 	 *	\brief Gets the number of allocated slots.
-	 *	\returns capacity - space
+	 *	\returns capacity - free.available()
 	 */
-	std::size_t used() const noexcept { return capacity - space; }
+	std::size_t used() const noexcept { return capacity - free.available(); }
 
 	/**	\fn available() const noexcept
 	 *	\brief Gets the number of free slots.
 	 *	\returns space
 	 */
-	std::size_t available() const noexcept { return space; }
+	std::size_t available() const noexcept { return free.available(); }
 
 	/**	\fn pending() const noexcept
 	 *	\brief Gets the number of objects pending traversal.
@@ -629,15 +611,15 @@ public:
 
 	/**	\fn empty() const noexcept
 	 *	\brief Checks if the pool is empty.
-	 *	\returns capacity == space
+	 *	\returns capacity == free.available()
 	 */
-	bool empty() const noexcept { return capacity == space; }
+	bool empty() const noexcept { return capacity == free.available(); }
 
 	/**	\fn full() const noexcept
 	 *	\brief Checks if the pool is full.
-	 *	\returns space == 0
+	 *	\returns free.full()
 	 */
-	bool full() const noexcept { return space == 0; }
+	bool full() const noexcept { return free.full(); }
 
 	/**	\fn has_pending() const noexcept
 	 *	\brief Checks if the pool has objects pending traversal.

@@ -19,7 +19,7 @@ PERFORMANCE OF THIS SOFTWARE.
 
 /**	\file src/gc/impl/pool.cpp
  *	\brief Defines the implementation of gc::pool.
- *	\ingroup gc_impl
+ *	\ingroup gc_pool
  */
 
 #include "pool.hpp"
@@ -108,8 +108,8 @@ namespace gc {
 pool::pool(vmem &&mem, identity const &id, std::size_t cap, std::size_t u, void **g,
 	void *start) noexcept :
 	isource(),
-	region(std::forward<vmem>(mem)), type(id), tracking(), capacity(cap), space(cap), unit(u),
-	free(nullptr), sentinel(g), gray(g), slots(start), end(add_offset(start, cap * u))
+	region(std::forward<vmem>(mem)), type(id), tracking(), capacity(cap), unit(u), sentinel(g),
+	gray(g), slots(start), end(add_offset(start, cap * u)), free(start, end, cap, u)
 {
 	// The bitmap is always located bitmap_offset from the start of the virtual memory.
 	bitmap = reinterpret_cast<bit_group *>(
@@ -128,25 +128,6 @@ pool::pool(vmem &&mem, identity const &id, std::size_t cap, std::size_t u, void 
 	}
 	// Sanity check the location of slots and end.
 	SYNAFIS_ASSERT(region.begin() <= slots && end <= region.end());
-	// Place all slots in the free stack.
-	void *addr{slots};
-	free = reinterpret_cast<node *>(addr);
-	node *current = free;
-	do {
-		SYNAFIS_ASSERT(from(addr));
-		// Advance the address.
-		addr = add_offset(addr, unit);
-		if (addr < end) {
-			// Set the next free slot.
-			current->next = reinterpret_cast<node *>(addr);
-			current = current->next;
-		} else {
-			// There are no more free slots, set nullptr and exit loop.
-			current->next = nullptr;
-			break;
-		}
-	} while (true);
-	SYNAFIS_ASSERT(end == addr);
 }
 
 pool::~pool() noexcept
@@ -154,7 +135,7 @@ pool::~pool() noexcept
 	for (auto *cur : tracking) {
 		*cur = nullptr;
 	}
-	if (idaccess::has_finalizer(type) && space < capacity) {
+	if (idaccess::has_finalizer(type) && !free.full()) {
 		std::size_t bit{0};
 		bit_group *batch{bitmap};
 		for (void *current = slots; current < end; current = add_offset(current, unit)) {
@@ -250,25 +231,21 @@ void pool::deallocate(void *ptr) noexcept
 	SYNAFIS_ASSERT(from(ptr));
 	SYNAFIS_ASSERT(sub_addr(ptr, slots) % unit == 0);
 	idaccess::finalize(type, ptr);
-	node *temp{static_cast<node *>(ptr)};
-	temp->next = free;
-	free = temp;
-	space++;
+	free.push(ptr);
 }
 
 void *pool::allocate() noexcept
 {
-	if (free) {
-		space--;
-		void *addr{static_cast<void *>(std::exchange(free, free->next))};
+	if (free.full()) {
+		return nullptr;
+	} else {
+		void *addr{free.pop()};
 		// Mark as initialized.
 		std::size_t bit, group;
 		std::tie(group, bit) = bit_locate(addr);
 		SYNAFIS_ASSERT(!bitmap[group].test(bit)); // Assert that it is not being marked twice.
 		bitmap[group].set(bit);
 		return addr;
-	} else {
-		return nullptr;
 	}
 }
 
@@ -280,10 +257,7 @@ void pool::discarded(void *addr) noexcept
 	std::tie(group, bit) = bit_locate(addr);
 	SYNAFIS_ASSERT(bitmap[group].test(bit)); // Assert that the slot is marked as allocated.
 	bitmap[group].reset(bit);
-	node *temp{static_cast<node *>(addr)};
-	temp->next = free;
-	free = temp;
-	space++;
+	free.push(addr);
 }
 
 void *pool::base_of(void *ptr) const noexcept
