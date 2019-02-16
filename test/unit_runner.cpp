@@ -70,12 +70,13 @@ public:
 	 */
 	class results
 	{
-	private:
+	public:
 		/**	\typedef msg_tuple
 		 *	\brief Shorthand for container of messages.
 		 */
 		typedef std::tuple<std::string, int, std::string_view> msg_tuple;
 
+	private:
 		/**	\var name
 		 *	\brief The name of the test case.
 		 */
@@ -114,18 +115,6 @@ public:
 				break;
 			}
 			return out;
-		}
-
-		/**	\fn print_message(std::ostream &out, msg_tuple const &msg, std::size_t indent)
-		 *	\brief Prints a message.
-		 *	\param out The output sink.
-		 *	\param msg The message to output.
-		 *	\param indent The base indentation for the output.
-		 */
-		static void print_message(std::ostream &out, msg_tuple const &msg, std::size_t indent)
-		{
-			indentl(out, indent) << std::get<2>(msg) << " @ " << std::get<1>(msg) << std::endl;
-			indentl(out, indent) << std::get<0>(msg) << std::endl;
 		}
 
 	public:
@@ -181,6 +170,18 @@ public:
 		 *	\returns Returns true if expect == comp.
 		 */
 		bool operator==(status comp) const noexcept { return expect == comp; }
+
+		/**	\fn print_message(std::ostream &out, msg_tuple const &msg, std::size_t indent)
+		 *	\brief Prints a message.
+		 *	\param out The output sink.
+		 *	\param msg The message to output.
+		 *	\param indent The base indentation for the output.
+		 */
+		static void print_message(std::ostream &out, msg_tuple const &msg, std::size_t indent)
+		{
+			indentl(out, indent) << std::get<2>(msg) << " @ " << std::get<1>(msg) << std::endl;
+			indentl(out, indent) << std::get<0>(msg) << std::endl;
+		}
 	};
 
 	class summary
@@ -347,7 +348,13 @@ public:
 	virtual void message(std::string_view msg, int lineno, std::string_view file) noexcept override
 	{
 		std::lock_guard<std::mutex> l{msg_lock};
-		cases.top().append(msg, lineno, file);
+		if (!cases.empty()) {
+			cases.top().append(msg, lineno, file);
+		} else {
+			std::cout << "Failure!" << std::endl;
+			results::print_message(std::cout, results::msg_tuple{msg, lineno, file}, 0);
+			std::cout << std::endl;
+		}
 	}
 
 	/**	\fn up() override
@@ -385,10 +392,15 @@ public:
  */
 extern unit_test::suite master{"master"};
 
-/**	\var output
+/**	\fn output() noexcept
  *	\brief The collector of the test runner.
+ *	\returns Returns a reference to the singleton instance.
  */
-static collector_impl output{};
+collector_impl &output() noexcept
+{
+	static collector_impl singleton{};
+	return singleton;
+}
 
 }
 
@@ -434,7 +446,7 @@ status case_type::context::get() noexcept { return current_status.load(); }
 void fail_msg(std::string_view msg, int lineno, std::string_view file) noexcept
 {
 	case_type::context::failed();
-	output.message(msg, lineno, file);
+	output().message(msg, lineno, file);
 }
 
 }
@@ -449,8 +461,8 @@ int main()
 	gc::set_period(std::chrono::steady_clock::duration::zero()); // Disable automatic cycles.
 	gc::initialize();
 	std::cout << "Beginning testing..." << std::endl;
-	unit_test::suite::run(output, master);
+	unit_test::suite::run(output(), master);
 	std::cout << "Testing complete." << std::endl << std::endl;
-	output.conclude();
+	output().conclude();
 	return 0;
 }
