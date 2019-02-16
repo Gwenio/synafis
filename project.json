@@ -35,6 +35,7 @@
 			"gc/impl/root",
 			"gc/impl/identity",
 			"gc/impl/collector",
+			"gc/impl/soft_ptr",
 			"gc/impl/hard_ptr"
 		],
 		"filters": [
