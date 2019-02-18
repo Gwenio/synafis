@@ -33,7 +33,7 @@ namespace gc {
 class pool;
 
 /**	\class gray_list
- *	\brief The list of free slots for a pool.
+ *	\brief The list of slots pending traversal.
  *	\ingroup gc_pool
  */
 class gray_list
