@@ -65,9 +65,8 @@ void t::invariants(pool const &obj) noexcept
 	bool flag{true};
 	for (node const *cur = obj.free.head; cur != nullptr; cur = cur->next) {
 		count++;
-		std::size_t bit, group;
-		std::tie(group, bit) = obj.bit_locate(const_cast<node *>(cur));
-		flag |= !obj.bitmap[group].test(bit);
+		std::size_t const offset{sub_addr(const_cast<node *>(cur), obj.slots) / obj.unit};
+		flag |= !obj.initialized.test(offset);
 	}
 	if (count < obj.free.space) {
 		SYNAFIS_FAILURE("The number of nodes in the free list was less than the free space count.");

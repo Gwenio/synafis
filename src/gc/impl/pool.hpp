@@ -42,6 +42,7 @@ PERFORMANCE OF THIS SOFTWARE.
 
 #include "pool/free_list.hpp"
 #include "pool/gray_list.hpp"
+#include "pool/bitmap.hpp"
 
 #include <list>
 
@@ -86,7 +87,7 @@ public:
 	/**	\typedef bit_group
 	 *	\brief Type for an element in bitmap state tracking arrays.
 	 */
-	typedef std::bitset<(sizeof(std::uintptr_t) * 8)> bit_group;
+	using bit_group = typename bitmap::group;
 
 	/**	\class handle
 	 *	\brief Manages the ownership and lifetime of a pool.
@@ -411,7 +412,7 @@ private:
 	 */
 	free_list free;
 
-	/**	\var bitmap
+	/**	\var initialized
 	 *	\brief Tracks allocated slots. Is a pointer to an array.
 	 *	\details While nodes track free objects for allocation, the bitmap is
 	 *	\details needed to know if the finalizer should be called on a slot
@@ -421,14 +422,14 @@ private:
 	 *	\note however, if the pointer cannot be squeezed in after the
 	 *	\note object then it would take more memory than a bitmap.
 	 */
-	bit_group *bitmap;
+	bitmap initialized;
 
-	/**	\var colors
+	/**	\var reachable
 	 *	\brief Tracks reachable objects. Is a pointer to an array.
 	 *	\note Slots with their matching bit set are called 'black' while
 	 *	\note the others are 'white'.
 	 */
-	bit_group *colors;
+	bitmap reachable;
 
 	/**	\var gray
 	 *	\brief The list of gray slots pending traversal.
@@ -462,13 +463,6 @@ private:
 	 *	\details the caller. This is so sweep can update bitmap in batches.
 	 */
 	void deallocate(void *ptr) noexcept;
-
-	/**	\fn bit_locate(void *ptr) const noexcept
-	 *	\brief Calculates the information for accessing the bit associated with an address.
-	 *	\param ptr The slot to calculate fore.
-	 *	\returns Returns a tuple containing the offset for the bit group and the bit number.
-	 */
-	std::tuple<std::size_t, std::size_t> bit_locate(void *ptr) const noexcept;
 
 	/**	\fn pool(vmem &&mem, identity const &id, std::size_t cap, std::size_t u, void **g, void *start) noexcept
 	 *	\brief Called by create to initialize a new pool.

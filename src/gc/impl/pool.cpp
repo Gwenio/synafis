@@ -32,52 +32,18 @@ PERFORMANCE OF THIS SOFTWARE.
 
 namespace {
 
-/**	\var bit_group_size
- *	\brief Short hand for the number of bits in gc::pool::bit_group.
- *	\invariant gc::pool::bit_group == std::bitmap<bit_group_size>
- */
-inline constexpr auto const bit_group_size = gc::pool::bit_group{}.size();
+using gc::bitmap;
 
-static_assert(std::is_same_v<gc::pool::bit_group, std::bitset<bit_group_size>>,
-	"gc::pool::bit_group and std::bitset<bit_group_size> must be the same type.");
+static_assert(sizeof(gc::pool) <= bitmap::placement(sizeof(gc::pool)),
+	"bitmap::placement(sizeof(pool)) must be larger than the size of a pool.");
 
-/**	\var bitmap_offset
- *	\brief The fixed offset to a pool's bitmap.
- *	\details It is an offset from the beginning of the virtual memory the pool is in.
- *	\note Offset varies based on whether guard pages are being used.
- *	\invariant sizeof(pool) <= bitmap_offset
- *	\invariant bitmap_offset % alignof(gc::pool::bit_group) == 0
- */
-inline constexpr auto const bitmap_offset =
-	((sizeof(gc::pool) % alignof(gc::pool::bit_group) == 0) ?
-			sizeof(gc::pool) :
-			((sizeof(gc::pool) / alignof(gc::pool::bit_group)) + 1) * alignof(gc::pool::bit_group));
-
-static_assert(
-	sizeof(gc::pool) <= bitmap_offset, "bitmap_offset must be larger than the size of a pool.");
-
-static_assert(bitmap_offset % alignof(gc::pool::bit_group) == 0,
-	"bitmap_offset must meet the alignment requirement of gc::pool::bit::group.");
-
-/**	\var bit_group_unit
- *	\brief The unit size of a gc::pool::bit_group.
- */
-inline constexpr auto const bit_group_unit = gc::idaccess::unit_size<gc::pool::bit_group>();
+static_assert(bitmap::placement(sizeof(gc::pool)) % alignof(bitmap::group) == 0,
+	"bitmap::placement(sizeof(pool)) must meet the alignment requirement of bitmap::group.");
 
 /**	\var gray_unit
  *	\brief The unit size of a pointer to a void pointer used for the gray stack.
  */
 inline constexpr auto const gray_unit = gc::idaccess::unit_size<void **>();
-
-/**	\fn bitmap_length(std::size_t capacity) noexcept
- *	\brief The number of elements in the arrays for bitmap and colors.
- *	\param capacity The number of slots managed by the pool.
- *	\returns Returns the number of elements in bitmap and colors.
- */
-inline constexpr std::size_t bitmap_length(std::size_t capacity) noexcept
-{
-	return (capacity / bit_group_size) + (capacity % bit_group_size == 0 ? 0 : 1);
-}
 
 /**	\fn gcd(std::size_t x, std::size_t y) noexcept
  *	\brief Calculates the greatest common divisor.
@@ -111,19 +77,19 @@ pool::pool(vmem &&mem, identity const &id, std::size_t cap, std::size_t u, void 
 	region(std::forward<vmem>(mem)), type(id), tracking(), capacity(cap), unit(u), gray(g),
 	slots(start), end(add_offset(start, cap * u)), free(start, cap, u)
 {
-	// The bitmap is always located bitmap_offset from the start of the virtual memory.
-	bitmap = reinterpret_cast<bit_group *>(
-		region[bitmap_offset + (config::guard_pages ? vmem::page_size : 0)]);
+	bit_group *maps{static_cast<bit_group *>(
+		region[bitmap::placement(sizeof(pool)) + (config::guard_pages ? vmem::page_size : 0)])};
+	initialized = bitmap{maps};
 	// Set the colors pointer. bitmap and colors should be a single array split into halves.
-	std::size_t const bit_array_half{bitmap_length(cap)};
-	colors = bitmap + bit_array_half;
+	std::size_t const bit_array_half{bitmap::length(cap)};
+	reachable = bitmap{maps + bit_array_half};
 	// End of colors.
-	bit_group *const last = bitmap + (bit_array_half * 2);
+	bit_group *const last{maps + (bit_array_half * 2)};
 	// Sanity check the location of bitmap and colors.
-	SYNAFIS_ASSERT(region.begin() <= bitmap && last <= region.end());
-	SYNAFIS_ASSERT(last <= slots || end <= bitmap);
+	SYNAFIS_ASSERT(region.begin() <= maps && last <= region.end());
+	SYNAFIS_ASSERT(last <= slots || end <= maps);
 	// Set all bits in the bitmap to false and set all bits for colors to white (false).
-	for (bit_group *current = bitmap; current < last; current++) {
+	for (bit_group *current = maps; current < last; current++) {
 		current->reset();
 	}
 	// Sanity check the location of slots and end.
@@ -137,10 +103,10 @@ pool::~pool() noexcept
 	}
 	if (idaccess::has_finalizer(type) && !free.full()) {
 		std::size_t bit{0};
-		bit_group *batch{bitmap};
+		bit_group *batch{initialized.begin()};
 		for (void *current = slots; current < end; current = add_offset(current, unit)) {
 			if (batch->test(bit)) { idaccess::finalize(type, current); }
-			if (++bit == bit_group_size) {
+			if (++bit == bitmap::bits()) {
 				bit = 0;
 				batch++;
 			}
@@ -190,7 +156,7 @@ pool::handle::handle(identity const &id, std::size_t capacity, std::size_t unit)
 	std::size_t size = capacity * unit;
 	size += vmem::page_size - (size % vmem::page_size);
 	// Calculate the offset to the end of bit groups.
-	std::size_t offset{guard + bitmap_offset + (bitmap_length(capacity) * bit_group_unit * 2)};
+	std::size_t offset{guard + bitmap::placement(sizeof(pool)) + (bitmap::footprint(capacity) * 2)};
 	// Calculate gray stack beginning and end if needed.
 	std::size_t gray_offset{0};
 	if (idaccess::has_traverser(id)) {
@@ -218,14 +184,6 @@ pool::handle::handle(identity const &id, std::size_t capacity, std::size_t unit)
 	}
 }
 
-std::tuple<std::size_t, std::size_t> pool::bit_locate(void *ptr) const noexcept
-{
-	std::size_t const offset{sub_addr(ptr, slots) / unit};
-	std::size_t const bit{offset % bit_group_size};
-	std::size_t const group{offset / bit_group_size};
-	return std::tuple<std::size_t, std::size_t>{group, bit};
-}
-
 void pool::deallocate(void *ptr) noexcept
 {
 	SYNAFIS_ASSERT(from(ptr));
@@ -241,10 +199,9 @@ void *pool::allocate() noexcept
 	} else {
 		void *addr{free.pop()};
 		// Mark as initialized.
-		std::size_t bit, group;
-		std::tie(group, bit) = bit_locate(addr);
-		SYNAFIS_ASSERT(!bitmap[group].test(bit)); // Assert that it is not being marked twice.
-		bitmap[group].set(bit);
+		std::size_t const offset{sub_addr(addr, slots) / unit};
+		SYNAFIS_ASSERT(!initialized.test(offset)); // Assert that it is not being marked twice.
+		initialized.set(offset);
 		return addr;
 	}
 }
@@ -253,10 +210,9 @@ void pool::discarded(void *addr) noexcept
 {
 	SYNAFIS_ASSERT(from(addr));
 	SYNAFIS_ASSERT(sub_addr(addr, slots) % unit == 0);
-	std::size_t bit, group;
-	std::tie(group, bit) = bit_locate(addr);
-	SYNAFIS_ASSERT(bitmap[group].test(bit)); // Assert that the slot is marked as allocated.
-	bitmap[group].reset(bit);
+	std::size_t const offset{sub_addr(addr, slots) / unit};
+	SYNAFIS_ASSERT(initialized.test(offset)); // Assert that the slot is marked as allocated.
+	initialized.reset(offset);
 	free.push(addr);
 }
 
@@ -274,16 +230,14 @@ void *pool::base_of(void *ptr) const noexcept
 void pool::mark(void *ptr) noexcept
 {
 	SYNAFIS_ASSERT(from(ptr));
-	std::size_t bit, group;
-	std::tie(group, bit) = bit_locate(ptr);
+	std::size_t const offset{sub_addr(ptr, slots) / unit};
 	// Assert that the slot is initialized.
-	SYNAFIS_ASSERT(bitmap[group].test(bit));
-	auto &ref = colors[group];
-	if (static_cast<bool>(gray) && !ref[bit]) {
+	SYNAFIS_ASSERT(initialized.test(offset));
+	if (static_cast<bool>(gray) && !reachable.test(offset)) {
 		SYNAFIS_ASSERT(pending() < capacity);
 		gray.push(ptr);
 	}
-	ref.set(bit);
+	reachable.set(offset);
 }
 
 bool pool::traverse(void *data, enumerate_cb cb) noexcept
@@ -301,15 +255,16 @@ bool pool::traverse(void *data, enumerate_cb cb) noexcept
 
 void pool::sweep() noexcept
 {
-	bit_group *alloc{bitmap};
-	bit_group *marks{colors};
+	bit_group *alloc{initialized.begin()};
+	bit_group const *marks{reachable.cbegin()};
 	void *current{slots};
+	std::size_t const skip{unit * bitmap::bits()};
 	auto start = tracking.begin();
 	do {
 		// Only bits for slots that are allocated and unmarked will be true.
 		bit_group const group{*alloc ^ *marks};
 		if (group.any()) {
-			for (std::size_t bit = 0; bit < bit_group_size; bit++) {
+			for (std::size_t bit = 0; bit < bitmap::bits(); bit++) {
 				if (group[bit]) {
 					SYNAFIS_ASSERT(alloc->test(bit));
 					SYNAFIS_ASSERT(!(marks->test(bit)));
@@ -331,14 +286,14 @@ void pool::sweep() noexcept
 			}
 		} else {
 			// Skip group, all are marked or unallocated.
-			current = add_offset(current, unit * bit_group_size);
+			current = add_offset(current, skip);
 		}
 		alloc->reset();
 		alloc++;
 		marks++;
 	} while (current < end);
 	// The black slots are the new allocated set.
-	std::swap(bitmap, colors);
+	std::swap(initialized, reachable);
 }
 
 soft_ptr::data *pool::fetch(void *ptr) noexcept
