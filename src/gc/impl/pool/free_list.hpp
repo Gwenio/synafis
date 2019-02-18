@@ -23,6 +23,7 @@ PERFORMANCE OF THIS SOFTWARE.
  */
 
 #include "../../../unit_test.hpp"
+#include "arena.hpp"
 
 #ifndef SYNAFIS_GC_POOL_FREE_LIST_HPP
 #define SYNAFIS_GC_POOL_FREE_LIST_HPP
@@ -102,13 +103,11 @@ private:
 	std::size_t space;
 
 public:
-	/**	\fn free_list(void *begin, std::size_t capacity, std::size_t unit) noexcept
+	/**	\fn free_list(arena const &store) noexcept
 	 *	\brief Constructor.
-	 *	\param begin The first slot.
-	 *	\param capacity The maximum value for space.
-	 *	\param unit The size of a slot in bytes.
+	 *	\param store The arena the free_list tracks free slots in.
 	 */
-	free_list(void *begin, std::size_t capacity, std::size_t unit) noexcept;
+	free_list(arena const &store) noexcept;
 
 	/**	\fn ~free_list() noexcept
 	 *	\brief Default destructor.

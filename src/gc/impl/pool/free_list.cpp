@@ -28,20 +28,20 @@ PERFORMANCE OF THIS SOFTWARE.
 
 namespace gc {
 
-free_list::free_list(void *begin, std::size_t capacity, std::size_t unit) noexcept :
-	head(static_cast<node *>(begin)), space(capacity)
+free_list::free_list(arena const &store) noexcept :
+	head(static_cast<node *>(store.cbegin())), space(store.max())
 {
-	void *const end{add_offset(begin, capacity * unit)};
+	void *slot{store.cbegin()};
 	node *current{head};
 	do {
 		// Advance the address.
-		begin = add_offset(begin, unit);
-		if (begin < end) {
+		slot = add_offset(slot, store.size());
+		if (slot < store.cend()) {
 			// Set the next free slot.
-			current->next = static_cast<node *>(begin);
+			current->next = static_cast<node *>(slot);
 			current = current->next;
 		} else {
-			SYNAFIS_ASSERT(begin == end);
+			SYNAFIS_ASSERT(slot == store.cend());
 			// There are no more free slots, set nullptr and exit loop.
 			current->next = nullptr;
 			break;

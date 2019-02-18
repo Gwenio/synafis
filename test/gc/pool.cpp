@@ -57,15 +57,16 @@ namespace unit_test {
 void t::invariants(pool const &obj) noexcept
 {
 	using node = free_list::node;
-	SYNAFIS_ASSERT(obj.free.space <= obj.capacity);
-	SYNAFIS_ASSERT((obj.slots <= obj.free.head && obj.free.head < obj.end) || obj.free.space == 0);
+	SYNAFIS_ASSERT(obj.free.space <= obj.store.max());
+	SYNAFIS_ASSERT((obj.store.front <= obj.free.head && obj.free.head < obj.store.back) ||
+				   obj.free.space == 0);
 	SYNAFIS_ASSERT(obj.gray.sentinel <= obj.gray.current);
 	SYNAFIS_ASSERT(obj.gray.current - obj.gray.sentinel <= obj.used());
 	std::size_t count{0};
 	bool flag{true};
-	for (node const *cur = obj.free.head; cur != nullptr; cur = cur->next) {
+	for (node *cur = obj.free.head; cur != nullptr; cur = cur->next) {
 		count++;
-		std::size_t const offset{sub_addr(const_cast<node *>(cur), obj.slots) / obj.unit};
+		std::size_t const offset{obj.store.get_slot(cur)};
 		flag |= !obj.initialized.test(offset);
 	}
 	if (count < obj.free.space) {
@@ -116,7 +117,7 @@ void t::creation(collector &)
 	SYNAFIS_ASSERT(temp.ptr != nullptr);
 	SYNAFIS_ASSERT(tester<vmem>::is_allocated(temp.ptr->region));
 	SYNAFIS_ASSERT(temp.used() == 0);
-	SYNAFIS_ASSERT(temp.available() == temp.ptr->capacity);
+	SYNAFIS_ASSERT(temp.available() == temp.ptr->store.max());
 	invariants(*temp);
 }
 
@@ -192,13 +193,13 @@ void t::allocation(collector &)
 {
 	handle temp{get_id<simple>(), simple_cap, simple_unit};
 	SYNAFIS_ASSERT(temp.used() == 0);
-	SYNAFIS_ASSERT(temp.available() == temp.ptr->capacity);
+	SYNAFIS_ASSERT(temp.available() == temp.ptr->store.max());
 	std::array<void *, 16> store;
 	for (auto &x : store) {
 		x = temp.allocate();
 	}
 	SYNAFIS_ASSERT(temp.used() == store.size());
-	SYNAFIS_ASSERT(temp.available() + temp.used() == temp.ptr->capacity);
+	SYNAFIS_ASSERT(temp.available() + temp.used() == temp.ptr->store.max());
 	auto const stop = store.end() - 1;
 	for (auto cur = store.begin(); cur < stop; cur++) {
 		for (auto comp = cur + 1; comp < store.end(); comp++) {
@@ -266,7 +267,7 @@ void t::sweeping(collector &)
 {
 	handle temp{get_id<simple>(), simple_cap, simple_unit};
 	SYNAFIS_ASSERT(temp.used() == 0);
-	SYNAFIS_ASSERT(temp.available() == temp.ptr->capacity);
+	SYNAFIS_ASSERT(temp.available() == temp.ptr->store.max());
 	invariants(*temp);
 	std::array<void *, 8> store1;
 	std::array<void *, 16> store2;
@@ -277,24 +278,24 @@ void t::sweeping(collector &)
 		x = temp.allocate();
 	}
 	SYNAFIS_ASSERT(temp.used() == store1.size() + store2.size());
-	SYNAFIS_ASSERT(temp.available() + temp.used() == temp.ptr->capacity);
+	SYNAFIS_ASSERT(temp.available() + temp.used() == temp.ptr->store.max());
 	invariants(*temp);
 	for (auto x : store1) {
 		temp.mark(x);
 	}
 	//!	TEST marking did not cause deallocation
 	SYNAFIS_ASSERT(temp.used() == store1.size() + store2.size());
-	SYNAFIS_ASSERT(temp.available() + temp.used() == temp.ptr->capacity);
+	SYNAFIS_ASSERT(temp.available() + temp.used() == temp.ptr->store.max());
 	invariants(*temp);
 	//!	TEST sweeping does deallocate the correct slots
 	temp.sweep();
 	SYNAFIS_ASSERT(temp.used() == store1.size());
-	SYNAFIS_ASSERT(temp.available() + temp.used() == temp.ptr->capacity);
+	SYNAFIS_ASSERT(temp.available() + temp.used() == temp.ptr->store.max());
 	invariants(*temp);
 	//!	TEST sweeping again without marking deallocates everything
 	temp.sweep();
 	SYNAFIS_ASSERT(temp.used() == 0);
-	SYNAFIS_ASSERT(temp.available() == temp.ptr->capacity);
+	SYNAFIS_ASSERT(temp.available() == temp.ptr->store.max());
 	invariants(*temp);
 }
 
@@ -302,7 +303,7 @@ void t::discarding(collector &)
 {
 	handle temp{get_id<simple>(), simple_cap, simple_unit};
 	SYNAFIS_ASSERT(temp.used() == 0);
-	SYNAFIS_ASSERT(temp.available() == temp.ptr->capacity);
+	SYNAFIS_ASSERT(temp.available() == temp.ptr->store.max());
 	std::array<void *, 8> store1;
 	std::array<void *, 16> store2;
 	for (auto &x : store1) {
@@ -312,7 +313,7 @@ void t::discarding(collector &)
 		x = temp.allocate();
 	}
 	SYNAFIS_ASSERT(temp.used() == store1.size() + store2.size());
-	SYNAFIS_ASSERT(temp.available() + temp.used() == temp.ptr->capacity);
+	SYNAFIS_ASSERT(temp.available() + temp.used() == temp.ptr->store.max());
 	for (auto x : store1) {
 		temp.discarded(x);
 	}

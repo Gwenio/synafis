@@ -71,29 +71,27 @@ static_assert(gcd(180, 48) == 12 && gcd(48, 180) == 12,
 
 namespace gc {
 
-pool::pool(vmem &&mem, identity const &id, std::size_t cap, std::size_t u, void **g,
-	void *start) noexcept :
-	isource(),
-	region(std::forward<vmem>(mem)), type(id), tracking(), capacity(cap), unit(u), gray(g),
-	slots(start), end(add_offset(start, cap * u)), free(start, cap, u)
+pool::pool(vmem &&mem, identity const &id, arena const &slots, void **g) noexcept :
+	isource(), region(std::forward<vmem>(mem)), type(id), store(slots), tracking(), gray(g),
+	free(slots)
 {
+	// Sanity check the location of the arena.
+	SYNAFIS_ASSERT(region.begin() <= store.cbegin() && store.cend() <= region.end());
 	bit_group *maps{static_cast<bit_group *>(
 		region[bitmap::placement(sizeof(pool)) + (config::guard_pages ? vmem::page_size : 0)])};
 	initialized = bitmap{maps};
 	// Set the colors pointer. bitmap and colors should be a single array split into halves.
-	std::size_t const bit_array_half{bitmap::length(cap)};
+	std::size_t const bit_array_half{bitmap::length(store.max())};
 	reachable = bitmap{maps + bit_array_half};
-	// End of colors.
+	// End of bitmaps.
 	bit_group *const last{maps + (bit_array_half * 2)};
 	// Sanity check the location of bitmap and colors.
 	SYNAFIS_ASSERT(region.begin() <= maps && last <= region.end());
-	SYNAFIS_ASSERT(last <= slots || end <= maps);
+	SYNAFIS_ASSERT(last <= store.cbegin() || store.cend() <= maps);
 	// Set all bits in the bitmap to false and set all bits for colors to white (false).
 	for (bit_group *current = maps; current < last; current++) {
 		current->reset();
 	}
-	// Sanity check the location of slots and end.
-	SYNAFIS_ASSERT(region.begin() <= slots && end <= region.end());
 }
 
 pool::~pool() noexcept
@@ -104,7 +102,8 @@ pool::~pool() noexcept
 	if (idaccess::has_finalizer(type) && !free.full()) {
 		std::size_t bit{0};
 		bit_group *batch{initialized.begin()};
-		for (void *current = slots; current < end; current = add_offset(current, unit)) {
+		for (void *current = store.begin(); current < store.end();
+			 current = add_offset(current, store.size())) {
 			if (batch->test(bit)) { idaccess::finalize(type, current); }
 			if (++bit == bitmap::bits()) {
 				bit = 0;
@@ -178,7 +177,7 @@ pool::handle::handle(identity const &id, std::size_t capacity, std::size_t unit)
 		}
 		void **gray{idaccess::has_traverser(id) ? static_cast<void **>(mem[gray_offset]) :
 												  static_cast<void **>(nullptr)};
-		ptr = new (mem[guard]) pool(std::move(mem), id, capacity, unit, gray, mem[offset]);
+		ptr = new (mem[guard]) pool(std::move(mem), id, arena{mem[offset], capacity, unit}, gray);
 	} else {
 		throw std::bad_alloc{};
 	}
@@ -187,7 +186,7 @@ pool::handle::handle(identity const &id, std::size_t capacity, std::size_t unit)
 void pool::deallocate(void *ptr) noexcept
 {
 	SYNAFIS_ASSERT(from(ptr));
-	SYNAFIS_ASSERT(sub_addr(ptr, slots) % unit == 0);
+	SYNAFIS_ASSERT(sub_addr(ptr, store.begin()) % store.size() == 0);
 	idaccess::finalize(type, ptr);
 	free.push(ptr);
 }
@@ -199,7 +198,7 @@ void *pool::allocate() noexcept
 	} else {
 		void *addr{free.pop()};
 		// Mark as initialized.
-		std::size_t const offset{sub_addr(addr, slots) / unit};
+		std::size_t const offset{store.get_slot(addr)};
 		SYNAFIS_ASSERT(!initialized.test(offset)); // Assert that it is not being marked twice.
 		initialized.set(offset);
 		return addr;
@@ -209,8 +208,8 @@ void *pool::allocate() noexcept
 void pool::discarded(void *addr) noexcept
 {
 	SYNAFIS_ASSERT(from(addr));
-	SYNAFIS_ASSERT(sub_addr(addr, slots) % unit == 0);
-	std::size_t const offset{sub_addr(addr, slots) / unit};
+	SYNAFIS_ASSERT(sub_addr(addr, store.begin()) % store.size() == 0);
+	std::size_t const offset{store.get_slot(addr)};
 	SYNAFIS_ASSERT(initialized.test(offset)); // Assert that the slot is marked as allocated.
 	initialized.reset(offset);
 	free.push(addr);
@@ -219,9 +218,9 @@ void pool::discarded(void *addr) noexcept
 void *pool::base_of(void *ptr) const noexcept
 {
 	SYNAFIS_ASSERT(from(ptr));
-	auto const x = sub_addr(ptr, slots);
+	auto const x = sub_addr(ptr, store.cbegin());
 	if (0 < x) {
-		return sub_offset(ptr, x % unit);
+		return sub_offset(ptr, x % store.size());
 	} else {
 		return ptr; // In the case x == slots, this is correct.
 	}
@@ -230,11 +229,11 @@ void *pool::base_of(void *ptr) const noexcept
 void pool::mark(void *ptr) noexcept
 {
 	SYNAFIS_ASSERT(from(ptr));
-	std::size_t const offset{sub_addr(ptr, slots) / unit};
+	std::size_t const offset{store.get_slot(ptr)};
 	// Assert that the slot is initialized.
 	SYNAFIS_ASSERT(initialized.test(offset));
 	if (static_cast<bool>(gray) && !reachable.test(offset)) {
-		SYNAFIS_ASSERT(pending() < capacity);
+		SYNAFIS_ASSERT(pending() < store.max());
 		gray.push(ptr);
 	}
 	reachable.set(offset);
@@ -257,8 +256,8 @@ void pool::sweep() noexcept
 {
 	bit_group *alloc{initialized.begin()};
 	bit_group const *marks{reachable.cbegin()};
-	void *current{slots};
-	std::size_t const skip{unit * bitmap::bits()};
+	void *current{store.begin()};
+	std::size_t const skip{store.size() * bitmap::bits()};
 	auto start = tracking.begin();
 	do {
 		// Only bits for slots that are allocated and unmarked will be true.
@@ -281,8 +280,8 @@ void pool::sweep() noexcept
 					}
 					deallocate(current);
 				}
-				current = add_offset(current, unit);
-				if (end <= current) { break; }
+				current = add_offset(current, store.size());
+				if (store.end() <= current) { break; }
 			}
 		} else {
 			// Skip group, all are marked or unallocated.
@@ -291,7 +290,7 @@ void pool::sweep() noexcept
 		alloc->reset();
 		alloc++;
 		marks++;
-	} while (current < end);
+	} while (current < store.end());
 	// The black slots are the new allocated set.
 	std::swap(initialized, reachable);
 }

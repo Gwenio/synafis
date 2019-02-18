@@ -43,6 +43,7 @@ PERFORMANCE OF THIS SOFTWARE.
 #include "pool/free_list.hpp"
 #include "pool/gray_list.hpp"
 #include "pool/bitmap.hpp"
+#include "pool/arena.hpp"
 
 #include <list>
 
@@ -384,17 +385,6 @@ private:
 	 */
 	vmem region;
 
-	/**	\var capacity
-	 *	\brief The number of slots in the pool.
-	 */
-	std::size_t const capacity;
-
-	/**	\var unit
-	 *	\brief The allocation unit size.
-	 *	\note At least the sizeof the type being allocated and a multiple of its alignof.
-	 */
-	std::uintptr_t const unit;
-
 	/**	\var type
 	 *	\brief The identity of the type being allocated.
 	 *	\todo Maybe this should just be the finalizer of the type.
@@ -436,16 +426,10 @@ private:
 	 */
 	gray_list gray;
 
-	/**	\var slots
-	 *	\brief The start of the address range to allocate objects from.
+	/**	\var store
+	 *	\brief The arena for the pool's slots.
 	 */
-	void *const slots;
-
-	/**	\var end
-	 *	\brief The end of the address range to allocate objects from.
-	 *	\invariant Equal to slots + (unit * \<number of slots in the pool\>).
-	 */
-	void *const end;
+	arena store;
 
 	/**	\fn deallocate(void *ptr) noexcept
 	 *	\brief Preforms bookkeeping related to freeing a slot.
@@ -464,21 +448,18 @@ private:
 	 */
 	void deallocate(void *ptr) noexcept;
 
-	/**	\fn pool(vmem &&mem, identity const &id, std::size_t cap, std::size_t u, void **g, void *start) noexcept
+	/**	\fn pool(vmem &&mem, identity const &id, arena const &slots, void **g) noexcept
 	 *	\brief Called by create to initialize a new pool.
 	 *	\param mem The virtual memory the pool is allocated on is to be owned by the pool.
 	 *	\param id The type of object placed in the pool.
-	 *	\param cap The maximum capacity of the pool.
-	 *	\param u The unit size of slots in the pool.
+	 *	\param slots The arena for store to copy.
 	 *	\param g The start of the gray stack and the value of sentinel.
-	 *	\param start The starting address for the memory to allocate objects from.
 	 *	\details Sets the bits in bitmap and colors to false.
 	 *	\details Places all slots in the free stack.
 	 *	\pre The value of 'g' must be nullptr if the type is not traversable.
 	 *	\pre The value of 'g' must be a valid pointer if the type is traversable.
 	 */
-	pool(vmem &&mem, identity const &id, std::size_t cap, std::size_t u, void **g,
-		void *start) noexcept;
+	pool(vmem &&mem, identity const &id, arena const &slots, void **g) noexcept;
 
 public:
 	/**	\var min_unit
@@ -525,14 +506,14 @@ public:
 	 *	\brief Gets an address to compare sources for sorting.
 	 *	\returns An address used to compare sources for sorting.
 	 */
-	virtual void *location() const noexcept override final { return slots; }
+	virtual void *location() const noexcept override final { return store.location(); }
 
 	/**	\fn from(void *ptr) const noexcept override final
 	 *	\brief Checks if a pointer is from the pool.
 	 *	\param ptr The object to check.
 	 *	\returns slots <= ptr < end
 	 */
-	virtual bool from(void *ptr) const noexcept override final { return slots <= ptr && ptr < end; }
+	virtual bool from(void *ptr) const noexcept override final { return store.from(ptr); }
 
 	/**	\fn base_of(void *ptr) const noexcept override final
 	 *	\brief Gets the starting address of the object ptr is within.
@@ -583,9 +564,9 @@ public:
 
 	/**	\fn used() const noexcept
 	 *	\brief Gets the number of allocated slots.
-	 *	\returns capacity - free.available()
+	 *	\returns store.max() - free.available()
 	 */
-	std::size_t used() const noexcept { return capacity - free.available(); }
+	std::size_t used() const noexcept { return store.max() - free.available(); }
 
 	/**	\fn available() const noexcept
 	 *	\brief Gets the number of free slots.
@@ -601,9 +582,9 @@ public:
 
 	/**	\fn empty() const noexcept
 	 *	\brief Checks if the pool is empty.
-	 *	\returns capacity == free.available()
+	 *	\returns store.max() == free.available()
 	 */
-	bool empty() const noexcept { return capacity == free.available(); }
+	bool empty() const noexcept { return store.max() == free.available(); }
 
 	/**	\fn full() const noexcept
 	 *	\brief Checks if the pool is full.
