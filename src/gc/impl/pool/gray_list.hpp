@@ -28,6 +28,8 @@ PERFORMANCE OF THIS SOFTWARE.
 #define SYNAFIS_GC_POOL_GRAY_LIST_HPP
 #pragma once
 
+#include <tuple>
+
 namespace gc {
 
 class pool;
@@ -80,6 +82,17 @@ private:
 	 */
 	void **current;
 
+	/**	\fn unit() noexcept
+	 *	\brief Calculates the unit size.
+	 *	\returns The unit size.
+	 */
+	static constexpr std::size_t unit() noexcept
+	{
+		std::size_t const s{sizeof(void **)};
+		std::size_t const a{alignof(void **)};
+		return s % a == 0 ? s : ((s / a) + 1) * a;
+	}
+
 public:
 	/**	\fn gray_list(void **begin) noexcept
 	 *	\brief Constructor.
@@ -131,6 +144,21 @@ public:
 	 *	\returns sentinel < current
 	 */
 	bool has_pending() const noexcept { return sentinel < current; }
+
+	/**	\fn placement(std::size_t offset, std::size_t capacity) noexcept
+	 *	\brief Calculates the placement of a gray_list.
+	 *	\param offset The offset from a page boundary to place the bitmap after.
+	 *	\param capacity The number of slots to be managed.
+	 *	\returns Returns a tuple containing the beginning and ending offsets.
+	 */
+	static constexpr std::tuple<std::size_t, std::size_t> placement(
+		std::size_t offset, std::size_t capacity) noexcept
+	{
+		std::size_t const u{unit()};
+		std::size_t const begin{(offset % u == 0) ? offset : ((offset / u) + 1) * u};
+		std::size_t const end{u * capacity};
+		return std::tuple<std::size_t, std::size_t>{begin, end};
+	}
 };
 
 }

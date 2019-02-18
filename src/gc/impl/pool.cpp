@@ -40,11 +40,6 @@ static_assert(sizeof(gc::pool) <= bitmap::placement(sizeof(gc::pool)),
 static_assert(bitmap::placement(sizeof(gc::pool)) % alignof(bitmap::group) == 0,
 	"bitmap::placement(sizeof(pool)) must meet the alignment requirement of bitmap::group.");
 
-/**	\var gray_unit
- *	\brief The unit size of a pointer to a void pointer used for the gray stack.
- */
-inline constexpr auto const gray_unit = gc::idaccess::unit_size<void **>();
-
 /**	\fn gcd(std::size_t x, std::size_t y) noexcept
  *	\brief Calculates the greatest common divisor.
  *	\param x First value.
@@ -159,12 +154,7 @@ pool::handle::handle(identity const &id, std::size_t capacity, std::size_t unit)
 	// Calculate gray stack beginning and end if needed.
 	std::size_t gray_offset{0};
 	if (idaccess::has_traverser(id)) {
-		// Calculate needed alignment adjustment if needed.
-		std::size_t const gray_rem{offset % alignof(void **)};
-		if (0 < gray_rem) { offset += alignof(void **) - gray_rem; }
-		gray_offset = offset;
-		// Calculate end of gray stack.
-		offset += gray_unit * capacity;
+		std::tie(offset, gray_offset) = gray_list::placement(offset, capacity);
 	}
 	// Make offset be at the start of a page.
 	offset += guard + vmem::page_size - (offset % vmem::page_size);
