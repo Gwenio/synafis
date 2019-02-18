@@ -7,6 +7,7 @@ Doxyfile
 !templates/Doxyfile
 .vscode
 !.vscode/spellright.dict
+!.vscode/extensions.json
 *.ninja
 *.ninja.tmp
 *.ninja.bak
