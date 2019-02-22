@@ -155,9 +155,10 @@ public:
 		std::size_t offset, std::size_t capacity) noexcept
 	{
 		std::size_t const u{unit()};
-		std::size_t const begin{(offset % u == 0) ? offset : ((offset / u) + 1) * u};
-		std::size_t const end{u * capacity};
-		return std::tuple<std::size_t, std::size_t>{begin, end};
+		std::size_t const rem{offset % u};
+		std::size_t const begin{(rem == 0) ? offset : offset + u - rem};
+		std::size_t const len{u * capacity};
+		return std::tuple<std::size_t, std::size_t>{begin, begin + len};
 	}
 };
 

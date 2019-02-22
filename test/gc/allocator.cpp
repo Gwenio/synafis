@@ -29,18 +29,24 @@ PERFORMANCE OF THIS SOFTWARE.
 #include <stdexcept>
 #include <array>
 
-namespace {
+using gc::allocator;
+using gc::pool;
+using gc::blueprint;
+using gc::get_id;
+using gc::idaccess;
+namespace traits = gc::traits;
 
-using namespace gc;
+using t = unit_test::tester<allocator>;
+
+namespace {
 
 using simple = unit_test::gc::simple;
 
 constexpr inline static std::size_t const simple_unit{
-	std::max(idaccess::unit_size<simple>(), pool::min_unit)};
+	std::max(idaccess::unit_size<simple>(), blueprint::min_unit())};
 
 constexpr inline static auto const simple_flags = traits::get_flags<simple>();
 
-using handle = allocator::handle;
 using pool_list = allocator::pool_list;
 
 /**	\fn is_sorted_pools(pool_list const &l)
@@ -50,11 +56,8 @@ using pool_list = allocator::pool_list;
  */
 bool is_sorted_pools(pool_list const &l)
 {
-	return std::is_sorted(
-		l.cbegin(), l.cend(), [](handle const &x, handle const &y) { return x < y; });
+	return std::is_sorted(l.cbegin(), l.cend(), [](pool const &x, pool const &y) { return x < y; });
 }
-
-using t = unit_test::tester<allocator>;
 
 }
 

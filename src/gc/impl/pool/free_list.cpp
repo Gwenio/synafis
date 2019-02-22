@@ -24,18 +24,17 @@ PERFORMANCE OF THIS SOFTWARE.
 
 #include "free_list.hpp"
 
-#include "../ptr_math.hpp"
-
 namespace gc {
 
 free_list::free_list(arena const &store) noexcept :
 	head(static_cast<node *>(store.cbegin())), space(store.max())
 {
-	void *slot{store.cbegin()};
+	void *slot{head};
 	node *current{head};
 	do {
+		SYNAFIS_ASSERT(store.from(slot));
 		// Advance the address.
-		slot = add_offset(slot, store.size());
+		slot = static_cast<std::byte *>(slot) + store.size();
 		if (slot < store.cend()) {
 			// Set the next free slot.
 			current->next = static_cast<node *>(slot);
@@ -59,7 +58,8 @@ void *free_list::pop() noexcept
 void free_list::push(void *slot) noexcept
 {
 	node *temp{static_cast<node *>(slot)};
-	temp->next = std::exchange(head, temp);
+	temp->next = head;
+	head = temp;
 	space++;
 }
 

@@ -30,50 +30,29 @@ PERFORMANCE OF THIS SOFTWARE.
 
 #include <algorithm>
 
-namespace {
-
-using gc::bitmap;
-
-static_assert(sizeof(gc::pool) <= bitmap::placement(sizeof(gc::pool)),
+static_assert(sizeof(gc::pool) <= gc::bitmap::placement(sizeof(gc::pool)),
 	"bitmap::placement(sizeof(pool)) must be larger than the size of a pool.");
 
-static_assert(bitmap::placement(sizeof(gc::pool)) % alignof(bitmap::group) == 0,
+static_assert(gc::bitmap::placement(sizeof(gc::pool)) % alignof(gc::bitmap::group) == 0,
 	"bitmap::placement(sizeof(pool)) must meet the alignment requirement of bitmap::group.");
-
-/**	\fn gcd(std::size_t x, std::size_t y) noexcept
- *	\brief Calculates the greatest common divisor.
- *	\param x First value.
- *	\param y Second value.
- *	\returns Returns the greatest common divisor of x and y.
- *	\pre Written to assume x and y are both greater than zero.
- *	\pre That case will not be tested.
- *	\note It saves one iteration if y <= x.
- */
-inline constexpr std::size_t gcd(std::size_t x, std::size_t y) noexcept
-{
-	do {
-		std::size_t z{x % y};
-		x = y;
-		y = z;
-	} while (y != 0);
-	return x;
-}
-
-static_assert(gcd(180, 48) == 12 && gcd(48, 180) == 12,
-	"gcd(180, 48) or with the inputs swapped should equal 12.");
-
-}
 
 namespace gc {
 
-pool::pool(vmem &&mem, identity const &id, arena const &slots, void **g) noexcept :
-	isource(), region(std::forward<vmem>(mem)), type(id), store(slots), tracking(), gray(g),
-	free(slots)
+pool::pool(identity const &id, blueprint const &cfg) :
+	pool(id, cfg, std::move(cfg.prepare_region()))
+{}
+
+pool::pool(identity const &id, blueprint const &cfg, vmem &&mem) noexcept :
+	pool(id, std::forward<vmem>(mem), arena{cfg.capacity, cfg.unit, mem[cfg.begin], cfg.length},
+		cfg.prepare_gray(id, mem), mem[cfg.maps])
+{}
+
+pool::pool(identity const &id, vmem &&m, arena const &s, void **g, void *b) noexcept :
+	isource(), region(std::forward<vmem>(m)), type(id), store(s), tracking(), gray(g), free(s)
 {
 	// Sanity check the location of the arena.
 	SYNAFIS_ASSERT(region.begin() <= store.cbegin() && store.cend() <= region.end());
-	bit_group *maps{static_cast<bit_group *>(
-		region[bitmap::placement(sizeof(pool)) + (config::guard_pages ? vmem::page_size : 0)])};
+	bit_group *const maps{static_cast<bit_group *>(b)};
 	initialized = bitmap{maps};
 	// Set the colors pointer. bitmap and colors should be a single array split into halves.
 	std::size_t const bit_array_half{bitmap::length(store.max())};
@@ -108,75 +87,10 @@ pool::~pool() noexcept
 	}
 }
 
-std::size_t pool::select_capacity(std::size_t unit) noexcept
-{
-	// The unit size of slots must be able to hold a node pointer.
-	SYNAFIS_ASSERT(min_unit <= unit);
-	// Check if the minimum object can fit in the maximum number of pages.
-	if (unit * config::min_pool < config::max_pool * vmem::page_size) {
-		// We start with the smallest amount that will completely fill all pages used.
-		std::size_t capacity{vmem::page_size / gcd(vmem::page_size, unit)};
-		// Get the memory required. This is equal to the least common multiple of unit and page_size.
-		std::size_t size{capacity * unit};
-		SYNAFIS_ASSERT(size % vmem::page_size == 0);
-		// Ensure we do no exceed config::max_pool pages.
-		if (size <= config::max_pool * vmem::page_size) {
-			capacity = config::max_pool * vmem::page_size / unit;
-		} else {
-			// See if we can fit more of the ideal capacity in without exceeding max.
-			// Both sides of the division are multiples of vmem::page_size.
-			std::size_t part{(config::max_pool * vmem::page_size) / size};
-			if (2 <= part) { capacity *= part; }
-		}
-		SYNAFIS_ASSERT(config::min_pool <= capacity);
-		return capacity;
-	} else {
-		// When config::min_pool is the optimal capacity, this branch is simpler.
-		// Capacity must always be at least config::min_pool, even if it exceeds max_pool pages.
-		std::size_t capacity{config::min_pool};
-		// Fill up the last occupied page as much as possible.
-		std::size_t size{capacity * unit};
-		capacity += (vmem::page_size - (size % vmem::page_size)) / unit;
-		return capacity;
-	}
-}
-
-pool::handle::handle(identity const &id, std::size_t capacity, std::size_t unit) : handle()
-{
-	// The unit size of slots must be able to hold a node pointer.
-	SYNAFIS_ASSERT(pool::min_unit <= unit);
-	std::size_t const guard{(config::guard_pages ? vmem::page_size : 0)};
-	//	Calculate size rounded up to the nearest multiple of vmem::page_size.
-	std::size_t size = capacity * unit;
-	size += vmem::page_size - (size % vmem::page_size);
-	// Calculate the offset to the end of bit groups.
-	std::size_t offset{guard + bitmap::placement(sizeof(pool)) + (bitmap::footprint(capacity) * 2)};
-	// Calculate gray stack beginning and end if needed.
-	std::size_t gray_offset{0};
-	if (idaccess::has_traverser(id)) {
-		std::tie(offset, gray_offset) = gray_list::placement(offset, capacity);
-	}
-	// Make offset be at the start of a page.
-	offset += guard + vmem::page_size - (offset % vmem::page_size);
-	vmem mem{offset + size + guard, !config::guard_pages};
-	if (mem) {
-		// Set up accessible areas if guard pages are used.
-		if (config::guard_pages) {
-			mem.writable(vmem::page_size, offset - (vmem::page_size * 2));
-			mem.writable(offset, size);
-		}
-		void **gray{idaccess::has_traverser(id) ? static_cast<void **>(mem[gray_offset]) :
-												  static_cast<void **>(nullptr)};
-		ptr = new (mem[guard]) pool(std::move(mem), id, arena{mem[offset], capacity, unit}, gray);
-	} else {
-		throw std::bad_alloc{};
-	}
-}
-
 void pool::deallocate(void *ptr) noexcept
 {
 	SYNAFIS_ASSERT(from(ptr));
-	SYNAFIS_ASSERT(sub_addr(ptr, store.begin()) % store.size() == 0);
+	ptr = base_of(ptr);
 	idaccess::finalize(type, ptr);
 	free.push(ptr);
 }
@@ -189,8 +103,10 @@ void *pool::allocate() noexcept
 		void *addr{free.pop()};
 		// Mark as initialized.
 		std::size_t const offset{store.get_slot(addr)};
+		SYNAFIS_ASSERT(offset < store.max());
 		SYNAFIS_ASSERT(!initialized.test(offset)); // Assert that it is not being marked twice.
 		initialized.set(offset);
+		SYNAFIS_ASSERT(from(addr));
 		return addr;
 	}
 }
@@ -200,8 +116,10 @@ void pool::discarded(void *addr) noexcept
 	SYNAFIS_ASSERT(from(addr));
 	SYNAFIS_ASSERT(sub_addr(addr, store.begin()) % store.size() == 0);
 	std::size_t const offset{store.get_slot(addr)};
+	SYNAFIS_ASSERT(offset < store.max());
 	SYNAFIS_ASSERT(initialized.test(offset)); // Assert that the slot is marked as allocated.
 	initialized.reset(offset);
+	SYNAFIS_ASSERT(addr == store[offset]);
 	free.push(addr);
 }
 
@@ -220,21 +138,29 @@ void pool::mark(void *ptr) noexcept
 {
 	SYNAFIS_ASSERT(from(ptr));
 	std::size_t const offset{store.get_slot(ptr)};
+	SYNAFIS_ASSERT(offset < store.max());
+	ptr = base_of(ptr);
 	// Assert that the slot is initialized.
 	SYNAFIS_ASSERT(initialized.test(offset));
-	if (static_cast<bool>(gray) && !reachable.test(offset)) {
-		SYNAFIS_ASSERT(pending() < store.max());
-		gray.push(ptr);
+	if (!reachable.test(offset)) {
+		if (gray) {
+			SYNAFIS_ASSERT(pending() < store.max());
+			gray.push(ptr);
+		}
+		reachable.set(offset);
 	}
-	reachable.set(offset);
 }
 
 bool pool::traverse(void *data, enumerate_cb cb) noexcept
 {
+	SYNAFIS_ASSERT(idaccess::has_traverser(type));
 	if (has_pending()) {
 		do {
-			void *obj{gray.pop()};
-			idaccess::traverse(type, obj, data, cb);
+			void *slot{gray.pop()};
+			SYNAFIS_ASSERT(from(slot));
+			SYNAFIS_ASSERT(initialized.test(store.get_slot(slot)));
+			SYNAFIS_ASSERT(reachable.test(store.get_slot(slot)));
+			idaccess::traverse(type, slot, data, cb);
 		} while (has_pending());
 		return true;
 	} else {

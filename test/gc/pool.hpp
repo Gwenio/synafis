@@ -48,11 +48,6 @@ public:
 	 */
 	typedef ::gc::pool pool;
 
-	/**	\typedef handle
-	 *	\brief Shorthand for a pool::handle.
-	 */
-	typedef pool::handle handle;
-
 	/**	\fn invariants(pool const &obj) noexcept
 	 *	\brief Checks invariants for objects of the pool class.
 	 *	\param obj The object to check.
@@ -60,35 +55,15 @@ public:
 	 */
 	static void invariants(pool const &obj) noexcept;
 
-	/**	\fn capacity_selection(collector &)
-	 *	\brief Tests pool::select_capacity.
-	 */
-	static void capacity_selection(collector &);
-
-	/**	\fn null_handle(collector &)
-	 *	\brief Tests the creation of handles with no pool.
-	 */
-	static void null_handle(collector &);
-
 	/**	\fn creation(collector &)
-	 *	\brief Tests the creation of handles with a pool.
+	 *	\brief Tests the creation of a pool.
 	 */
 	static void creation(collector &);
 
 	/**	\fn destruction(collector &)
-	 *	\brief Tests that pools are properly freed when not needed.
+	 *	\brief Tests that pools properly free their virtual memory.
 	 */
 	static void destruction(collector &);
-
-	/**	\fn boolean(collector &)
-	 *	\brief Tests the boolean conversion and comparison operators of handles.
-	 */
-	static void boolean(collector &);
-
-	/**	\fn moving(collector &)
-	 *	\brief Tests moving a pool between handles.
-	 */
-	static void moving(collector &);
 
 	/**	\fn allocation(collector &)
 	 *	\brief Tests the ability to allocate objects from the pool.

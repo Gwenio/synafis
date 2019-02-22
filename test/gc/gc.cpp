@@ -51,20 +51,18 @@ using unit_test::gc::simple;
 
 using unit_test::gc::simple_ptr;
 
-static identity const simple_id(static_cast<simple *>(nullptr));
-
-static identity const simple_ptr_id(static_cast<simple_ptr *>(nullptr));
-
 template<>
 identity const &get_id<simple>() noexcept
 {
-	return simple_id;
+	static identity const id{static_cast<simple *>(nullptr)};
+	return id;
 }
 
 template<>
 identity const &get_id<simple_ptr>() noexcept
 {
-	return simple_ptr_id;
+	static identity const id{static_cast<simple_ptr *>(nullptr)};
+	return id;
 }
 
 template identity const &get_id<simple>() noexcept;

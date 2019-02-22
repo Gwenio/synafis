@@ -60,15 +60,10 @@ class allocator : public collector::iallocator
 	allocator(allocator &&) = delete;
 
 public:
-	/**	\typedef handle
-	 *	\brief Shorthand for pool::handle.
-	 */
-	using handle = pool::handle;
-
 	/**	\typedef pool_list
 	 *	\brief The container type for pools.
 	 */
-	using pool_list = std::list<handle>;
+	using pool_list = std::list<pool>;
 
 	/**	\typedef pool_iter
 	 *	\brief The iterator type of pool_list.
@@ -125,22 +120,10 @@ private:
 	 */
 	identity const &type;
 
-	/**	\var unit
-	 *	\brief The size of a unit of allocated memory.
-	 *	\details The size of an object rounded up to a multiple of its alignment.
+	/**	\var cfg
+	 *	\brief Stores the pre-calculated information for creating pools.
 	 */
-	std::size_t const unit;
-
-	/**	\var capacity
-	 *	\brief The capacity of pools in the allocator.
-	 *	\details Determined by pool::select_capacity.
-	 */
-	std::size_t const capacity;
-
-	/**	\var flags
-	 *	\brief Stores the trait flags of the type.
-	 */
-	traits::flag_type const flags;
+	blueprint const cfg;
 
 	/**	\fn try_allocate()
 	 *	\brief Attempts to allocate memory for an object.
@@ -159,12 +142,12 @@ private:
 
 	/**	\fn grow()
 	 *	\brief Adds a new pool to the pools list.
-	 *	\returns Returns a reference to the new pool's handle.
+	 *	\returns Returns a reference to the new pool.
 	 *	\details The new pool will be indicated by current.
 	 *	\throws std::bad_alloc if another pool could not be added.
 	 *	\pre The mutex mtx must be held by the calling thread.
 	 */
-	handle &grow();
+	pool &grow();
 
 	/**	\fn move_back() noexcept
 	 *	\brief Moves the full pool at the front of pools back.

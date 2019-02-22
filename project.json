@@ -30,6 +30,7 @@
 			"gc/impl/pool",
 			"gc/impl/pool/free_list",
 			"gc/impl/pool/arena",
+			"gc/impl/pool/blueprint",
 			"gc/impl/allocator",
 			"gc/hard_ptr",
 			"gc/soft_ptr",

@@ -48,11 +48,6 @@ public:
 	 */
 	typedef ::gc::allocator allocator;
 
-	/**	\typedef handle
-	 *	\brief Shorthand for a pool::handle.
-	 */
-	typedef ::gc::pool::handle handle;
-
 	/**	\fn invariants(allocator const &obj) noexcept
 	 *	\brief Checks invariants for objects of the allocator class.
 	 *	\param obj The object to check.

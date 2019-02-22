@@ -90,15 +90,21 @@ public:
 		capacity(other.capacity), unit(other.unit), front(other.front), back(other.back)
 	{}
 
-	/**	\fn arena(void *begin, std::size_t cap, std::uintptr_t u) noexcept
+	/**	\fn arena(std::size_t cap, std::uintptr_t u, void *begin, std::size_t l) noexcept
 	 *	\brief Constructor.
-	 *	\param begin The beginning of the arena.
 	 *	\param cap The number of slots in the arena.
 	 *	\param u The size of a slot for the arena.
+	 *	\param begin The beginning of the arena.
+	 *	\param l The length of the arena in bytes.
+	 *	\pre begin != nullptr
+	 *	\pre cap * u <= l
 	 */
-	arena(void *begin, std::size_t cap, std::uintptr_t u) noexcept :
-		front(begin), back(static_cast<std::byte *>(begin) + (cap * u)), capacity(cap), unit(u)
-	{}
+	arena(std::size_t cap, std::uintptr_t u, void *begin, std::size_t l) noexcept :
+		capacity(cap), unit(u), front(begin), back(static_cast<std::byte *>(begin) + l)
+	{
+		SYNAFIS_ASSERT(begin != nullptr);
+		SYNAFIS_ASSERT(cap * u <= l);
+	}
 
 	/**	\fn ~arena() noexcept
 	 *	\brief Default destructor.

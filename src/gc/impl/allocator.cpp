@@ -26,11 +26,11 @@ PERFORMANCE OF THIS SOFTWARE.
  *	\ingroup gc_impl
  */
 
-namespace {
-
 using gc::allocator;
-using handle = allocator::handle;
+using gc::pool;
 using pool_list = allocator::pool_list;
+
+namespace {
 
 /**	\fn is_sorted_pools(pool_list const &l)
  *	\brief Checks if a list of pools are sorted.
@@ -39,8 +39,29 @@ using pool_list = allocator::pool_list;
  */
 bool is_sorted_pools(pool_list const &l)
 {
-	return std::is_sorted(
-		l.cbegin(), l.cend(), [](handle const &x, handle const &y) { return x < y; });
+	return std::is_sorted(l.cbegin(), l.cend(), [](pool const &x, pool const &y) { return x < y; });
+}
+
+/**	\fn partition_pools(pool_list &from, Cond &cond)
+ *	\brief Removes pools matching a condition and places them in a new list preserving their order.
+ *	\tparam Cond The type for cond.
+ *	\param from The list to partition.
+ *	\param cond A function taking 'pool const &' as a parameter and returning bool.
+ *	\returns Returns a list containing all pools cond returned true for.
+ */
+template<typename Cond>
+pool_list partition_pools(pool_list &from, Cond &cond)
+{
+	pool_list temp{};
+	for (auto cur = from.cbegin(); cur != from.cend();) {
+		if (cond(*cur)) {
+			auto it = cur++;
+			temp.splice(temp.cend(), from, it);
+		} else {
+			cur++;
+		}
+	}
+	return std::move(temp);
 }
 
 }
@@ -48,8 +69,7 @@ bool is_sorted_pools(pool_list const &l)
 namespace gc {
 
 allocator::allocator(identity const &id, std::size_t u, traits::flag_type f) :
-	iallocator(), mtx(), empty_pools(), part_pools(), full_pools(), type(id), unit(u),
-	capacity(pool::select_capacity(u)), flags(f)
+	iallocator(), mtx(), empty_pools(), part_pools(), full_pools(), type(id), cfg(blueprint(id, u))
 {
 	grow();
 }
@@ -62,10 +82,10 @@ allocator::~allocator() noexcept
 	erase_sources(full_pools.begin(), full_pools.end(), idaccess::has_traverser(type));
 }
 
-allocator::handle &allocator::grow()
+pool &allocator::grow()
 {
-	handle &p = empty_pools.emplace_front(type, capacity, unit);
-	insert_source(*p, idaccess::has_traverser(type));
+	pool &p{empty_pools.emplace_front(type, cfg)};
+	insert_source(p, idaccess::has_traverser(type));
 	current = empty_pools.begin();
 	return p;
 }
@@ -73,9 +93,9 @@ allocator::handle &allocator::grow()
 void allocator::move_back() noexcept
 {
 	SYNAFIS_ASSERT(current->full());
-	handle const &ref = *current;
+	pool const &ref = *current;
 	auto const pos = std::find_if(full_pools.cbegin(), full_pools.cend(),
-		[&ref](handle const &cur) -> bool { return cur < ref; });
+		[&ref](pool const &cur) -> bool { return cur < ref; });
 	if (current == empty_pools.begin()) {
 		full_pools.splice(pos, empty_pools, current);
 	} else if (current != pos) {
@@ -130,7 +150,7 @@ void allocator::discarded(void *addr) noexcept
 		current->discarded(addr);
 	} else {
 		auto const it = std::find_if(full_pools.begin(), full_pools.end(),
-			[addr](handle const &cur) { return std::addressof(*cur) < addr; });
+			[addr](pool const &cur) { return cur.location() < addr; });
 		if (it->from(addr)) {
 			it->discarded(addr);
 			return;
@@ -148,32 +168,18 @@ std::size_t allocator::shrink(std::size_t goal) noexcept
 	// This lets us send the empties to erase_sources which needs a sorted range sorted by location.
 	// To minimize future sorting, pools are left as close to address order as possible.
 	{
-		pool_list empty{};
-		{
-			auto const it = std::stable_partition(part_pools.begin(), part_pools.end(),
-				[](handle const &cur) -> bool { return cur.empty(); });
-			empty.splice(empty.cend(), part_pools, part_pools.cbegin(), it);
-		}
-		pool_list part{};
-		{
-			auto const it = std::stable_partition(full_pools.begin(), full_pools.end(),
-				[](handle const &cur) -> bool { return cur.full(); });
-			part.splice(part.cend(), full_pools, it, full_pools.cend());
-		}
-		{
-			pool_list temp{};
-			auto const it = std::stable_partition(
-				part.begin(), part.end(), [](handle const &cur) -> bool { return cur.empty(); });
-			temp.splice(temp.cend(), part, part.cbegin(), it);
-			empty.merge(std::move(temp));
-		}
+		auto const is_empty = [](pool const &p) -> bool { return p.empty(); };
+		pool_list empty{std::move(partition_pools(part_pools, is_empty))};
+		pool_list part{std::move(
+			partition_pools(full_pools, [](pool const &p) -> bool { return !p.full(); }))};
+		empty.merge(std::move(partition_pools(part, is_empty)));
 		if (current->full()) {
 			move_back();
 		} else if (!current->empty() && current == empty_pools.begin()) {
-			handle const &ref = *current;
-			pool_list &list = (part_pools.size() <= part.size() ? part_pools : part);
-			auto const it = std::find_if(list.cbegin(), list.cend(),
-				[&ref](handle const &cur) -> bool { return cur < ref; });
+			pool const &ref = *current;
+			pool_list &list{part_pools.size() <= part.size() ? part_pools : part};
+			auto const it = std::find_if(
+				list.cbegin(), list.cend(), [&ref](pool const &cur) -> bool { return cur < ref; });
 			list.splice(it, empty_pools, empty_pools.cbegin());
 		}
 		empty_pools.merge(std::move(empty));
@@ -181,20 +187,20 @@ std::size_t allocator::shrink(std::size_t goal) noexcept
 	}
 	SYNAFIS_ASSERT(is_sorted_pools(empty_pools));
 	SYNAFIS_ASSERT(std::all_of(
-		empty_pools.cbegin(), empty_pools.cend(), [](handle const &x) { return x.empty(); }));
+		empty_pools.cbegin(), empty_pools.cend(), [](pool const &x) { return x.empty(); }));
 	SYNAFIS_ASSERT(is_sorted_pools(part_pools));
 	SYNAFIS_ASSERT(std::none_of(part_pools.cbegin(), part_pools.cend(),
-		[](handle const &x) { return x.empty() || x.full(); }));
+		[](pool const &x) { return x.empty() || x.full(); }));
 	SYNAFIS_ASSERT(is_sorted_pools(full_pools));
 	SYNAFIS_ASSERT(std::all_of(
-		full_pools.cbegin(), full_pools.cend(), [](handle const &x) { return x.full(); }));
+		full_pools.cbegin(), full_pools.cend(), [](pool const &x) { return x.full(); }));
 	std::size_t release{empty_pools.size()};
 	std::size_t available{0};
-	for (handle const &cur : part_pools) {
+	for (pool const &cur : part_pools) {
 		available += cur.available();
 	}
 	// Count empty pools and find the iterator passed the last empty pool.
-	if (available < capacity && 0 < release) { release--; }
+	if (available < cfg.capacity && 0 < release) { release--; }
 	if (release == 0) {
 		if (!empty_pools.empty()) {
 			current = empty_pools.begin();
@@ -209,7 +215,7 @@ std::size_t allocator::shrink(std::size_t goal) noexcept
 	{
 		// Possibly set a new goal if there is a lot of unused slots in the pools.
 		std::size_t const used{full_pools.size() + part_pools.size()};
-		std::size_t const free{release + (available / capacity)};
+		std::size_t const free{release + (available / cfg.capacity)};
 		goal = std::max(goal, used <= free ? std::min(release, free - used) : 0);
 	}
 	if (goal == 0) { // If goal is none still then quit.

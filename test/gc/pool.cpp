@@ -29,24 +29,27 @@ PERFORMANCE OF THIS SOFTWARE.
 #include <algorithm>
 #include <stdexcept>
 #include <array>
+#include <iostream>
 
-namespace {
-
-using namespace gc;
+using gc::pool;
+using gc::free_list;
+using gc::blueprint;
+using gc::vmem;
+using gc::get_id;
+using gc::idaccess;
 
 using simple = unit_test::gc::simple;
 using simple_ptr = unit_test::gc::simple_ptr;
 
-std::size_t const simple_unit{std::max(gc::idaccess::unit_size<simple>(), gc::pool::min_unit)};
-
-std::size_t const simple_ptr_unit{
-	std::max(gc::idaccess::unit_size<simple_ptr>(), gc::pool::min_unit)};
-
-std::size_t const simple_cap{pool::select_capacity(simple_unit)};
-
-std::size_t const simple_ptr_cap{pool::select_capacity(simple_ptr_unit)};
-
 using t = unit_test::tester<pool>;
+
+namespace {
+
+blueprint const simple_cfg{
+	get_id<simple>(), std::max(idaccess::unit_size<simple>(), blueprint::min_unit())};
+
+blueprint const simple_ptr_cfg{
+	get_id<simple_ptr>(), std::max(idaccess::unit_size<simple_ptr>(), blueprint::min_unit())};
 
 }
 
@@ -66,140 +69,65 @@ void t::invariants(pool const &obj) noexcept
 	bool flag{true};
 	for (node *cur = obj.free.head; cur != nullptr; cur = cur->next) {
 		count++;
+		if (count > obj.free.space) {
+			SYNAFIS_FAILURE(
+				"The number of nodes in the free list was greater than the free space count.");
+			return;
+		}
 		std::size_t const offset{obj.store.get_slot(cur)};
-		flag |= !obj.initialized.test(offset);
+		if (offset < obj.store.max()) {
+			flag |= !obj.initialized.test(offset);
+		} else {
+			std::cout << offset << " "
+					  << (static_cast<std::byte *>(obj.store.front) -
+							 static_cast<std::byte *>(static_cast<void *>(cur))) /
+							 obj.store.unit
+					  << std::endl;
+			SYNAFIS_FAILURE("A free list node pointed to an address outside the pool.");
+			return;
+		}
 	}
 	if (count < obj.free.space) {
 		SYNAFIS_FAILURE("The number of nodes in the free list was less than the free space count.");
-	} else if (count > obj.free.space) {
-		SYNAFIS_FAILURE(
-			"The number of nodes in the free list was greater than the free space count.");
 	}
 	if (!flag) { SYNAFIS_FAILURE("The allocated bit of a slot in the free list was set."); }
-}
-
-void t::capacity_selection(collector &)
-{
-	{
-		//!	TEST Test capacity selection for small objects.
-		auto const cap{pool::select_capacity(pool::min_unit)};
-		SYNAFIS_ASSERT(config::min_pool <= cap);
-		SYNAFIS_ASSERT(cap * pool::min_unit <= config::max_pool * vmem::page_size);
-	}
-	{
-		//!	TEST Test capacity selection for very large objects.
-		std::size_t const unit{
-			(config::max_pool * vmem::page_size / config::min_pool) + pool::min_unit};
-		auto const cap{pool::select_capacity(unit)};
-		SYNAFIS_ASSERT(config::min_pool <= cap);
-		SYNAFIS_ASSERT(cap * unit >= config::max_pool * vmem::page_size);
-	}
-}
-
-void t::null_handle(collector &)
-{
-	{
-		//!	TEST Test default pool::handle constructor.
-		handle temp{};
-		SYNAFIS_ASSERT(temp.ptr == nullptr);
-	}
-	{
-		//!	TEST Test pool::handle constructor with a nullptr.
-		handle temp{nullptr};
-		SYNAFIS_ASSERT(temp.ptr == nullptr);
-	}
 }
 
 void t::creation(collector &)
 {
 	//!	TEST Test pool::handle constructor that creates a pool.
-	handle temp{get_id<simple>(), simple_cap, simple_unit};
-	SYNAFIS_ASSERT(temp.ptr != nullptr);
-	SYNAFIS_ASSERT(tester<vmem>::is_allocated(temp.ptr->region));
+	pool temp{get_id<simple>(), simple_cfg};
+	SYNAFIS_ASSERT(temp.region);
+	SYNAFIS_ASSERT(tester<vmem>::is_allocated(temp.region));
 	SYNAFIS_ASSERT(temp.used() == 0);
-	SYNAFIS_ASSERT(temp.available() == temp.ptr->store.max());
-	invariants(*temp);
+	SYNAFIS_ASSERT(temp.available() == temp.store.max());
+	invariants(temp);
 }
 
 void t::destruction(collector &)
 {
 	void *addr{nullptr};
 	{
-		handle temp{get_id<simple>(), simple_cap, simple_unit};
-		SYNAFIS_ASSERT(temp.ptr != nullptr);
-		invariants(*temp);
-		addr = temp.ptr;
+		pool temp{get_id<simple>(), simple_cfg};
+		SYNAFIS_ASSERT(temp.region);
+		invariants(temp);
+		addr = temp.region.begin();
 	}
-	//!	TEST Test if the memory for a pool is deallocated on handle destruction.
-	SYNAFIS_ASSERT(tester<vmem>::is_free(addr, vmem::page_size));
-	handle temp{get_id<simple>(), simple_cap, simple_unit};
-	SYNAFIS_ASSERT(temp.ptr != nullptr);
-	invariants(*temp);
-	addr = temp.ptr;
-	//!	TEST Test if the memory for a pool is deallocated on when setting a handle to nullptr.
-	temp = nullptr;
-	SYNAFIS_ASSERT(tester<vmem>::is_free(addr, vmem::page_size));
-}
-
-void t::boolean(collector &)
-{
-	handle x{get_id<simple>(), simple_cap, simple_unit};
-	handle y{};
-	handle z{};
-	//!	TEST handle objects correctly convert to true when owning a pool.
-	SYNAFIS_ASSERT(x);
-	//!	TEST handle objects are not equal to nullptr when owning a pool.
-	SYNAFIS_ASSERT(x != nullptr);
-	//!	TEST handle objects are equal to themselves.
-	SYNAFIS_ASSERT(x == x);
-	//!	TEST handle objects operator! is false when not owning a pool.
-	SYNAFIS_ASSERT(!y);
-	//!	TEST handle objects are equal to nullptr when not owning a pool.
-	SYNAFIS_ASSERT(y == nullptr);
-	SYNAFIS_ASSERT(y == y);
-	SYNAFIS_ASSERT(x != y);
-	SYNAFIS_ASSERT(!z);
-	SYNAFIS_ASSERT(z == nullptr);
-	SYNAFIS_ASSERT(z == z);
-	//!	TEST handle objects with no pool are equal.
-	SYNAFIS_ASSERT(z == y);
-}
-
-void t::moving(collector &)
-{
-	handle x{get_id<simple>(), simple_cap, simple_unit};
-	handle y{};
-	void *addr{nullptr};
-	//!	TEST moving a pool between handles.
-	SYNAFIS_ASSERT(x.ptr != nullptr);
-	SYNAFIS_ASSERT(tester<vmem>::is_allocated(x.ptr->region));
-	SYNAFIS_ASSERT(y.ptr == nullptr);
-	y = std::move(x);
-	SYNAFIS_ASSERT(y.ptr != nullptr);
-	SYNAFIS_ASSERT(tester<vmem>::is_allocated(y.ptr->region));
-	SYNAFIS_ASSERT(x.ptr == nullptr);
-	y = std::move(y);
-	SYNAFIS_ASSERT(y.ptr != nullptr);
-	SYNAFIS_ASSERT(tester<vmem>::is_allocated(y.ptr->region));
-	SYNAFIS_ASSERT(x.ptr == nullptr);
-	addr = y.ptr;
-	y = std::move(x);
-	SYNAFIS_ASSERT(x.ptr == nullptr);
-	SYNAFIS_ASSERT(y.ptr == nullptr);
+	//!	TEST Test if a pool's region is deallocated on destruction of the pool.
 	SYNAFIS_ASSERT(tester<vmem>::is_free(addr, vmem::page_size));
 }
 
 void t::allocation(collector &)
 {
-	handle temp{get_id<simple>(), simple_cap, simple_unit};
+	pool temp{get_id<simple>(), simple_cfg};
 	SYNAFIS_ASSERT(temp.used() == 0);
-	SYNAFIS_ASSERT(temp.available() == temp.ptr->store.max());
+	SYNAFIS_ASSERT(temp.available() == temp.store.max());
 	std::array<void *, 16> store;
 	for (auto &x : store) {
 		x = temp.allocate();
 	}
 	SYNAFIS_ASSERT(temp.used() == store.size());
-	SYNAFIS_ASSERT(temp.available() + temp.used() == temp.ptr->store.max());
+	SYNAFIS_ASSERT(temp.available() + temp.used() == temp.store.max());
 	auto const stop = store.end() - 1;
 	for (auto cur = store.begin(); cur < stop; cur++) {
 		for (auto comp = cur + 1; comp < store.end(); comp++) {
@@ -213,9 +141,9 @@ void t::allocation(collector &)
 
 void t::ownership(collector &)
 {
-	handle x{get_id<simple>(), simple_cap, simple_unit};
-	handle y{get_id<simple>(), simple_cap, simple_unit};
-	handle z{get_id<simple>(), simple_cap, simple_unit};
+	pool x{get_id<simple>(), simple_cfg};
+	pool y{get_id<simple>(), simple_cfg};
+	pool z{get_id<simple>(), simple_cfg};
 	std::array<simple *, 32> store;
 	for (std::size_t i = 0; i < store.size(); i++) {
 		if (i % 2 == 0) {
@@ -265,10 +193,10 @@ void t::ownership(collector &)
 
 void t::sweeping(collector &)
 {
-	handle temp{get_id<simple>(), simple_cap, simple_unit};
+	pool temp{get_id<simple>(), simple_cfg};
 	SYNAFIS_ASSERT(temp.used() == 0);
-	SYNAFIS_ASSERT(temp.available() == temp.ptr->store.max());
-	invariants(*temp);
+	SYNAFIS_ASSERT(temp.available() == temp.store.max());
+	invariants(temp);
 	std::array<void *, 8> store1;
 	std::array<void *, 16> store2;
 	for (auto &x : store1) {
@@ -278,32 +206,32 @@ void t::sweeping(collector &)
 		x = temp.allocate();
 	}
 	SYNAFIS_ASSERT(temp.used() == store1.size() + store2.size());
-	SYNAFIS_ASSERT(temp.available() + temp.used() == temp.ptr->store.max());
-	invariants(*temp);
+	SYNAFIS_ASSERT(temp.available() + temp.used() == temp.store.max());
+	invariants(temp);
 	for (auto x : store1) {
 		temp.mark(x);
 	}
 	//!	TEST marking did not cause deallocation
 	SYNAFIS_ASSERT(temp.used() == store1.size() + store2.size());
-	SYNAFIS_ASSERT(temp.available() + temp.used() == temp.ptr->store.max());
-	invariants(*temp);
+	SYNAFIS_ASSERT(temp.available() + temp.used() == temp.store.max());
+	invariants(temp);
 	//!	TEST sweeping does deallocate the correct slots
 	temp.sweep();
 	SYNAFIS_ASSERT(temp.used() == store1.size());
-	SYNAFIS_ASSERT(temp.available() + temp.used() == temp.ptr->store.max());
-	invariants(*temp);
+	SYNAFIS_ASSERT(temp.available() + temp.used() == temp.store.max());
+	invariants(temp);
 	//!	TEST sweeping again without marking deallocates everything
 	temp.sweep();
 	SYNAFIS_ASSERT(temp.used() == 0);
-	SYNAFIS_ASSERT(temp.available() == temp.ptr->store.max());
-	invariants(*temp);
+	SYNAFIS_ASSERT(temp.available() == temp.store.max());
+	invariants(temp);
 }
 
 void t::discarding(collector &)
 {
-	handle temp{get_id<simple>(), simple_cap, simple_unit};
+	pool temp{get_id<simple>(), simple_cfg};
 	SYNAFIS_ASSERT(temp.used() == 0);
-	SYNAFIS_ASSERT(temp.available() == temp.ptr->store.max());
+	SYNAFIS_ASSERT(temp.available() == temp.store.max());
 	std::array<void *, 8> store1;
 	std::array<void *, 16> store2;
 	for (auto &x : store1) {
@@ -313,47 +241,50 @@ void t::discarding(collector &)
 		x = temp.allocate();
 	}
 	SYNAFIS_ASSERT(temp.used() == store1.size() + store2.size());
-	SYNAFIS_ASSERT(temp.available() + temp.used() == temp.ptr->store.max());
+	SYNAFIS_ASSERT(temp.available() + temp.used() == temp.store.max());
 	for (auto x : store1) {
 		temp.discarded(x);
 	}
 	//!	TEST discarding slots returns them to the pool
 	SYNAFIS_ASSERT(temp.used() == store2.size());
-	invariants(*temp);
+	invariants(temp);
 }
 
 void t::traversing(collector &)
 {
-	handle temp1{get_id<simple>(), simple_cap, simple_unit};
-	handle temp2{get_id<simple_ptr>(), simple_ptr_cap, simple_ptr_unit};
-	std::array<void *, 32> store1;
-	std::array<void *, 16> store2;
+	pool temp1{get_id<simple>(), simple_cfg};
+	pool temp2{get_id<simple_ptr>(), simple_ptr_cfg};
+	invariants(temp2);
+	std::array<simple *, 32> store1;
+	std::array<simple_ptr *, 16> store2;
 	for (auto &x : store1) {
-		x = temp1.allocate();
+		x = static_cast<simple *>(temp1.allocate());
 	}
-	{
-		std::size_t count{0};
-		for (auto &x : store2) {
-			x = temp2.allocate();
-			simple_ptr &ref{*static_cast<simple_ptr *>(x)};
-			ref.data = static_cast<simple *>(store1[count * 2]);
-			count++;
-		}
+	for (std::size_t count = 0; count < store2.size(); count++) {
+		simple_ptr *ref{static_cast<simple_ptr *>(temp2.allocate())};
+		ref->data = store1[count * 2];
+		store2[count] = ref;
 	}
-	for (auto x : store2) {
+	invariants(temp2);
+	for (simple_ptr *x : store2) {
 		temp2.mark(x);
 	}
+	invariants(temp2);
 	auto const cb = [](void *arg, void *ptr) noexcept->void
 	{
-		static_cast<pool *>(arg)->mark(ptr);
+		pool *p{static_cast<pool *>(arg)};
+		SYNAFIS_ASSERT(p->from(ptr));
+		p->mark(ptr);
 	};
-	(*temp2).traverse(std::addressof(*temp1), cb);
+	temp2.traverse(std::addressof(temp1), cb);
+	invariants(temp1);
+	invariants(temp2);
 	//!	TEST traversal marks all the pointed to slots
 	temp1.sweep();
 	temp2.sweep();
 	SYNAFIS_ASSERT(temp1.used() == temp2.used());
-	invariants(*temp1);
-	invariants(*temp2);
+	invariants(temp1);
+	invariants(temp2);
 }
 
 //!	\endcond
@@ -379,16 +310,8 @@ static c ownership{"ownership", s, pass, &t::ownership};
 
 static c allocation{"allocation", s, pass, &t::allocation};
 
-static c moving{"moving", s, pass, &t::moving};
-
-static c boolean{"boolean", s, pass, &t::boolean};
-
 static c destruction{"destruction", s, pass, &t::destruction};
 
 static c creation{"creation", s, pass, &t::creation};
-
-static c null_handle{"null handle", s, pass, &t::null_handle};
-
-static c capacity{"capacity", s, pass, &t::capacity_selection};
 
 }
