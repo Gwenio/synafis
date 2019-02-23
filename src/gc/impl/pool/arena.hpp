@@ -68,7 +68,7 @@ private:
 	 *	\brief The allocation unit max.
 	 *	\note At least the sizeof the type being allocated and a multiple of its alignof.
 	 */
-	std::uintptr_t const unit;
+	std::size_t const unit;
 
 	/**	\var front
 	 *	\brief The start of the address range to allocate objects from.
@@ -90,7 +90,7 @@ public:
 		capacity(other.capacity), unit(other.unit), front(other.front), back(other.back)
 	{}
 
-	/**	\fn arena(std::size_t cap, std::uintptr_t u, void *begin, std::size_t l) noexcept
+	/**	\fn arena(std::size_t cap, std::size_t u, void *begin, std::size_t l) noexcept
 	 *	\brief Constructor.
 	 *	\param cap The number of slots in the arena.
 	 *	\param u The size of a slot for the arena.
@@ -99,7 +99,7 @@ public:
 	 *	\pre begin != nullptr
 	 *	\pre cap * u <= l
 	 */
-	arena(std::size_t cap, std::uintptr_t u, void *begin, std::size_t l) noexcept :
+	arena(std::size_t cap, std::size_t u, void *begin, std::size_t l) noexcept :
 		capacity(cap), unit(u), front(begin), back(static_cast<std::byte *>(begin) + l)
 	{
 		SYNAFIS_ASSERT(begin != nullptr);
@@ -167,7 +167,7 @@ public:
 	 *	\brief Gets the size of a slot for the arena.
 	 *	\returns unit
 	 */
-	std::uintptr_t size() const noexcept { return unit; }
+	std::size_t size() const noexcept { return unit; }
 
 	/**	\fn from(void *slot) const noexcept
 	 *	\brief Checks if a pointer is from the arena.
