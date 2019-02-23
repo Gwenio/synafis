@@ -104,14 +104,14 @@ struct blueprint
 	 */
 	~blueprint() noexcept = default;
 
-	/**	\prepare_region() const
+	/**	\fn prepare_region() const
 	 *	\brief Creates a virtual memory region based on the blueprint.
 	 *	\returns Returns a gc::vmem that owns a region large enough for pools using the blueprint.
 	 *	\throws std::bad_alloc if virtual memory could not be allocated.
 	 */
 	vmem prepare_region() const;
 
-	/**	\prepare_gray(identity const &id, vmem const &mem) const noexcept
+	/**	\fn prepare_gray(identity const &id, vmem const &mem) const noexcept
 	 *	\brief Gets the start of the gray list for a pool based on the blueprint.
 	 *	\param id The gc::identity used to construct the blueprint.
 	 *	\param mem A gc::vmem returned by prepare_region().

@@ -28,7 +28,9 @@ PERFORMANCE OF THIS SOFTWARE.
 
 using gc::allocator;
 using gc::pool;
+//!	\cond impl_details
 using pool_list = allocator::pool_list;
+//!	\endcond
 
 namespace {
 
