@@ -25,6 +25,8 @@ PERFORMANCE OF THIS SOFTWARE.
 
 namespace gc_test {
 
+using unit_test::gc_suite;
+
 extern suite collector_suite{"collector", gc_suite};
 
 extern suite alloc_suite{"allocator", gc_suite};
