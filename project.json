@@ -73,6 +73,7 @@
 			"unit_runner",
 			"gc/gc",
 			"gc/vmem",
+			"gc/pool/suites",
 			"gc/pool",
 			"gc/allocator",
 			"gc/ptr_math",
