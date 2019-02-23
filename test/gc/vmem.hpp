@@ -26,11 +26,11 @@ PERFORMANCE OF THIS SOFTWARE.
 
 namespace unit_test {
 
-/**	\class tester<::gc::vmem>
- *	\brief Class with access to the interals of gc::vmem to make tests.
+/**	\class tester<gc::vmem>
+ *	\brief Class with access to the internals of gc::vmem to make tests.
  */
 template<>
-class tester<::gc::vmem>
+class tester<gc::vmem>
 {
 	/**	\fn tester()
 	 *	\brief Deleted.
@@ -46,7 +46,7 @@ public:
 	/**	\typedef vmem
 	 *	\brief Shorthand for the class being tested.
 	 */
-	typedef ::gc::vmem vmem;
+	using vmem = typename gc::vmem;
 
 	/**	\fn invariants(vmem const &obj) noexcept
 	 *	\brief Checks invariants for objects of the vmem class.

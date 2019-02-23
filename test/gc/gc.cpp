@@ -23,9 +23,7 @@ PERFORMANCE OF THIS SOFTWARE.
 
 #include "gc.hpp"
 
-namespace unit_test {
-
-namespace gc {
+namespace gc_test {
 
 extern suite collector_suite{"collector", gc_suite};
 
@@ -41,15 +39,13 @@ extern suite ptrmath_suite{"pointer math", gc_suite};
 
 }
 
-}
-
 namespace gc {
 
 //!	\cond impl_details
 
-using unit_test::gc::simple;
+using gc_test::simple;
 
-using unit_test::gc::simple_ptr;
+using gc_test::simple_ptr;
 
 template<>
 identity const &get_id<simple>() noexcept

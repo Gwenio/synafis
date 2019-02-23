@@ -38,10 +38,8 @@ using gc::vmem;
 using gc::get_id;
 using gc::idaccess;
 
-using simple = unit_test::gc::simple;
-using simple_ptr = unit_test::gc::simple_ptr;
-
-using t = unit_test::tester<pool>;
+using gc_test::simple;
+using gc_test::simple_ptr;
 
 namespace {
 
@@ -53,9 +51,10 @@ blueprint const simple_ptr_cfg{
 
 }
 
-namespace unit_test {
-
 //!	\cond impl_details
+
+using t = typename unit_test::tester<pool>;
+using utc = typename unit_test::collector;
 
 void t::invariants(pool const &obj) noexcept
 {
@@ -93,7 +92,7 @@ void t::invariants(pool const &obj) noexcept
 	if (!flag) { SYNAFIS_FAILURE("The allocated bit of a slot in the free list was set."); }
 }
 
-void t::creation(collector &)
+void t::creation(utc &)
 {
 	//!	TEST Test pool::handle constructor that creates a pool.
 	pool temp{get_id<simple>(), simple_cfg};
@@ -104,7 +103,7 @@ void t::creation(collector &)
 	invariants(temp);
 }
 
-void t::destruction(collector &)
+void t::destruction(utc &)
 {
 	void *addr{nullptr};
 	{
@@ -117,7 +116,7 @@ void t::destruction(collector &)
 	SYNAFIS_ASSERT(tester<vmem>::is_free(addr, vmem::page_size));
 }
 
-void t::allocation(collector &)
+void t::allocation(utc &)
 {
 	pool temp{get_id<simple>(), simple_cfg};
 	SYNAFIS_ASSERT(temp.used() == 0);
@@ -139,7 +138,7 @@ void t::allocation(collector &)
 	}
 }
 
-void t::ownership(collector &)
+void t::ownership(utc &)
 {
 	pool x{get_id<simple>(), simple_cfg};
 	pool y{get_id<simple>(), simple_cfg};
@@ -191,7 +190,7 @@ void t::ownership(collector &)
 	}
 }
 
-void t::sweeping(collector &)
+void t::sweeping(utc &)
 {
 	pool temp{get_id<simple>(), simple_cfg};
 	SYNAFIS_ASSERT(temp.used() == 0);
@@ -227,7 +226,7 @@ void t::sweeping(collector &)
 	invariants(temp);
 }
 
-void t::discarding(collector &)
+void t::discarding(utc &)
 {
 	pool temp{get_id<simple>(), simple_cfg};
 	SYNAFIS_ASSERT(temp.used() == 0);
@@ -250,7 +249,7 @@ void t::discarding(collector &)
 	invariants(temp);
 }
 
-void t::traversing(collector &)
+void t::traversing(utc &)
 {
 	pool temp1{get_id<simple>(), simple_cfg};
 	pool temp2{get_id<simple_ptr>(), simple_ptr_cfg};
@@ -289,8 +288,6 @@ void t::traversing(collector &)
 
 //!	\endcond
 
-}
-
 namespace {
 
 using c = unit_test::case_type;
@@ -298,20 +295,20 @@ using unit_test::pass;
 using unit_test::fail;
 using unit_test::skip;
 
-inline unit_test::suite &s{unit_test::gc::pool_suite};
+inline unit_test::suite &s() noexcept { return gc_test::pool_suite; }
 
-static c traversing{"traversing", s, pass, &t::traversing};
+c traversing{"traversing", s(), pass, &t::traversing};
 
-static c discarding{"discarding", s, pass, &t::discarding};
+c discarding{"discarding", s(), pass, &t::discarding};
 
-static c sweeping{"sweeping", s, pass, &t::sweeping};
+c sweeping{"sweeping", s(), pass, &t::sweeping};
 
-static c ownership{"ownership", s, pass, &t::ownership};
+c ownership{"ownership", s(), pass, &t::ownership};
 
-static c allocation{"allocation", s, pass, &t::allocation};
+c allocation{"allocation", s(), pass, &t::allocation};
 
-static c destruction{"destruction", s, pass, &t::destruction};
+c destruction{"destruction", s(), pass, &t::destruction};
 
-static c creation{"creation", s, pass, &t::creation};
+c creation{"creation", s(), pass, &t::creation};
 
 }

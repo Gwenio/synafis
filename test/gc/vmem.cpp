@@ -26,17 +26,13 @@ PERFORMANCE OF THIS SOFTWARE.
 
 #include <windows.h>
 
-namespace {
-
-using namespace gc;
-
-using t = unit_test::tester<gc::vmem>;
-
-}
-
-namespace unit_test {
+using gc::vmem;
+using gc::add_offset;
 
 //!	\cond impl_details
+
+using t = typename unit_test::tester<vmem>;
+using utc = typename unit_test::collector;
 
 bool t::invariants(vmem const &obj) noexcept
 {
@@ -83,21 +79,21 @@ bool t::is_free(void *addr, std::size_t length) noexcept
 	return (info.State & MEM_FREE) == MEM_FREE;
 }
 
-void t::sane_page_size(collector &)
+void t::sane_page_size(utc &)
 {
 	SYNAFIS_ASSERT(0 < vmem::page_size);
 	SYNAFIS_ASSERT(alignof(std::max_align_t) < vmem::page_size);
 	SYNAFIS_ASSERT(vmem::page_size % alignof(std::max_align_t) == 0);
 }
 
-void t::def_init(collector &)
+void t::def_init(utc &)
 {
 	vmem temp{};
 	SYNAFIS_ASSERT(temp.ptr == nullptr);
 	SYNAFIS_ASSERT(temp.len == 0);
 }
 
-void t::reg_init(collector &)
+void t::reg_init(utc &)
 {
 	{
 		vmem temp{vmem::page_size, true};
@@ -115,7 +111,7 @@ void t::reg_init(collector &)
 	}
 }
 
-void t::move_init(collector &)
+void t::move_init(utc &)
 {
 	vmem temp1{vmem::page_size, true};
 	SYNAFIS_ASSERT(temp1.ptr != nullptr);
@@ -134,7 +130,7 @@ void t::move_init(collector &)
 	}
 }
 
-void t::destruct(collector &)
+void t::destruct(utc &)
 {
 	void *addr{nullptr};
 	{
@@ -145,7 +141,7 @@ void t::destruct(collector &)
 	SYNAFIS_ASSERT(is_free(addr, vmem::page_size));
 }
 
-void t::null_assign(collector &)
+void t::null_assign(utc &)
 {
 	vmem temp{vmem::page_size, true};
 	SYNAFIS_ASSERT(temp.ptr != nullptr);
@@ -157,7 +153,7 @@ void t::null_assign(collector &)
 	SYNAFIS_ASSERT(is_free(addr, vmem::page_size));
 }
 
-void t::move_assign(collector &)
+void t::move_assign(utc &)
 {
 	{
 		vmem temp1{vmem::page_size, true};
@@ -201,7 +197,7 @@ void t::move_assign(collector &)
 	}
 }
 
-void t::bool_convert(collector &)
+void t::bool_convert(utc &)
 {
 	vmem temp1{};
 	vmem temp2{vmem::page_size, true};
@@ -209,7 +205,7 @@ void t::bool_convert(collector &)
 	SYNAFIS_ASSERT(temp2);
 }
 
-void t::bounds(collector &)
+void t::bounds(utc &)
 {
 	vmem temp1{};
 	vmem temp2{vmem::page_size, true};
@@ -221,7 +217,7 @@ void t::bounds(collector &)
 	SYNAFIS_ASSERT(temp2.size() == temp2.len);
 }
 
-void t::access(collector &)
+void t::access(utc &)
 {
 	vmem temp{vmem::page_size, true};
 	SYNAFIS_ASSERT(temp[0] == temp.ptr);
@@ -247,7 +243,7 @@ void t::access(collector &)
 	if (!threw) { SYNAFIS_FAILURE("vmem::at should throw std::logic_error when ptr == nullptr."); }
 }
 
-void t::protect(collector &)
+void t::protect(utc &)
 {
 	vmem temp{vmem::page_size * 4, false};
 	SYNAFIS_ASSERT(no_access(temp, 0, vmem::page_size));
@@ -273,8 +269,6 @@ void t::protect(collector &)
 
 //!	\endcond
 
-}
-
 namespace {
 
 using c = unit_test::case_type;
@@ -282,28 +276,28 @@ using unit_test::pass;
 using unit_test::fail;
 using unit_test::skip;
 
-inline unit_test::suite &s{unit_test::gc::vmem_suite};
+inline unit_test::suite &s() noexcept { return gc_test::vmem_suite; }
 
-static c protect{"protect", s, pass, &t::protect};
+c protect{"protect", s(), pass, &t::protect};
 
-static c access{"access", s, pass, &t::access};
+c access{"access", s(), pass, &t::access};
 
-static c bounds{"bounds", s, pass, &t::bounds};
+c bounds{"bounds", s(), pass, &t::bounds};
 
-static c bool_convert{"bool_convert", s, pass, &t::bool_convert};
+c bool_convert{"bool_convert", s(), pass, &t::bool_convert};
 
-static c move_assign{"move assign", s, pass, &t::move_assign};
+c move_assign{"move assign", s(), pass, &t::move_assign};
 
-static c null_assign{"null assign", s, pass, &t::null_assign};
+c null_assign{"null assign", s(), pass, &t::null_assign};
 
-static c destruct{"destructor", s, pass, &t::destruct};
+c destruct{"destructor", s(), pass, &t::destruct};
 
-static c move_init{"move initialization", s, pass, &t::move_init};
+c move_init{"move initialization", s(), pass, &t::move_init};
 
-static c reg_init{"regular initialization", s, pass, &t::reg_init};
+c reg_init{"regular initialization", s(), pass, &t::reg_init};
 
-static c def_init{"default initialization", s, pass, &t::def_init};
+c def_init{"default initialization", s(), pass, &t::def_init};
 
-static c sane_page_size{"sane page size", s, pass, &t::sane_page_size};
+c sane_page_size{"sane page size", s(), pass, &t::sane_page_size};
 
 }

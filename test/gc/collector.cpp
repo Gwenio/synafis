@@ -18,23 +18,18 @@ PERFORMANCE OF THIS SOFTWARE.
 */
 
 /**	\file test/gc/collector.cpp
- *	\brief Defines test cases for gc::collector.
+ *	\brief Defines test cases for collector.
  */
 
 #include "collector.hpp"
 #include "gc.hpp"
 
-namespace {
-
-using namespace gc;
-
-using t = unit_test::tester<collector>;
-
-}
-
-namespace unit_test {
+using gc::collector;
 
 //!	\cond impl_details
+
+using t = typename unit_test::tester<collector>;
+using utc = typename unit_test::collector;
 
 bool t::no_readers() noexcept
 {
@@ -50,8 +45,6 @@ bool t::has_readers() noexcept
 
 //!	\endcond
 
-}
-
 namespace {
 
 using c = unit_test::case_type;
@@ -59,6 +52,6 @@ using unit_test::pass;
 using unit_test::fail;
 using unit_test::skip;
 
-inline unit_test::suite &s{unit_test::gc::collector_suite};
+inline unit_test::suite &s() { return gc_test::collector_suite; }
 
 }

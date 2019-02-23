@@ -56,10 +56,10 @@ using unit_test::pass;
 using unit_test::fail;
 using unit_test::skip;
 
-inline unit_test::suite &s{unit_test::gc::lock_suite};
+inline unit_test::suite &s() noexcept { return gc_test::lock_suite; }
 
-static c debug_locking{"debug locking", s, pass, locking<debug_mutex>};
+c debug_locking{"debug locking", s(), pass, locking<debug_mutex>};
 
-static c basic_locking{"basic_locking", s, pass, locking<basic_mutex>};
+c basic_locking{"basic_locking", s(), pass, locking<basic_mutex>};
 
 }

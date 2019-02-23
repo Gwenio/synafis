@@ -36,11 +36,9 @@ using gc::get_id;
 using gc::idaccess;
 namespace traits = gc::traits;
 
-using t = unit_test::tester<allocator>;
+using gc_test::simple;
 
 namespace {
-
-using simple = unit_test::gc::simple;
 
 constexpr inline static std::size_t const simple_unit{
 	std::max(idaccess::unit_size<simple>(), blueprint::min_unit())};
@@ -61,9 +59,10 @@ bool is_sorted_pools(pool_list const &l)
 
 }
 
-namespace unit_test {
-
 //!	\cond impl_details
+
+using t = typename unit_test::tester<allocator>;
+using utc = typename unit_test::collector;
 
 bool t::invariants(allocator const &obj) noexcept
 {
@@ -77,13 +76,13 @@ bool t::invariants(allocator const &obj) noexcept
 	}
 }
 
-void t::creation(collector &)
+void t::creation(utc &)
 {
 	allocator temp{get_id<simple>(), simple_unit, simple_flags};
 	SYNAFIS_ASSERT(invariants(temp));
 }
 
-void t::growth(collector &)
+void t::growth(utc &)
 {
 	allocator temp{get_id<simple>(), simple_unit, simple_flags};
 	SYNAFIS_ASSERT(invariants(temp));
@@ -97,8 +96,6 @@ void t::growth(collector &)
 
 //!	\endcond
 
-}
-
 namespace {
 
 using c = unit_test::case_type;
@@ -106,10 +103,10 @@ using unit_test::pass;
 using unit_test::fail;
 using unit_test::skip;
 
-inline unit_test::suite &s{unit_test::gc::alloc_suite};
+inline unit_test::suite &s() noexcept { return gc_test::alloc_suite; }
 
-static c growth{"growth", s, pass, &t::growth};
+c growth{"growth", s(), pass, &t::growth};
 
-static c creation{"creation", s, pass, &t::creation};
+c creation{"creation", s(), pass, &t::creation};
 
 }

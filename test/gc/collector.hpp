@@ -26,11 +26,11 @@ PERFORMANCE OF THIS SOFTWARE.
 
 namespace unit_test {
 
-/**	\class tester<::gc::collector>
+/**	\class tester<gc::collector>
  *	\brief Class with access to the internals of ::gc::collector to make tests.
  */
 template<>
-class tester<::gc::collector>
+class tester<gc::collector>
 {
 	/**	\fn tester()
 	 *	\brief Deleted.
@@ -46,7 +46,7 @@ public:
 	/**	\typedef collector
 	 *	\brief Shorthand for the class being tested.
 	 */
-	typedef ::gc::collector collector;
+	using collector = typename gc::collector;
 
 	/**	\fn no_readers() noexcept
 	 *	\brief Checks that the collector singleton has no readers.

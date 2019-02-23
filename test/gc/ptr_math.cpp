@@ -61,12 +61,12 @@ using unit_test::pass;
 using unit_test::fail;
 using unit_test::skip;
 
-inline unit_test::suite &s{unit_test::gc::ptrmath_suite};
+inline unit_test::suite &s() noexcept { return gc_test::ptrmath_suite; }
 
-static c differencing{"difference", s, pass, difference};
+c differencing{"difference", s(), pass, difference};
 
-static c subtraction{"subtract", s, pass, subtract};
+c subtraction{"subtract", s(), pass, subtract};
 
-static c addition{"adding", s, pass, adding};
+c addition{"adding", s(), pass, adding};
 
 }

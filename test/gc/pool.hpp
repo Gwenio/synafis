@@ -26,11 +26,11 @@ PERFORMANCE OF THIS SOFTWARE.
 
 namespace unit_test {
 
-/**	\class tester<::gc::pool>
+/**	\class tester<gc::pool>
  *	\brief Class with access to the internals of gc::pool to make tests.
  */
 template<>
-class tester<::gc::pool>
+class tester<gc::pool>
 {
 	/**	\fn tester()
 	 *	\brief Deleted.
@@ -46,7 +46,7 @@ public:
 	/**	\typedef pool
 	 *	\brief Shorthand for the class being tested.
 	 */
-	typedef ::gc::pool pool;
+	using pool = typename gc::pool;
 
 	/**	\fn invariants(pool const &obj) noexcept
 	 *	\brief Checks invariants for objects of the pool class.

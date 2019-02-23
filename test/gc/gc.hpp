@@ -31,12 +31,12 @@ PERFORMANCE OF THIS SOFTWARE.
 #include "../../src/gc/callbacks.hpp"
 #include "../../src/gc/traits.hpp"
 
-namespace unit_test {
-
-/**	\namespace gc
+/**	\namespace gc_test
  *	\brief Namespace for GC unit test items.
  */
-namespace gc {
+namespace gc_test {
+
+using unit_test::suite;
 
 // Declare the gc test suites.
 
@@ -111,8 +111,6 @@ public:
 
 }
 
-}
-
 namespace gc {
 
 //!	\cond impl_details
@@ -120,14 +118,14 @@ namespace gc {
 namespace traits {
 
 template<>
-class pointers_type<unit_test::gc::simple_ptr> : public std::integral_constant<bool, true>
+class pointers_type<gc_test::simple_ptr> : public std::integral_constant<bool, true>
 {};
 
 }
 
-extern template identity const &get_id<unit_test::gc::simple>() noexcept;
+extern template identity const &get_id<gc_test::simple>() noexcept;
 
-extern template identity const &get_id<unit_test::gc::simple_ptr>() noexcept;
+extern template identity const &get_id<gc_test::simple_ptr>() noexcept;
 
 //!	\endcond
 
