@@ -17,6 +17,10 @@ OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
 PERFORMANCE OF THIS SOFTWARE.
 */
 
+/**	\dir test/gc/pool
+ *	\brief The directory for unit testing gc::pool sub-components.
+ */
+
 /**	\file test/gc/pool/suites.hpp
  *	\brief Declares the test suites for the sub-components of gc::pool.
  */
