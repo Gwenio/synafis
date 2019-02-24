@@ -75,6 +75,7 @@
 			"gc/vmem",
 			"gc/pool/suites",
 			"gc/pool/gray_list",
+			"gc/pool/arena",
 			"gc/pool",
 			"gc/allocator",
 			"gc/ptr_math",
