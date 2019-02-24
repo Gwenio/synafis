@@ -70,11 +70,6 @@ public:
 	 */
 	static void allocation(collector &);
 
-	/**	\fn ownership(collector &)
-	 *	\brief Tests the ability to identify the pool that allocated a pointer.
-	 */
-	static void ownership(collector &);
-
 	/**	\fn sweeping(collector &)
 	 *	\brief Tests the ability to mark and sweep objects.
 	 */

@@ -138,58 +138,6 @@ void t::allocation(utc &)
 	}
 }
 
-void t::ownership(utc &)
-{
-	pool x{get_id<simple>(), simple_cfg};
-	pool y{get_id<simple>(), simple_cfg};
-	pool z{get_id<simple>(), simple_cfg};
-	std::array<simple *, 32> store;
-	for (std::size_t i = 0; i < store.size(); i++) {
-		if (i % 2 == 0) {
-			store[i] = reinterpret_cast<simple *>(x.allocate());
-			store[i]->data = 0;
-		} else if (i % 3 == 0) {
-			store[i] = reinterpret_cast<simple *>(y.allocate());
-			store[i]->data = 1;
-		} else {
-			store[i] = reinterpret_cast<simple *>(z.allocate());
-			store[i]->data = 2;
-		}
-	}
-	//!	TEST that pools do not say nullptr is from them.
-	SYNAFIS_ASSERT(!x.from(nullptr));
-	SYNAFIS_ASSERT(!y.from(nullptr));
-	SYNAFIS_ASSERT(!z.from(nullptr));
-	//!	TEST that pools claim pointers they allocated, and not those from others
-	bool in_pool{true};
-	bool not_pool{false};
-	for (auto i : store) {
-		switch (i->data) {
-		case 0:
-			in_pool &= x.from(i);
-			not_pool |= (y.from(i) || z.from(i));
-			break;
-		case 1:
-			in_pool &= y.from(i);
-			not_pool |= (x.from(i) || z.from(i));
-			break;
-		case 2:
-			in_pool &= z.from(i);
-			not_pool |= (y.from(i) || x.from(i));
-			break;
-		default:
-			SYNAFIS_FAILURE("Invalid pool number.");
-			return;
-		}
-	}
-	if (!in_pool) {
-		SYNAFIS_FAILURE("At least one pointer was not identified as from the correct pool.");
-	}
-	if (not_pool) {
-		SYNAFIS_FAILURE("At least one pointer was identified as from an incorrect pool.");
-	}
-}
-
 void t::sweeping(utc &)
 {
 	pool temp{get_id<simple>(), simple_cfg};
@@ -302,8 +250,6 @@ c traversing{"traversing", s(), pass, &t::traversing};
 c discarding{"discarding", s(), pass, &t::discarding};
 
 c sweeping{"sweeping", s(), pass, &t::sweeping};
-
-c ownership{"ownership", s(), pass, &t::ownership};
 
 c allocation{"allocation", s(), pass, &t::allocation};
 
