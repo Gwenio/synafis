@@ -27,6 +27,8 @@ PERFORMANCE OF THIS SOFTWARE.
 #include "blueprint.hpp"
 
 #include "../../../unit_test.hpp"
+#include "../../identity.hpp"
+#include "../vmem.hpp"
 #include "../idaccess.hpp"
 
 #include "bitmap.hpp"

@@ -23,8 +23,6 @@ PERFORMANCE OF THIS SOFTWARE.
  */
 
 #include "free_list.hpp"
-#include "../../identity.hpp"
-#include "../vmem.hpp"
 
 #ifndef SYNAFIS_GC_POOL_BLUEPRINT_HPP
 #define SYNAFIS_GC_POOL_BLUEPRINT_HPP
@@ -33,6 +31,9 @@ PERFORMANCE OF THIS SOFTWARE.
 #include <cstddef>
 
 namespace gc {
+
+class identity;
+class vmem;
 
 /**	\struct blueprint
  *	\brief Contains pre-calculated values for constructing a pool.
