@@ -96,7 +96,7 @@ public:
 	 *	\brief Deleted.
 	 *	\returns *this
 	 */
-	bitmap &operator=(bitmap const &other)
+	bitmap &operator=(bitmap const &other) noexcept
 	{
 		data = other.data;
 		return *this;
