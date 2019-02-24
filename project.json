@@ -77,6 +77,7 @@
 			"gc/pool/gray_list",
 			"gc/pool/arena",
 			"gc/pool/free_list",
+			"gc/pool/blueprint",
 			"gc/pool",
 			"gc/allocator",
 			"gc/ptr_math",
