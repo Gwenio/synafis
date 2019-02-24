@@ -54,7 +54,7 @@ public:
 
 private:
 	/**	\var data
-	 *	\brief Points to the bottom of the gray stack.
+	 *	\brief Points to the beginning of the bitmap.
 	 */
 	group *data;
 
