@@ -23,7 +23,6 @@ PERFORMANCE OF THIS SOFTWARE.
  */
 
 #include "../../../unit_test.hpp"
-#include "arena.hpp"
 
 #ifndef SYNAFIS_GC_POOL_FREE_LIST_HPP
 #define SYNAFIS_GC_POOL_FREE_LIST_HPP
@@ -32,6 +31,7 @@ PERFORMANCE OF THIS SOFTWARE.
 namespace gc {
 
 class pool;
+class arena;
 
 /**	\class free_list
  *	\brief The list of free slots for a pool.

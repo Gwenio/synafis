@@ -23,6 +23,7 @@ PERFORMANCE OF THIS SOFTWARE.
  */
 
 #include "free_list.hpp"
+#include "arena.hpp"
 
 namespace gc {
 
