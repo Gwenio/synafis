@@ -36,24 +36,29 @@ namespace gc_test {
 // Declare the pool test suites.
 
 /**	\var blueprint_suite
- *	\brief The test suite for ::gc::blueprint.
+ *	\brief The test suite for gc::blueprint.
  */
 extern suite blueprint_suite;
 
 /**	\var gray_list_suite
- *	\brief The test suite for ::gc::gray_list.
+ *	\brief The test suite for gc::gray_list.
  */
 extern suite gray_list_suite;
 
 /**	\var free_list_suite
- *	\brief The test suite for ::gc::free_list.
+ *	\brief The test suite for gc::free_list.
  */
 extern suite free_list_suite;
 
 /**	\var arena_suite
- *	\brief The test suite for ::gc::arena.
+ *	\brief The test suite for gc::arena.
  */
 extern suite arena_suite;
+
+/**	\var bitmap_suite
+ *	\brief The test suite for gc::bitmap.
+ */
+extern suite bitmap_suite;
 
 }
 

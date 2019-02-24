@@ -25,6 +25,8 @@ PERFORMANCE OF THIS SOFTWARE.
 
 namespace gc_test {
 
+extern suite bitmap_suite{"bitmap", pool_suite};
+
 extern suite blueprint_suite{"blueprint", pool_suite};
 
 extern suite free_list_suite{"free list", pool_suite};
