@@ -25,8 +25,6 @@ PERFORMANCE OF THIS SOFTWARE.
 #include "gc.hpp"
 #include "../../src/gc/impl/vmem.hpp"
 
-#include <windows.h>
-
 using gc::vmem;
 using gc::add_offset;
 
@@ -38,46 +36,6 @@ using utc = typename unit_test::collector;
 bool t::invariants(vmem const &obj) noexcept
 {
 	return !obj.ptr && (obj.len == 0) || obj.ptr && (0 < obj.len) && is_allocated(obj);
-}
-
-bool t::no_access(vmem const &obj, std::size_t offset, std::size_t length) noexcept
-{
-	MEMORY_BASIC_INFORMATION info;
-	memset(std::addressof(info), 0, sizeof(info));
-	VirtualQuery(obj[offset], std::addressof(info), sizeof(info));
-	return (info.Protect & PAGE_NOACCESS) == PAGE_NOACCESS;
-}
-
-bool t::is_readonly(vmem const &obj, std::size_t offset, std::size_t length) noexcept
-{
-	MEMORY_BASIC_INFORMATION info;
-	memset(std::addressof(info), 0, sizeof(info));
-	VirtualQuery(obj[offset], std::addressof(info), sizeof(info));
-	return (info.Protect & PAGE_READONLY) == PAGE_READONLY;
-}
-
-bool t::is_writable(vmem const &obj, std::size_t offset, std::size_t length) noexcept
-{
-	MEMORY_BASIC_INFORMATION info;
-	memset(std::addressof(info), 0, sizeof(info));
-	VirtualQuery(obj[offset], std::addressof(info), sizeof(info));
-	return (info.Protect & PAGE_READWRITE) == PAGE_READWRITE;
-}
-
-bool t::is_allocated(vmem const &obj) noexcept
-{
-	MEMORY_BASIC_INFORMATION info;
-	memset(std::addressof(info), 0, sizeof(info));
-	VirtualQuery(obj.ptr, std::addressof(info), sizeof(info));
-	return (info.State & MEM_COMMIT) == MEM_COMMIT;
-}
-
-bool t::is_free(void *addr, std::size_t length) noexcept
-{
-	MEMORY_BASIC_INFORMATION info;
-	memset(std::addressof(info), 0, sizeof(info));
-	VirtualQuery(addr, std::addressof(info), sizeof(info));
-	return (info.State & MEM_FREE) == MEM_FREE;
 }
 
 void t::sane_page_size(utc &)

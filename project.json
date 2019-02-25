@@ -86,6 +86,20 @@
 			"gc/collector"
 		],
 		"filters": [{ "target": "unit" }]
+	},
+	{
+		"group": "src",
+		"description": "Adds Windows specific unit testing '.cpp' files to the 'src' group.",
+		"prefix": "test/",
+		"suffix": ".cpp",
+		"files": [
+			"gc/vmem/winapi"
+		],
+		"filters": [
+		{
+			"target": "unit",
+			"platform": "winapi"
+		}]
 	}],
 	"steps":
 	{
