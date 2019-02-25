@@ -114,7 +114,7 @@ void t::destruction(utc &)
 		addr = temp.region.begin();
 	}
 	//!	TEST Test if a pool's region is deallocated on destruction of the pool.
-	SYNAFIS_ASSERT(tester<vmem>::is_free(addr, vmem::page_size));
+	SYNAFIS_ASSERT(tester<vmem>::is_free(addr, vmem::page_size()));
 }
 
 void t::allocation(utc &)

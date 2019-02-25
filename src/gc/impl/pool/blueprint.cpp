@@ -64,20 +64,20 @@ std::size_t select_capacity(std::size_t unit) noexcept
 	using gc::vmem;
 	using config::max_pool;
 	using config::min_pool;
-	std::size_t const max_size{max_pool * vmem::page_size};
+	std::size_t const max_size{max_pool * vmem::page_size()};
 	// Check if the minimum object can fit in the maximum number of pages.
 	if (unit * min_pool < max_size) {
 		// We start with the smallest amount that will completely fill all pages used.
-		std::size_t capacity{vmem::page_size / gcd(vmem::page_size, unit)};
+		std::size_t capacity{vmem::page_size() / gcd(vmem::page_size(), unit)};
 		// Get the memory required. This is equal to the least common multiple of unit and page_size.
 		std::size_t const size{capacity * unit};
-		SYNAFIS_ASSERT(size % vmem::page_size == 0);
+		SYNAFIS_ASSERT(size % vmem::page_size() == 0);
 		// Ensure we do no exceed config::max_pool pages.
 		if (size > max_size) {
 			capacity = max_size / unit;
 		} else if (size < max_size) {
 			// See if we can fit more of the ideal capacity in without exceeding max.
-			// Both sides of the division are multiples of vmem::page_size.
+			// Both sides of the division are multiples of vmem::page_size().
 			std::size_t part{max_size / size};
 			if (2 <= part) { capacity *= part; }
 		}
@@ -88,8 +88,8 @@ std::size_t select_capacity(std::size_t unit) noexcept
 		// Capacity must always be at least config::min_pool, even if it exceeds max_pool pages.
 		std::size_t capacity{min_pool};
 		// Fill up the last occupied page as much as possible.
-		std::size_t const remainder{(min_pool * unit) % vmem::page_size};
-		if (remainder > unit) { capacity += (vmem::page_size - remainder) / unit; }
+		std::size_t const remainder{(min_pool * unit) % vmem::page_size()};
+		if (remainder > unit) { capacity += (vmem::page_size() - remainder) / unit; }
 		return capacity;
 	}
 }
@@ -104,11 +104,11 @@ blueprint::blueprint(identity const &id, std::size_t u) noexcept
 	SYNAFIS_ASSERT(min_unit() <= u);
 	unit = std::max(u, min_unit());
 	capacity = select_capacity(unit);
-	std::size_t const guard{(config::guard_pages ? vmem::page_size : 0)};
-	//	Calculate size rounded up to the nearest multiple of vmem::page_size.
+	std::size_t const guard{(config::guard_pages ? vmem::page_size() : 0)};
+	//	Calculate size rounded up to the nearest multiple of vmem::page_size().
 	length = capacity * unit;
-	std::size_t const remainder{length % vmem::page_size};
-	std::size_t const pad{remainder > 0 ? vmem::page_size - (length % vmem::page_size) : 0};
+	std::size_t const remainder{length % vmem::page_size()};
+	std::size_t const pad{remainder > 0 ? vmem::page_size() - (length % vmem::page_size()) : 0};
 	std::size_t const size{length + pad};
 	// Calculate the offset to the end of bit groups.
 	maps = bitmap::placement(guard);
@@ -121,7 +121,7 @@ blueprint::blueprint(identity const &id, std::size_t u) noexcept
 		gray = 0;
 	}
 	// Make offset be at the start of a page.
-	offset += vmem::page_size - (offset % vmem::page_size);
+	offset += vmem::page_size() - (offset % vmem::page_size());
 	header = offset - maps;
 	begin = offset + guard;
 	total = size + begin + guard;

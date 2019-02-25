@@ -82,9 +82,9 @@ bool t::is_free(void *addr, std::size_t length) noexcept
 
 void t::sane_page_size(utc &)
 {
-	SYNAFIS_ASSERT(0 < vmem::page_size);
-	SYNAFIS_ASSERT(alignof(std::max_align_t) < vmem::page_size);
-	SYNAFIS_ASSERT(vmem::page_size % alignof(std::max_align_t) == 0);
+	SYNAFIS_ASSERT(0 < vmem::page_size());
+	SYNAFIS_ASSERT(alignof(std::max_align_t) < vmem::page_size());
+	SYNAFIS_ASSERT(vmem::page_size() % alignof(std::max_align_t) == 0);
 }
 
 void t::def_init(utc &)
@@ -97,24 +97,24 @@ void t::def_init(utc &)
 void t::reg_init(utc &)
 {
 	{
-		vmem temp{vmem::page_size, true};
+		vmem temp{vmem::page_size(), true};
 		SYNAFIS_ASSERT(temp.ptr != nullptr);
-		SYNAFIS_ASSERT(temp.len == vmem::page_size);
+		SYNAFIS_ASSERT(temp.len == vmem::page_size());
 		SYNAFIS_ASSERT(is_allocated(temp));
-		SYNAFIS_ASSERT(is_writable(temp, 0, vmem::page_size));
+		SYNAFIS_ASSERT(is_writable(temp, 0, vmem::page_size()));
 	}
 	{
-		vmem temp{vmem::page_size, false};
+		vmem temp{vmem::page_size(), false};
 		SYNAFIS_ASSERT(temp.ptr != nullptr);
-		SYNAFIS_ASSERT(temp.len == vmem::page_size);
+		SYNAFIS_ASSERT(temp.len == vmem::page_size());
 		SYNAFIS_ASSERT(is_allocated(temp));
-		SYNAFIS_ASSERT(no_access(temp, 0, vmem::page_size));
+		SYNAFIS_ASSERT(no_access(temp, 0, vmem::page_size()));
 	}
 }
 
 void t::move_init(utc &)
 {
-	vmem temp1{vmem::page_size, true};
+	vmem temp1{vmem::page_size(), true};
 	SYNAFIS_ASSERT(temp1.ptr != nullptr);
 	{
 		void *const addr{temp1.ptr};
@@ -135,29 +135,29 @@ void t::destruct(utc &)
 {
 	void *addr{nullptr};
 	{
-		vmem temp{vmem::page_size, true};
+		vmem temp{vmem::page_size(), true};
 		SYNAFIS_ASSERT(is_allocated(temp));
 		addr = temp.ptr;
 	}
-	SYNAFIS_ASSERT(is_free(addr, vmem::page_size));
+	SYNAFIS_ASSERT(is_free(addr, vmem::page_size()));
 }
 
 void t::null_assign(utc &)
 {
-	vmem temp{vmem::page_size, true};
+	vmem temp{vmem::page_size(), true};
 	SYNAFIS_ASSERT(temp.ptr != nullptr);
 	SYNAFIS_ASSERT(invariants(temp));
 	void *addr{temp.ptr};
 	temp = nullptr;
 	SYNAFIS_ASSERT(temp.ptr == nullptr);
 	SYNAFIS_ASSERT(invariants(temp));
-	SYNAFIS_ASSERT(is_free(addr, vmem::page_size));
+	SYNAFIS_ASSERT(is_free(addr, vmem::page_size()));
 }
 
 void t::move_assign(utc &)
 {
 	{
-		vmem temp1{vmem::page_size, true};
+		vmem temp1{vmem::page_size(), true};
 		vmem temp2{};
 		SYNAFIS_ASSERT(temp1.ptr != nullptr && invariants(temp1));
 		SYNAFIS_ASSERT(temp2.ptr == nullptr && invariants(temp2));
@@ -165,11 +165,11 @@ void t::move_assign(utc &)
 		temp1 = std::move(temp2);
 		SYNAFIS_ASSERT(temp1.ptr == nullptr && invariants(temp1));
 		SYNAFIS_ASSERT(temp2.ptr == nullptr && invariants(temp2));
-		SYNAFIS_ASSERT(is_free(addr, vmem::page_size));
+		SYNAFIS_ASSERT(is_free(addr, vmem::page_size()));
 	}
 	{
 		vmem temp1{};
-		vmem temp2{vmem::page_size, true};
+		vmem temp2{vmem::page_size(), true};
 		SYNAFIS_ASSERT(temp1.ptr == nullptr && invariants(temp1));
 		SYNAFIS_ASSERT(temp2.ptr != nullptr && invariants(temp2));
 		void *addr{temp2.ptr};
@@ -178,8 +178,8 @@ void t::move_assign(utc &)
 		SYNAFIS_ASSERT(temp2.ptr == nullptr && invariants(temp2));
 	}
 	{
-		vmem temp1{vmem::page_size, true};
-		vmem temp2{vmem::page_size, true};
+		vmem temp1{vmem::page_size(), true};
+		vmem temp2{vmem::page_size(), true};
 		SYNAFIS_ASSERT(temp1.ptr != nullptr && invariants(temp1));
 		SYNAFIS_ASSERT(temp2.ptr != nullptr && invariants(temp2));
 		void *addr1{temp1.ptr};
@@ -187,10 +187,10 @@ void t::move_assign(utc &)
 		temp1 = std::move(temp2);
 		SYNAFIS_ASSERT(temp1.ptr == addr2 && invariants(temp1));
 		SYNAFIS_ASSERT(temp2.ptr == nullptr && invariants(temp2));
-		SYNAFIS_ASSERT(is_free(addr1, vmem::page_size));
+		SYNAFIS_ASSERT(is_free(addr1, vmem::page_size()));
 	}
 	{
-		vmem temp{vmem::page_size, true};
+		vmem temp{vmem::page_size(), true};
 		SYNAFIS_ASSERT(temp.ptr != nullptr && invariants(temp));
 		void *addr{temp.ptr};
 		temp = std::move(temp);
@@ -201,7 +201,7 @@ void t::move_assign(utc &)
 void t::bool_convert(utc &)
 {
 	vmem temp1{};
-	vmem temp2{vmem::page_size, true};
+	vmem temp2{vmem::page_size(), true};
 	SYNAFIS_ASSERT(!temp1);
 	SYNAFIS_ASSERT(temp2);
 }
@@ -209,7 +209,7 @@ void t::bool_convert(utc &)
 void t::bounds(utc &)
 {
 	vmem temp1{};
-	vmem temp2{vmem::page_size, true};
+	vmem temp2{vmem::page_size(), true};
 	SYNAFIS_ASSERT(temp1.begin() == nullptr);
 	SYNAFIS_ASSERT(temp1.end() == nullptr);
 	SYNAFIS_ASSERT(temp1.size() == 0);
@@ -220,16 +220,16 @@ void t::bounds(utc &)
 
 void t::access(utc &)
 {
-	vmem temp{vmem::page_size, true};
+	vmem temp{vmem::page_size(), true};
 	SYNAFIS_ASSERT(temp[0] == temp.ptr);
-	SYNAFIS_ASSERT(temp[vmem::page_size / 2] == add_offset(temp.ptr, temp.len / 2));
-	SYNAFIS_ASSERT(temp[vmem::page_size - 1] == add_offset(temp.ptr, temp.len - 1));
+	SYNAFIS_ASSERT(temp[vmem::page_size() / 2] == add_offset(temp.ptr, temp.len / 2));
+	SYNAFIS_ASSERT(temp[vmem::page_size() - 1] == add_offset(temp.ptr, temp.len - 1));
 	SYNAFIS_ASSERT(temp.at(0) == temp[0]);
-	SYNAFIS_ASSERT(temp.at(vmem::page_size / 2) == temp[vmem::page_size / 2]);
-	SYNAFIS_ASSERT(temp.at(vmem::page_size - 1) == temp[vmem::page_size - 1]);
+	SYNAFIS_ASSERT(temp.at(vmem::page_size() / 2) == temp[vmem::page_size() / 2]);
+	SYNAFIS_ASSERT(temp.at(vmem::page_size() - 1) == temp[vmem::page_size() - 1]);
 	bool threw{false};
 	try {
-		temp.at(vmem::page_size);
+		temp.at(vmem::page_size());
 	} catch (std::out_of_range &) {
 		threw = true;
 	}
@@ -246,26 +246,26 @@ void t::access(utc &)
 
 void t::protect(utc &)
 {
-	vmem temp{vmem::page_size * 4, false};
-	SYNAFIS_ASSERT(no_access(temp, 0, vmem::page_size));
-	SYNAFIS_ASSERT(no_access(temp, vmem::page_size, vmem::page_size));
-	SYNAFIS_ASSERT(no_access(temp, vmem::page_size * 2, vmem::page_size));
-	SYNAFIS_ASSERT(no_access(temp, vmem::page_size * 3, vmem::page_size));
-	temp.readonly(vmem::page_size + 1, vmem::page_size * 2 - 2);
-	SYNAFIS_ASSERT(no_access(temp, 0, vmem::page_size));
-	SYNAFIS_ASSERT(is_readonly(temp, vmem::page_size, vmem::page_size));
-	SYNAFIS_ASSERT(is_readonly(temp, vmem::page_size * 2, vmem::page_size));
-	SYNAFIS_ASSERT(no_access(temp, vmem::page_size * 3, vmem::page_size));
-	temp.writable(vmem::page_size * 2 - 1, 2);
-	SYNAFIS_ASSERT(no_access(temp, 0, vmem::page_size));
-	SYNAFIS_ASSERT(is_writable(temp, vmem::page_size, vmem::page_size));
-	SYNAFIS_ASSERT(is_writable(temp, vmem::page_size * 2, vmem::page_size));
-	SYNAFIS_ASSERT(no_access(temp, vmem::page_size * 3, vmem::page_size));
-	temp.forbid(vmem::page_size, vmem::page_size);
-	SYNAFIS_ASSERT(no_access(temp, 0, vmem::page_size));
-	SYNAFIS_ASSERT(no_access(temp, vmem::page_size, vmem::page_size));
-	SYNAFIS_ASSERT(is_writable(temp, vmem::page_size * 2, vmem::page_size));
-	SYNAFIS_ASSERT(no_access(temp, vmem::page_size * 3, vmem::page_size));
+	vmem temp{vmem::page_size() * 4, false};
+	SYNAFIS_ASSERT(no_access(temp, 0, vmem::page_size()));
+	SYNAFIS_ASSERT(no_access(temp, vmem::page_size(), vmem::page_size()));
+	SYNAFIS_ASSERT(no_access(temp, vmem::page_size() * 2, vmem::page_size()));
+	SYNAFIS_ASSERT(no_access(temp, vmem::page_size() * 3, vmem::page_size()));
+	temp.readonly(vmem::page_size() + 1, vmem::page_size() * 2 - 2);
+	SYNAFIS_ASSERT(no_access(temp, 0, vmem::page_size()));
+	SYNAFIS_ASSERT(is_readonly(temp, vmem::page_size(), vmem::page_size()));
+	SYNAFIS_ASSERT(is_readonly(temp, vmem::page_size() * 2, vmem::page_size()));
+	SYNAFIS_ASSERT(no_access(temp, vmem::page_size() * 3, vmem::page_size()));
+	temp.writable(vmem::page_size() * 2 - 1, 2);
+	SYNAFIS_ASSERT(no_access(temp, 0, vmem::page_size()));
+	SYNAFIS_ASSERT(is_writable(temp, vmem::page_size(), vmem::page_size()));
+	SYNAFIS_ASSERT(is_writable(temp, vmem::page_size() * 2, vmem::page_size()));
+	SYNAFIS_ASSERT(no_access(temp, vmem::page_size() * 3, vmem::page_size()));
+	temp.forbid(vmem::page_size(), vmem::page_size());
+	SYNAFIS_ASSERT(no_access(temp, 0, vmem::page_size()));
+	SYNAFIS_ASSERT(no_access(temp, vmem::page_size(), vmem::page_size()));
+	SYNAFIS_ASSERT(is_writable(temp, vmem::page_size() * 2, vmem::page_size()));
+	SYNAFIS_ASSERT(no_access(temp, vmem::page_size() * 3, vmem::page_size()));
 }
 
 //!	\endcond

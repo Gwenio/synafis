@@ -81,10 +81,11 @@ private:
 	static void deallocate(void *ptr) noexcept;
 
 public:
-	/**	\var page_size
+	/**	\fn page_size() noexcept
 	 *	\brief The basic unit size of virtual memory blocks.
+	 *	\returns Returns the smallest unit of virtual memory used by the OS.
 	 */
-	static std::size_t const page_size;
+	static std::size_t page_size() noexcept;
 
 	/**	\fn vmem() noexcept
 	 *	\brief Initializes with no virtual memory.

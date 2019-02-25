@@ -135,7 +135,7 @@ public:
 		 *	\param goal A hint about how much memory to try and free.
 		 *	\returns Returns the units of memory freed.
 		 *	\details The measures of memory are not exact, just hints. The hints are a count of
-		 *	\details units that is approximately (vmem::page_size * config::max_pool).
+		 *	\details units that is approximately (vmem::page_size() * config::max_pool).
 		 *	\details Will be called with a goal of zero to notify that it is a good time to shrink
 		 *	\details if the allocator has lots of free space.
 		 *	\note Allocators need to keep some free space available for allocation.

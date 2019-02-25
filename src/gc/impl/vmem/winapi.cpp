@@ -2,7 +2,7 @@
 /*
 ISC License (ISC)
 
-Copyright 2018 Adam Armstrong
+Copyright 2018-2019 Adam Armstrong
 
 Permission to use, copy, modify, and/or distribute this software for any
 purpose with or without fee is hereby granted, provided that the above copyright
@@ -49,7 +49,11 @@ inline std::size_t get_page_size() noexcept
 
 namespace gc {
 
-std::size_t const vmem::page_size{get_page_size()};
+std::size_t vmem::page_size() noexcept
+{
+	static std::size_t const p{get_page_size()};
+	return p;
+}
 
 void *vmem::allocate(std::size_t size, bool access) noexcept
 {
