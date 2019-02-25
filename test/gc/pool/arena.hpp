@@ -21,8 +21,13 @@ PERFORMANCE OF THIS SOFTWARE.
  *	\brief Declares test cases for gc::arena.
  */
 
-#include "../../../src/gc/impl/pool/arena.hpp"
-#include "suites.hpp"
+#include "../../master.hpp"
+
+namespace gc {
+
+class arena;
+
+}
 
 namespace unit_test {
 

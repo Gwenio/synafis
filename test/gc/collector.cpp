@@ -22,6 +22,7 @@ PERFORMANCE OF THIS SOFTWARE.
  */
 
 #include "collector.hpp"
+#include "../../src/gc/impl/core.hpp"
 #include "gc.hpp"
 
 using gc::collector;

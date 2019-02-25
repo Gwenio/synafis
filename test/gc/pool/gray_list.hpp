@@ -21,8 +21,13 @@ PERFORMANCE OF THIS SOFTWARE.
  *	\brief Declares test cases for gc::gray_list.
  */
 
-#include "../../../src/gc/impl/pool/gray_list.hpp"
-#include "suites.hpp"
+#include "../../master.hpp"
+
+namespace gc {
+
+class gray_list;
+
+}
 
 namespace unit_test {
 

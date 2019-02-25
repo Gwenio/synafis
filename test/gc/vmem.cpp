@@ -23,6 +23,7 @@ PERFORMANCE OF THIS SOFTWARE.
 
 #include "vmem.hpp"
 #include "gc.hpp"
+#include "../../src/gc/impl/vmem.hpp"
 
 #include <windows.h>
 

@@ -23,6 +23,9 @@ PERFORMANCE OF THIS SOFTWARE.
 
 #include "arena.hpp"
 
+#include "../../../src/gc/impl/pool/arena.hpp"
+#include "suites.hpp"
+
 #include <algorithm>
 #include <array>
 #include <random>

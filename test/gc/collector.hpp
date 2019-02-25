@@ -22,7 +22,12 @@ PERFORMANCE OF THIS SOFTWARE.
  */
 
 #include "../master.hpp"
-#include "../../src/gc/impl/core.hpp"
+
+namespace gc {
+
+class collector;
+
+}
 
 namespace unit_test {
 

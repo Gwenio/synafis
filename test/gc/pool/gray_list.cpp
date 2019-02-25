@@ -23,6 +23,9 @@ PERFORMANCE OF THIS SOFTWARE.
 
 #include "gray_list.hpp"
 
+#include "../../../src/gc/impl/pool/gray_list.hpp"
+#include "suites.hpp"
+
 #include <array>
 
 using gc::gray_list;

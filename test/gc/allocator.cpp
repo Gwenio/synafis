@@ -22,6 +22,8 @@ PERFORMANCE OF THIS SOFTWARE.
  */
 
 #include "allocator.hpp"
+
+#include "../../src/gc/impl/allocator.hpp"
 #include "../../src/gc/impl/idaccess.hpp"
 #include "gc.hpp"
 

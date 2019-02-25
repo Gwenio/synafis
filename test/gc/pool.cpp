@@ -23,6 +23,7 @@ PERFORMANCE OF THIS SOFTWARE.
 
 #include "pool.hpp"
 #include "vmem.hpp"
+#include "../../src/gc/impl/pool.hpp"
 #include "../../src/gc/impl/idaccess.hpp"
 #include "gc.hpp"
 

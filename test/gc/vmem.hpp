@@ -22,7 +22,12 @@ PERFORMANCE OF THIS SOFTWARE.
  */
 
 #include "../master.hpp"
-#include "../../src/gc/impl/vmem.hpp"
+
+namespace gc {
+
+class vmem;
+
+}
 
 namespace unit_test {
 
@@ -103,7 +108,7 @@ public:
 	static void sane_page_size(collector &);
 
 	/**	\fn def_init(collector &)
-	 *	\brief Test case checking that the default contructor works.
+	 *	\brief Test case checking that the default constructor works.
 	 */
 	static void def_init(collector &);
 
