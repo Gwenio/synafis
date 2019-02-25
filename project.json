@@ -78,6 +78,7 @@
 			"gc/pool/arena",
 			"gc/pool/free_list",
 			"gc/pool/blueprint",
+			"gc/pool/bitmap",
 			"gc/pool",
 			"gc/allocator",
 			"gc/ptr_math",
