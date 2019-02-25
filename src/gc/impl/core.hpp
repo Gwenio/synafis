@@ -23,6 +23,7 @@ PERFORMANCE OF THIS SOFTWARE.
  */
 
 #include "source.hpp"
+#include "../identity.hpp"
 
 #ifndef SYNAFIS_GC_CORE_HPP
 #define SYNAFIS_GC_CORE_HPP

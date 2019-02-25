@@ -22,7 +22,7 @@ PERFORMANCE OF THIS SOFTWARE.
  *	\ingroup gc_impl
  */
 
-#include "../identity.hpp"
+#include "../callbacks.hpp"
 #include "../soft_ptr.hpp"
 
 #ifndef SYNAFIS_GC_SOURCE_HPP
@@ -30,6 +30,8 @@ PERFORMANCE OF THIS SOFTWARE.
 #pragma once
 
 namespace gc {
+
+class identity;
 
 /**	\class isource
  *	\brief Represents a source of memory allocation.
