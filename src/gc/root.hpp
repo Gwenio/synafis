@@ -39,6 +39,12 @@ namespace gc {
  *	\details
  *	\details For types that are always roots, static members are provides
  *	\details so they can manage themselves.
+ *	\details
+ *	\details Objects residing in memory allocated by the GC are not allowed to be roots.
+ *	\details The reason for this is that roots must have a lifetime bounded by a means other than
+ *	\details the garbage collector.
+ *	\details Additionally, if a newly allocated object from the GC is immediately made a root,
+ *	\details it could be mistakenly freed if there is not enough memory to record the new root.
  *	\ingroup gc_interface
  */
 class root
@@ -57,6 +63,7 @@ private:
 	 *	\pre tcb != nullptr
 	 *	\pre rcb != nullptr
 	 *	\pre The the object is not yet registered.
+	 *	\pre The address pointed to by obj must not have been allocated by the GC.
 	 *	\post The object is now registered as a root object.
 	 *	\details Implemented in the collector.
 	 */
@@ -170,6 +177,7 @@ public:
 	 *	\param obj The object to register.
 	 *	\pre Must be called in the scope of a gc::scope_lock.
 	 *	\pre The the object is not yet registered.
+	 *	\pre The object must not have been allocated by the GC.
 	 *	\post The object is now registered as a root object.
 	 *	\details Provides the correct callbacks for type T during registration.
 	 */
@@ -177,8 +185,8 @@ public:
 	static void register_(T &obj)
 	{
 		static_assert(traits::pointers<T>,
-			"The type of a root object must be specified as gc::traits::pointers<T> == true.")
-			register_impl(get_pointer(obj), traits::traverser<T>, (&root_impl<T>));
+			"The type of a root object must be specified as gc::traits::pointers<T> == true.");
+		register_impl(get_pointer(obj), traits::traverser<T>, (&root_impl<T>));
 	}
 
 	/**	\fn unregister(T &obj)
