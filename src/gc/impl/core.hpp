@@ -33,6 +33,8 @@ PERFORMANCE OF THIS SOFTWARE.
 #include <atomic>
 #include <condition_variable>
 #include <mutex>
+#include <map>
+#include <set>
 #include <thread>
 #include <vector>
 
@@ -106,21 +108,8 @@ public:
 		static void erase_sources(
 			Iter const begin, Iter const end, bool trav, std::defer_lock_t) noexcept
 		{
-			{
-				auto &vec = collector::singleton().sources;
-				auto tag = vec.cbegin();
-				for (auto cur = begin; cur != end; cur++) {
-					collector::singleton().erase_source(
-						vec, tag, static_cast<isource const &>(*cur));
-				}
-			}
-			if (trav) {
-				auto &vec = collector::singleton().traversable;
-				auto tag = vec.cbegin();
-				for (auto cur = begin; cur != end; cur++) {
-					collector::singleton().erase_source(
-						vec, tag, static_cast<isource const &>(*cur));
-				}
+			for (auto cur = begin; cur != end; cur++) {
+				collector::singleton().erase_source(*cur, trav);
 			}
 		}
 
@@ -151,53 +140,26 @@ public:
 	 */
 	using duration = std::chrono::steady_clock::duration;
 
-	/**	\typedef source
-	 *	\brief The type stored in sources.
-	 */
-	using source = isource *;
-
 	/**	\typedef alloc_ptr
 	 *	\brief The type for stored allocators.
 	 */
 	using alloc_ptr = std::unique_ptr<iallocator>;
 
-	/**	\struct mroot
-	 *	\brief The type to store roots to managed objects.
-	 *	\see managed
+	/**	\struct root_type
+	 *	\brief The type to store root objects.
+	 *	\see roots
 	 */
-	struct mroot
+	struct root_type
 	{
-		/**	\var obj
-		 *	\brief A pointer to the root object.
-		 */
-		void *obj;
-
-		/**	\var src
-		 *	\brief The source of the root object.
-		 */
-		source src;
-	};
-
-	/**	\struct uroot
-	 *	\brief The type to store roots to unmanaged objects.
-	 *	\see unmanaged
-	 */
-	struct uroot
-	{
-		/**	\var obj
-		 *	\brief A pointer to the root object.
-		 */
-		void *obj;
-
 		/**	\var tcb
 		 *	\brief The callback for traversing pointers in the object.
 		 */
-		traverse_cb tcb;
+		traverse_cb const tcb;
 
 		/**	\var rcb
 		 *	\brief The callback for updating pointers in the object.
 		 */
-		root_cb rcb;
+		root_cb const rcb;
 	};
 
 private:
@@ -256,33 +218,24 @@ private:
 
 	/**	\var sources
 	 *	\brief Bookkeeping for sources of allocation.
-	 *	\invariant Should be kept sorted by location in memory.
 	 */
-	std::vector<source> sources;
+	std::map<void *, isource *> sources;
 
 	/**	\var traversable
 	 *	\brief The traversable sources.
-	 *	\invariant Should be kept sorted by location in memory.
 	 */
-	std::vector<source> traversable;
+	std::set<isource *> traversable;
 
 	/**	\var allocators
-	 *	\brief Tracks allocators for shrink request.
-	 *	\invariant Should be kept sorted by location in memory.
+	 *	\brief Tracks allocators for shrink requests.
 	 */
 	std::vector<alloc_ptr> allocators;
 
-	/**	\var managed
-	 *	\brief Tracks root objects with lifetimes managed by the collector.
-	 *	\invariant Should be kept sorted by address of the object.
+	/**	\var roots
+	 *	\brief Tracks root objects.
+	 *	\note Tracked roots should be addresses not allocated by the GC.
 	 */
-	std::vector<mroot> managed;
-
-	/**	\var unmanaged
-	 *	\brief Tracks root objects with lifetimes not managed by the collector.
-	 *	\invariant Should be kept sorted by address of the object.
-	 */
-	std::vector<uroot> unmanaged;
+	std::map<void *, root_type> roots;
 
 	/**	\fn collector() noexcept
 	 *	\brief Prepares most of the collector.
@@ -339,19 +292,6 @@ private:
 		}
 		writer.notify_one();
 	}
-
-	/**	\fn insert_helper(std::vector<T1> &vec, T2 const &find, T1 &&add, F &func, std::unique_lock<std::mutex> &l)
-	 *	\param vec The vector to insert the root into.
-	 *	\param find The object to search for the insert location.
-	 *	\param add The object record to insert.
-	 *	\param func A function to check find < element from vec.
-	 *	\param l The the lock.
-	 *	\pre The lock l must own the lock on mtx.
-	 *	\post The lock l will own the lock on mtx.
-	 */
-	template<typename T1, typename T2, typename F>
-	void insert_helper(
-		std::vector<T1> &vec, T2 const &find, T1 &&add, F &func, std::unique_lock<std::mutex> &l);
 
 	/**	\fn register_root_impl(void *obj, traverse_cb tcb, root_cb rcb)
 	 *	\param obj A pointer to the root object being registered.
@@ -417,14 +357,12 @@ private:
 	 */
 	void insert_source(isource &src, bool trav) noexcept;
 
-	/**	\fn erase_source(std::vector<source> &vec, decltype(vec.cbegin()) &start, isource const &src) noexcept
+	/**	\fn erase_source(isource const &src, bool trav) noexcept
 	 *	\brief Stops tracking a source.
-	 *	\param vec Either sources or traversable to remove the source from.
-	 *	\param start The start of the search range. Updated to the location of the removed source.
 	 *	\param src The source to remove.
+	 *	\param trav Indicates if the source is traversable.
 	 */
-	void erase_source(
-		std::vector<source> &vec, decltype(vec.cbegin()) &start, isource const &src) noexcept;
+	void erase_source(isource const &src, bool trav) noexcept;
 
 	/**	\fn insert_alloc_impl(alloc_ptr &&alloc) noexcept
 	 *	\brief Takes ownership of an allocator.
@@ -432,12 +370,6 @@ private:
 	 *	\returns Returns a pointer to the inserted allocator.
 	 */
 	iallocator *insert_alloc_impl(alloc_ptr &&alloc) noexcept;
-
-	/**	\fn erase_alloc_impl(iallocator const &alloc) noexcept
-	 *	\brief Removes an allocator.
-	 *	\param alloc The allocator to remove.
-	 */
-	void erase_alloc_impl(iallocator const &alloc) noexcept;
 
 	/**	\fn work() noexcept
 	 *	\brief Defines the job of worker.
@@ -530,6 +462,7 @@ public:
 	 *	\param obj A pointer to the root object being registered.
 	 *	\param tcb The callback for traversing pointers in the object.
 	 *	\param rcb The callback for updating pointers in the object.
+	 *	\pre obj != nullptr && find_source(obj) == nullptr
 	 */
 	static void register_root(void *obj, traverse_cb tcb, root_cb rcb)
 	{
@@ -556,15 +489,6 @@ public:
 	static iallocator *insert_alloc(alloc_ptr &&alloc) noexcept
 	{
 		return singleton().insert_alloc_impl(std::forward<alloc_ptr>(alloc));
-	}
-
-	/**	\fn erase_alloc(iallocator const &alloc) noexcept
-	 *	\brief Removes an allocator.
-	 *	\param alloc The allocator to remove.
-	 */
-	static void erase_alloc(iallocator const &alloc) noexcept
-	{
-		singleton().erase_alloc_impl(alloc);
 	}
 
 	/**	\fn find_source(void *ptr) noexcept

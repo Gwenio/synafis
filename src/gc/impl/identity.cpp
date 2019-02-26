@@ -28,10 +28,7 @@ PERFORMANCE OF THIS SOFTWARE.
 
 namespace gc {
 
-identity::~identity()
-{
-	if (alloc) { collector::erase_alloc(*dynamic_cast<collector::iallocator *>(alloc)); }
-}
+identity::~identity() {}
 
 identity::iallocator *identity::select_alloc(
 	identity const &id, std::size_t unit, traits::flag_type flags)
